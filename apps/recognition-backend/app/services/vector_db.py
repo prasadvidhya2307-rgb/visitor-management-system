@@ -1,9 +1,8 @@
-from uuid import uuid5, NAMESPACE_URL
-
-from qdrant_client.models import PointStruct
+from uuid import NAMESPACE_URL, uuid5
 
 from app.core.config import settings
 from app.core.qdrant import qdrant_client
+from qdrant_client.models import PointStruct
 
 
 class VectorDB:
@@ -28,3 +27,17 @@ class VectorDB:
                 ),
             ],
         )
+
+    @staticmethod
+    def search_embedding(
+        embedding: list[float],
+    ):
+
+        response = qdrant_client.query_points(
+            collection_name=settings.QDRANT_COLLECTION,
+            query=embedding,
+            limit=1,
+            with_payload=True,
+        )
+
+        return response.points

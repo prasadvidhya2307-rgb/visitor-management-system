@@ -8,8 +8,8 @@ class Settings(BaseSettings):
     QDRANT_PORT: int = 6333
     QDRANT_COLLECTION: str = "employees"
     QDRANT_VECTOR_SIZE: int = 512
-
     MODEL_NAME: str = "buffalo_l"
+    FACE_MATCH_THRESHOLD: float = 0.65
 
     model_config = SettingsConfigDict(
         env_file=".env",

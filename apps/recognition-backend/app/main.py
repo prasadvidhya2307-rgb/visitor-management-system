@@ -1,10 +1,14 @@
 from contextlib import asynccontextmanager
-
 from fastapi import FastAPI
 
+# Routers---
 from app.api.routes.health import router as health_router
 from app.api.routes.face import router as face_router
+from app.api.routes.recognition import router as recognition_router
+
+
 from app.core.startup import create_collection
+
 
 
 @asynccontextmanager
@@ -21,5 +25,4 @@ app = FastAPI(
 
 app.include_router(health_router)
 app.include_router(face_router)
-
-# app.include_router(recognition_router)
+app.include_router(recognition_router)

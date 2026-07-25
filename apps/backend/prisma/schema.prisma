@@ -35,8 +35,8 @@ model Visitor {
   firstName String
   lastName  String?
 
-  identityType   IdentityType?
-  identityNumber String?
+  identityType   IdentityType
+  identityNumber String @unique
 
   profileImageId String?
   profileImage   Media?  @relation(fields: [profileImageId], references: [id], onDelete: SetNull)

@@ -1,23 +1,8 @@
-import {IdentityType} from "../../generated/prisma/client"
+import { z } from 'zod'
+import { createEmailSchema, createMobileSchema, createVisitorSchema, updateVisitorSchema } from "./visitor.validation";
 
 
-export interface createMobileDto {
-    mobile: string;
-    isPrimary: boolean;
-}
-
-export interface createEmailDto {
-    email: string;
-    isPrimary: boolean;
-}
-
-export interface createVisitorDto {
-    firstName: string;
-    lastName?: string;
-
-    identityType: IdentityType
-    identityNumber: string
-
-    mobiles: createMobileDto[];
-    emails?: createEmailDto[];
-}
+export type createMobileDto = z.infer<typeof createMobileSchema>
+export type createEmailDto = z.infer<typeof createEmailSchema>
+export type createVisitorDto = z.infer<typeof createVisitorSchema>
+export type updateVisitorDto = z.infer<typeof updateVisitorSchema>

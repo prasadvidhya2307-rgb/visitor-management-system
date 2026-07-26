@@ -3,7 +3,7 @@ import { PrismaClient, VisitorMobile, Prisma } from "../../../generated/prisma/c
 export class VisitorMobileRepository {
     constructor(
         private readonly prisma: PrismaClient
-    ){}
+    ) { }
 
     public async createMany(
         tx: Prisma.TransactionClient,
@@ -19,7 +19,30 @@ export class VisitorMobileRepository {
     ): Promise<VisitorMobile[]> {
         return this.prisma.visitorMobile.findMany({
             where: { visitorId },
-            orderBy: { isPrimary: 'desc'}
+            orderBy: { isPrimary: 'desc' }
         })
     }
+
+    public async updateById(
+        tx: Prisma.TransactionClient,
+        id: string,
+        data: Prisma.VisitorMobileUpdateInput
+    ): Promise<VisitorMobile> {
+        return tx.visitorMobile.update({
+            where: { id },
+            data,
+        });
+    }
+
+    public async deleteByVisitorId(
+        tx: Prisma.TransactionClient,
+        visitorId: string
+    ): Promise<void> {
+        await tx.visitorMobile.deleteMany({
+            where: {
+                visitorId,
+            },
+        });
+    }
+
 }

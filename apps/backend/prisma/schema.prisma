@@ -1,6 +1,3 @@
-// This is your Prisma schema file
-// https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -8,6 +5,98 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+model Visitor {
+  id             String          @id @default(uuid())
+  visitorCode    String          @unique
+  firstName      String
+  lastName       String?
+  identityType   IdentityType
+  identityNumber String          @unique
+  profileImageId String?
+  faceRegistered Boolean         @default(false)
+  lastVisitedAt  DateTime?
+  /// Soft delete
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  deletedAt      DateTime?
+  isDeleted      Boolean         @default(false)
+  emails         VisitorEmail[]
+  mobiles        VisitorMobile[]
+  profileImage   Media?          @relation(fields: [profileImageId], references: [id])
+  visits         Visit[]
+
+  @@index([visitorCode])
+  @@index([firstName])
+  @@index([lastName])
+  @@map("visitors")
+}
+
+model Visit {
+  id         String      @id @default(uuid())
+  visitorId  String
+  purpose    String
+  status     VisitStatus @default(CHECKED_IN)
+  checkInAt  DateTime    @default(now())
+  checkOutAt DateTime?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  visitor    Visitor     @relation(fields: [visitorId], references: [id])
+
+  @@index([visitorId])
+  @@index([status])
+  @@index([checkInAt])
+  @@map("visits")
+}
+
+model VisitorCounter {
+  year         Int      @id
+  lastSequence Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("visitor_counters")
+}
+
+model Media {
+  id        String    @id @default(uuid())
+  fileName  String
+  filePath  String
+  mimeType  String
+  fileSize  BigInt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  visitors  Visitor[]
+
+  @@map("media")
+}
+
+model VisitorEmail {
+  id        String   @id @default(uuid())
+  visitorId String
+  email     String
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+  visitor   Visitor  @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+
+  @@index([visitorId])
+  @@index([email])
+  @@map("visitor_emails")
+}
+
+model VisitorMobile {
+  id        String   @id @default(uuid())
+  visitorId String
+  mobile    String
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+  visitor   Visitor  @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+
+  @@index([visitorId])
+  @@index([mobile])
+  @@map("visitor_mobiles")
 }
 
 enum IdentityType {
@@ -21,150 +110,4 @@ enum IdentityType {
 enum VisitStatus {
   CHECKED_IN
   CHECKED_OUT
-}
-
-// =====================================================
-// Visitor
-// =====================================================
-
-model Visitor {
-  id String @id @default(uuid())
-
-  visitorCode String @unique
-
-  firstName String
-  lastName  String?
-
-  identityType   IdentityType
-  identityNumber String @unique
-
-  profileImageId String?
-  profileImage   Media?  @relation(fields: [profileImageId], references: [id], onDelete: SetNull)
-
-  faceRegistered Boolean @default(false)
-
-  lastVisitedAt DateTime?
-
-  /// Soft delete
-  isActive Boolean @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  mobiles VisitorMobile[]
-  emails  VisitorEmail[]
-  visits  Visit[]
-
-  @@index([visitorCode])
-  @@index([firstName])
-  @@index([lastName])
-  @@map("visitors")
-}
-
-// =====================================================
-// Visit
-// =====================================================
-
-model Visit {
-  id String @id @default(uuid())
-
-  visitorId String
-
-  purpose String
-
-  status VisitStatus @default(CHECKED_IN)
-
-  checkInAt  DateTime  @default(now())
-  checkOutAt DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  visitor Visitor @relation(fields: [visitorId], references: [id], onDelete: Restrict)
-
-  @@index([visitorId])
-  @@index([status])
-  @@index([checkInAt])
-  @@map("visits")
-}
-
-// =====================================================
-// Visitor Counter
-// =====================================================
-
-model VisitorCounter {
-  year Int @id
-
-  lastSequence Int @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("visitor_counters")
-}
-
-// =====================================================
-// Media
-// =====================================================
-
-model Media {
-  id String @id @default(uuid())
-
-  fileName String
-  filePath String
-
-  mimeType String
-  fileSize BigInt
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  visitors Visitor[]
-
-  @@map("media")
-}
-
-// =====================================================
-// Visitor Email
-// =====================================================
-
-model VisitorEmail {
-  id String @id @default(uuid())
-
-  visitorId String
-
-  email String
-
-  isPrimary Boolean @default(false)
-
-  createdAt DateTime @default(now())
-
-  visitor Visitor @relation(fields: [visitorId], references: [id], onDelete: Cascade)
-
-  @@index([visitorId])
-  @@index([email])
-  @@map("visitor_emails")
-}
-
-// =====================================================
-// Visitor Mobile
-// =====================================================
-
-model VisitorMobile {
-  id String @id @default(uuid())
-
-  visitorId String
-
-  mobile String
-
-  isPrimary Boolean @default(false)
-
-  createdAt DateTime @default(now())
-
-  visitor Visitor @relation(fields: [visitorId], references: [id], onDelete: Cascade)
-
-  @@index([visitorId])
-  @@index([mobile])
-  @@map("visitor_mobiles")
 }

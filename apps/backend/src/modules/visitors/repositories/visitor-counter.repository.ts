@@ -1,6 +1,6 @@
 import { Prisma, PrismaClient, VisitorCounter } from "../../../generated/prisma/client";
 
-export class visitorCounterRepository {
+export class VisitorCounterRepository {
     constructor(
         private readonly prisma: PrismaClient
     ){}

@@ -22,4 +22,16 @@ export class VisitorEmailRepository {
             orderBy: {isPrimary: "desc"}
         })
     }
+
+    public async deleteByVisitorId(
+        tx: Prisma.TransactionClient,
+        visitorId: string
+    ): Promise<void> {
+        await tx.visitorEmail.deleteMany({
+            where: {
+                visitorId,
+            },
+        });
+    }
+
 }

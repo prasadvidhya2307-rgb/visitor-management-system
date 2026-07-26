@@ -1,0 +1,1 @@
+export { default as visitorRoutes } from './visitor.routes'

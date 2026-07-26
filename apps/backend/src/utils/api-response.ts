@@ -15,6 +15,14 @@ export class ApiResponse {
         })
     }
 
+    static created<T>(
+        res: Response,
+        message: string,
+        data?: T,
+    ) {
+        return this.success(res, message, data, 201)
+    }
+
     static error(
         res: Response,
         message: string,
@@ -27,11 +35,4 @@ export class ApiResponse {
             errors: errors ?? null,
         });
     }
-
-
-
-
-
-
-
 }

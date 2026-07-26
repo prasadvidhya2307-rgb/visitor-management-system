@@ -98,7 +98,7 @@ function getPhotoFromDataUrl(dataUrl) {
   return dataUrl;
 }
 
-export default function FaceRecognition({ mode = 'capture', storedFace = null, onCapture, onMatch, onFail, label }) {
+export default function FaceRecognition({ mode = 'capture', storedFace = null, storedFaces = [], onCapture, onMatch, onFail, onIdentified, onNewFace, label }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
@@ -211,6 +211,24 @@ export default function FaceRecognition({ mode = 'capture', storedFace = null, o
           onFail && onFail(result);
         }
       }, 1000);
+    } else if (mode === 'identify') {
+      setState('comparing');
+      setTimeout(() => {
+        let bestResult = { score: 0, match: false, visitor: null };
+        for (const sf of storedFaces) {
+          const result = compareFaces(sf.faceData, faceData);
+          if (result.match && result.score > bestResult.score) {
+            bestResult = { ...result, visitor: sf.visitor, photo: sf.photo };
+          }
+        }
+        setMatchResult(bestResult);
+        setState('verified');
+        if (bestResult.match) {
+          onIdentified && onIdentified(bestResult.visitor, bestResult.photo);
+        } else {
+          onNewFace && onNewFace(faceData, image);
+        }
+      }, 1000);
     }
   };
 
@@ -230,7 +248,7 @@ export default function FaceRecognition({ mode = 'capture', storedFace = null, o
             <div className="webcam-box">
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 16, color: '#fff' }}>
                 <Camera size={56} style={{ opacity: 0.3 }} />
-                <p style={{ fontSize: 14, opacity: 0.7 }}>{label || (mode === 'capture' ? 'Click to start camera for face capture' : 'Click to start camera for face verification')}</p>
+                <p style={{ fontSize: 14, opacity: 0.7 }}>{label || (mode === 'capture' ? 'Click to start camera for face capture' : mode === 'identify' ? 'Click to scan your face for identification' : 'Click to start camera for face verification')}</p>
                 <button className="btn-p" onClick={startCamera}><Camera size={16} /> Start Camera</button>
               </div>
             </div>
@@ -275,9 +293,9 @@ export default function FaceRecognition({ mode = 'capture', storedFace = null, o
             </div>
             {state === 'streaming' && (
               <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 12 }}>
-                <button className="btn-p" onClick={startCountdownAndCapture} disabled={!faceDetected}>
-                  <Camera size={16} /> {mode === 'capture' ? 'Capture Face' : 'Verify Face'}
-                </button>
+                  <button className="btn-p" onClick={startCountdownAndCapture} disabled={!faceDetected}>
+                    <Camera size={16} /> {mode === 'capture' ? 'Capture Face' : mode === 'identify' ? 'Scan Face' : 'Verify Face'}
+                  </button>
                 <button className="btn-o" onClick={() => { stopCamera(); reset(); }}>Cancel</button>
               </div>
             )}
@@ -292,7 +310,7 @@ export default function FaceRecognition({ mode = 'capture', storedFace = null, o
                 <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }}>
                   <Loader2 size={48} color="#fff" />
                 </motion.div>
-                <p style={{ color: '#fff', fontSize: 14 }}>Comparing faces...</p>
+                <p style={{ color: '#fff', fontSize: 14 }}>{mode === 'identify' ? 'Identifying visitor...' : 'Comparing faces...'}</p>
               </div>
             </div>
           </motion.div>
@@ -304,7 +322,7 @@ export default function FaceRecognition({ mode = 'capture', storedFace = null, o
               <img src={capturedImage} alt="captured" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: matchResult.match ? 'rgba(16,185,129,0.7)' : 'rgba(239,68,68,0.7)', gap: 12 }}>
                 {matchResult.match ? <UserCheck size={56} color="#fff" /> : <AlertCircle size={56} color="#fff" />}
-                <p style={{ color: '#fff', fontSize: 20, fontWeight: 700 }}>{matchResult.match ? 'Face Matched!' : 'Face Not Matched'}</p>
+                <p style={{ color: '#fff', fontSize: 20, fontWeight: 700 }}>{mode === 'identify' ? (matchResult.match ? `Welcome back, ${matchResult.visitor?.name}!` : 'Visitor Not Recognized') : (matchResult.match ? 'Face Matched!' : 'Face Not Matched')}</p>
                 <p style={{ color: '#fff', fontSize: 14, opacity: 0.9 }}>Confidence: {matchResult.score}%</p>
               </div>
             </div>

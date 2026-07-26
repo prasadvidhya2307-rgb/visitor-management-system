@@ -164,6 +164,23 @@ const store = {
   getVisitHistory: () => get(KEYS.visits).filter(v => v.status === 'checked_out').sort((a, b) => new Date(b.checkOutTime) - new Date(a.checkOutTime)),
   getVisitorVisits: (visitorId) => get(KEYS.visits).filter(v => v.visitorId === visitorId),
 
+  getStoredFaces: () => {
+    const visits = get(KEYS.visits);
+    const visitors = get(KEYS.visitors);
+    const faces = [];
+    const seen = new Set();
+    visits.forEach(v => {
+      if (v.faceData && !seen.has(v.visitorId)) {
+        seen.add(v.visitorId);
+        const visitor = visitors.find(vis => vis.id === v.visitorId);
+        if (visitor) {
+          faces.push({ visitorId: v.visitorId, visitor, faceData: v.faceData, photo: v.photo });
+        }
+      }
+    });
+    return faces;
+  },
+
   // Expected Visitors
   getExpected: () => get(KEYS.expected),
   addExpected: (exp) => {

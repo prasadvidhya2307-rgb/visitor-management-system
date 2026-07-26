@@ -108,7 +108,7 @@ export default function PreRegisteredGuests() {
                 <div className="modal-b">
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                     <div className="form-g"><label className="form-l">Name *</label><input className="form-i" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
-                    <div className="form-g"><label className="form-l">Company</label><input className="form-i" value={form.company} onChange={e => setForm({ ...form, company: e.target.value })} /></div>
+                    <div className="form-g"><label className="form-l">Company *</label><input className="form-i" required value={form.company} onChange={e => setForm({ ...form, company: e.target.value })} /></div>
                     <div className="form-g"><label className="form-l">Email</label><input className="form-i" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></div>
                     <div className="form-g"><label className="form-l">Phone</label><input className="form-i" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
                     <div className="form-g"><label className="form-l">Host Employee *</label><select className="form-s" required value={form.employeeId} onChange={e => setForm({ ...form, employeeId: e.target.value })}><option value="">Select...</option>{employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}</select></div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ClipboardCheck, Plus, Trash2, Edit2, X } from 'lucide-react';
+import { ClipboardCheck, Plus, Trash2, Edit2, X, Search } from 'lucide-react';
 import store from '../store';
 
 const FREQUENCIES = ['daily', 'weekly', 'monthly'];
@@ -8,6 +8,7 @@ const FREQUENCIES = ['daily', 'weekly', 'monthly'];
 export default function PreRegisteredGuests() {
   const [guests, setGuests] = useState([]);
   const [employees, setEmployees] = useState([]);
+  const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editId, setEditId] = useState(null);
   const [form, setForm] = useState({ name: '', company: '', email: '', phone: '', employeeId: '', purpose: '', validFrom: new Date().toISOString().slice(0, 10), validTo: '', recurring: false, frequency: 'weekly' });
@@ -18,6 +19,14 @@ export default function PreRegisteredGuests() {
     setGuests(store.getPreRegistered());
     setEmployees(store.getEmployees());
   }
+
+  const filtered = guests.filter(g =>
+    g.name?.toLowerCase().includes(search.toLowerCase()) ||
+    g.company?.toLowerCase().includes(search.toLowerCase()) ||
+    g.email?.toLowerCase().includes(search.toLowerCase()) ||
+    g.phone?.includes(search) ||
+    g.purpose?.toLowerCase().includes(search.toLowerCase())
+  );
 
   function openAdd() {
     setEditId(null);
@@ -45,8 +54,12 @@ export default function PreRegisteredGuests() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <p style={{ fontSize: 13, color: 'var(--text2)' }}>{guests.length} pre-registered guest{guests.length !== 1 ? 's' : ''}</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ position: 'relative', flex: '1 1 250px', maxWidth: 400 }}>
+          <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text2)' }} />
+          <input className="form-i" style={{ paddingLeft: 36 }} placeholder="Search by name, company, email, phone, purpose..." value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
+        <p style={{ fontSize: 13, color: 'var(--text2)' }}>{filtered.length} of {guests.length} guest{guests.length !== 1 ? 's' : ''}</p>
         <button className="btn-p" onClick={openAdd}><Plus size={16} /> Add Guest</button>
       </div>
 
@@ -67,7 +80,10 @@ export default function PreRegisteredGuests() {
                 </tr>
               </thead>
               <tbody>
-                {guests.map(g => {
+                {filtered.length === 0 && guests.length > 0 && (
+                  <tr><td colSpan={8} style={{ textAlign: 'center', padding: 32, color: 'var(--text2)' }}>No guests match "{search}"</td></tr>
+                )}
+                {filtered.map(g => {
                   const emp = employees.find(e => e.id === g.employeeId);
                   return (
                     <tr key={g.id}>

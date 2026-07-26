@@ -4,7 +4,7 @@ import { AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, UserPlus, UserMinus, History, Users,
   CalendarClock, ClipboardCheck, BarChart3, Settings, UserCog,
-  Sun, Moon, Menu, X, ShieldCheck
+  Sun, Moon, Menu, X, ShieldCheck, UserX
 } from 'lucide-react';
 import './App.css';
 import store from './store';
@@ -20,6 +20,7 @@ import Reports from './components/Reports';
 import SettingsPage from './components/Settings';
 import VisitorProfile from './components/VisitorProfile';
 import EmployeeManagement from './components/EmployeeManagement';
+import DeletedVisitors from './components/DeletedVisitors';
 
 const navItems = [
   { section: 'Overview' },
@@ -32,6 +33,7 @@ const navItems = [
   { path: '/active', icon: Users, label: 'Active Visitors' },
   { path: '/expected', icon: CalendarClock, label: 'Expected Visitors' },
   { path: '/pre-registered', icon: ClipboardCheck, label: 'Pre-Registered' },
+  { path: '/deleted', icon: UserX, label: 'Deleted Visitors' },
   { section: 'Insights' },
   { path: '/reports', icon: BarChart3, label: 'Reports' },
   { path: '/employees', icon: UserCog, label: 'Employees' },
@@ -47,6 +49,7 @@ const pageTitles = {
   '/active': 'Active Visitors',
   '/expected': 'Expected Visitors',
   '/pre-registered': 'Pre-Registered Guests',
+  '/deleted': 'Deleted Visitors',
   '/reports': 'Reports & Analytics',
   '/employees': 'Employee Management',
   '/settings': 'Settings',
@@ -145,6 +148,7 @@ function AppLayout() {
               <Route path="/active" element={<ActiveVisitors />} />
               <Route path="/expected" element={<ExpectedVisitors />} />
               <Route path="/pre-registered" element={<PreRegisteredGuests />} />
+              <Route path="/deleted" element={<DeletedVisitors />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/employees" element={<EmployeeManagement />} />
               <Route path="/settings" element={<SettingsPage />} />

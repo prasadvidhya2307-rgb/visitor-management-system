@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Mail, Phone, Building, CreditCard } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, Building, CreditCard, Trash2 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import store from '../store';
 
@@ -15,6 +15,13 @@ export default function VisitorProfile() {
     setVisits(store.getVisitorVisits(id));
   }, [id]);
 
+  function handleDelete() {
+    if (window.confirm(`Delete visitor "${visitor.name}"? They will be moved to Deleted Visitors and can be restored later.`)) {
+      store.softDeleteVisitor(visitor.id);
+      navigate(-1);
+    }
+  }
+
   if (!visitor) return <div className="card"><div className="card-b empty"><h3>Visitor Not Found</h3></div></div>;
 
   const totalVisits = visits.length;
@@ -22,7 +29,10 @@ export default function VisitorProfile() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-      <button className="btn-o" onClick={() => navigate(-1)} style={{ marginBottom: 16 }}><ArrowLeft size={16} /> Back</button>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+        <button className="btn-o" onClick={() => navigate(-1)}><ArrowLeft size={16} /> Back</button>
+        <button className="btn-o" onClick={handleDelete} style={{ marginLeft: 'auto', color: 'var(--danger)', borderColor: 'var(--danger)' }}><Trash2 size={16} /> Delete Visitor</button>
+      </div>
 
       <div className="card" style={{ marginBottom: 16 }}>
         <div className="card-b">

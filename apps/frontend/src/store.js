@@ -6,6 +6,7 @@ const KEYS = {
   preRegistered: 'vms_pre_registered',
   activity: 'vms_activity',
   settings: 'vms_settings',
+  deletedVisitors: 'vms_deleted_visitors',
 };
 
 function get(key) {
@@ -113,13 +114,38 @@ const store = {
   },
 
   // Visitors
-  getVisitors: () => get(KEYS.visitors),
+  getVisitors: () => get(KEYS.visitors).filter(v => !v.deleted),
+  getAllVisitors: () => get(KEYS.visitors),
   getVisitorById: (id) => get(KEYS.visitors).find(v => v.id === id),
   addVisitor: (vis) => {
     const all = get(KEYS.visitors);
     const nv = { ...vis, id: genId(), createdAt: new Date().toISOString() };
     all.push(nv); set(KEYS.visitors, all); return nv;
   },
+  softDeleteVisitor: (id) => {
+    const all = get(KEYS.visitors);
+    const idx = all.findIndex(v => v.id === id);
+    if (idx >= 0) {
+      all[idx] = { ...all[idx], deleted: true, deletedAt: new Date().toISOString() };
+      set(KEYS.visitors, all);
+      addActivity('delete', `${all[idx].name} was removed from visitors`, all[idx].name);
+      return all[idx];
+    }
+    return null;
+  },
+  restoreVisitor: (id) => {
+    const all = get(KEYS.visitors);
+    const idx = all.findIndex(v => v.id === id);
+    if (idx >= 0) {
+      const { deleted, deletedAt, ...rest } = all[idx];
+      all[idx] = rest;
+      set(KEYS.visitors, all);
+      addActivity('restore', `${all[idx].name} was restored to visitors`, all[idx].name);
+      return all[idx];
+    }
+    return null;
+  },
+  getDeletedVisitors: () => get(KEYS.visitors).filter(v => v.deleted),
 
   // Visits (Check-in/Check-out)
   getVisits: () => get(KEYS.visits),
@@ -172,7 +198,7 @@ const store = {
     visits.forEach(v => {
       if (v.faceData && !seen.has(v.visitorId)) {
         seen.add(v.visitorId);
-        const visitor = visitors.find(vis => vis.id === v.visitorId);
+        const visitor = visitors.find(vis => vis.id === v.visitorId && !vis.deleted);
         if (visitor) {
           faces.push({ visitorId: v.visitorId, visitor, faceData: v.faceData, photo: v.photo });
         }

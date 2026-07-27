@@ -80,7 +80,6 @@ class FaceService:
             return {
                 "success": True,
                 "matched": False,
-                "message": "Unknown person.",
                 "score": round(match.score, 4),
             }
 

@@ -7,7 +7,6 @@ import FaceRecognition from './FaceRecognition';
 
 const ID_TYPES = ['aadhaar', 'pan', 'driving_license', 'passport', 'voter_id'];
 const PURPOSES = ['Technical Discussion', 'Interview', 'Business Meeting', 'Contract Negotiation', 'Design Review', 'Training', 'Audit', 'Delivery', 'Maintenance', 'Other'];
-const FLOORS = ['Ground Floor', '1st Floor', '2nd Floor', '3rd Floor', '4th Floor', '5th Floor', '6th Floor', '7th Floor'];
 
 export default function CheckIn() {
   const navigate = useNavigate();
@@ -24,8 +23,10 @@ export default function CheckIn() {
   const [newVisitor, setNewVisitor] = useState({ firstName: '', lastName: '', email: '', phone: '', company: '', identityNumber: '' });
   const [identityType, setIdentityType] = useState('aadhaar');
   const [selectedPreReg, setSelectedPreReg] = useState('');
+  const [preRegIdentityType, setPreRegIdentityType] = useState('aadhaar');
+  const [preRegIdentityNumber, setPreRegIdentityNumber] = useState('');
 
-  const [form, setForm] = useState({ employeeId: '', purpose: '', floor: '3rd Floor', notes: '', badgePrinted: false });
+  const [form, setForm] = useState({ employeeId: '', purpose: '', notes: '' });
   const [faceResult, setFaceResult] = useState(null);
   const [result, setResult] = useState(null);
 
@@ -72,8 +73,8 @@ export default function CheckIn() {
           email: preReg.email,
           phone: preReg.phone,
           company: preReg.company,
-          identityType: 'aadhaar',
-          identityNumber: '',
+          identityType: preRegIdentityType,
+          identityNumber: preRegIdentityNumber,
           photo: faceResult?.image || null,
         });
         visitorId = vis.id;
@@ -86,9 +87,8 @@ export default function CheckIn() {
       visitorId,
       employeeId: form.employeeId,
       purpose: form.purpose,
-      floor: form.floor,
       notes: form.notes,
-      badgePrinted: form.badgePrinted,
+      badgePrinted: true,
       faceData,
       photo,
     });
@@ -112,12 +112,16 @@ export default function CheckIn() {
     setNewVisitor({ firstName: '', lastName: '', email: '', phone: '', company: '', identityNumber: '' });
     setIdentityType('aadhaar');
     setSelectedPreReg('');
-    setForm({ employeeId: '', purpose: '', floor: '3rd Floor', notes: '', badgePrinted: false });
+    setPreRegIdentityType('aadhaar');
+    setPreRegIdentityNumber('');
+    setForm({ employeeId: '', purpose: '', notes: '' });
     setFaceResult(null);
   }
 
   const stepLabels = ['Scan', 'Type', 'Details', 'Face', 'Confirm'];
   const currentStepNum = step === 1 ? 1 : step <= 2 ? 2 : step <= 5 ? 3 : step <= 6 ? 4 : 5;
+
+  const checkInDate = result ? new Date(result.checkInTime) : new Date();
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
@@ -146,8 +150,8 @@ export default function CheckIn() {
                   <div className="detail-item"><div className="lbl">Visitor</div><div className="val">{visitorName}</div></div>
                   <div className="detail-item"><div className="lbl">Host</div><div className="val">{empName}</div></div>
                   <div className="detail-item"><div className="lbl">Purpose</div><div className="val">{result.purpose}</div></div>
-                  <div className="detail-item"><div className="lbl">Time</div><div className="val">{new Date(result.checkInTime).toLocaleTimeString()}</div></div>
-                  <div className="detail-item"><div className="lbl">Floor</div><div className="val">{result.floor}</div></div>
+                  <div className="detail-item"><div className="lbl">Date</div><div className="val">{checkInDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div></div>
+                  <div className="detail-item"><div className="lbl">Time</div><div className="val">{checkInDate.toLocaleTimeString()}</div></div>
                   <div className="detail-item"><div className="lbl">Face ID</div><div className="val" style={{ color: 'var(--success)' }}>Captured</div></div>
                 </div>
                 <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 20 }}>
@@ -171,8 +175,8 @@ export default function CheckIn() {
                   <div><span style={{ color: 'var(--text2)' }}>Type: </span><strong>{visitorType === 'returning' ? 'Returning' : visitorType === 'pre_registered' ? 'Pre-Registered' : 'New'}</strong></div>
                   <div><span style={{ color: 'var(--text2)' }}>Host: </span><strong>{empName}</strong></div>
                   <div><span style={{ color: 'var(--text2)' }}>Purpose: </span><strong>{form.purpose}</strong></div>
-                  <div><span style={{ color: 'var(--text2)' }}>Floor: </span><strong>{form.floor}</strong></div>
-                  <div><span style={{ color: 'var(--text2)' }}>Badge: </span><strong>{form.badgePrinted ? 'Yes' : 'No'}</strong></div>
+                  <div><span style={{ color: 'var(--text2)' }}>Date: </span><strong>{new Date().toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</strong></div>
+                  <div><span style={{ color: 'var(--text2)' }}>Time: </span><strong>{new Date().toLocaleTimeString()}</strong></div>
                   {form.notes && <div style={{ gridColumn: 'span 2' }}><span style={{ color: 'var(--text2)' }}>Notes: </span><strong>{form.notes}</strong></div>}
                 </div>
               </div>
@@ -243,23 +247,30 @@ export default function CheckIn() {
                     if (!g) return null;
                     const emp = employees.find(e => e.id === g.employeeId);
                     return (
-                      <div style={{ background: 'var(--bg)', borderRadius: 'var(--r-sm)', padding: 16, border: '1px solid var(--border)', marginTop: 12, fontSize: 12 }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                          <div><span style={{ color: 'var(--text2)' }}>Name: </span><strong>{g.name}</strong></div>
-                          <div><span style={{ color: 'var(--text2)' }}>Company: </span><strong>{g.company}</strong></div>
-                          <div><span style={{ color: 'var(--text2)' }}>Email: </span><strong>{g.email}</strong></div>
-                          <div><span style={{ color: 'var(--text2)' }}>Phone: </span><strong>{g.phone}</strong></div>
-                          <div><span style={{ color: 'var(--text2)' }}>Host: </span><strong>{emp?.name || 'N/A'}</strong></div>
-                          <div><span style={{ color: 'var(--text2)' }}>Purpose: </span><strong>{g.purpose}</strong></div>
+                      <>
+                        <div style={{ background: 'var(--bg)', borderRadius: 'var(--r-sm)', padding: 16, border: '1px solid var(--border)', marginTop: 12, fontSize: 12 }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                            <div><span style={{ color: 'var(--text2)' }}>Name: </span><strong>{g.name}</strong></div>
+                            <div><span style={{ color: 'var(--text2)' }}>Company: </span><strong>{g.company}</strong></div>
+                            <div><span style={{ color: 'var(--text2)' }}>Email: </span><strong>{g.email}</strong></div>
+                            <div><span style={{ color: 'var(--text2)' }}>Phone: </span><strong>{g.phone}</strong></div>
+                            <div><span style={{ color: 'var(--text2)' }}>Host: </span><strong>{emp?.name || 'N/A'}</strong></div>
+                            <div><span style={{ color: 'var(--text2)' }}>Purpose: </span><strong>{g.purpose}</strong></div>
+                          </div>
                         </div>
-                      </div>
+                        <h4 style={{ fontSize: 12, fontWeight: 600, color: 'var(--text2)', marginTop: 16, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>Identity Verification</h4>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                          <div className="form-g"><label className="form-l">Identity Type *</label><select className="form-s" value={preRegIdentityType} onChange={e => setPreRegIdentityType(e.target.value)}>{ID_TYPES.map(t => <option key={t} value={t}>{t.replace('_', ' ').toUpperCase()}</option>)}</select></div>
+                          <div className="form-g"><label className="form-l">ID Number *</label><input className="form-i" value={preRegIdentityNumber} onChange={e => setPreRegIdentityNumber(e.target.value)} placeholder="Enter ID number" /></div>
+                        </div>
+                      </>
                     );
                   })()}
                 </>
               )}
               <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', marginTop: 16 }}>
                 <button className="btn-o" onClick={() => setStep(2)}><ArrowLeft size={14} /> Back</button>
-                <button className="btn-p" disabled={!selectedPreReg} onClick={() => {
+                <button className="btn-p" disabled={!selectedPreReg || !preRegIdentityNumber.trim()} onClick={() => {
                   const g = preRegistered.find(p => p.id === selectedPreReg);
                   if (g) setForm({ ...form, employeeId: g.employeeId, purpose: g.purpose });
                   setStep(5);
@@ -291,8 +302,6 @@ export default function CheckIn() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div className="form-g"><label className="form-l">Host Employee *</label><select className="form-s" value={form.employeeId} onChange={e => setForm({ ...form, employeeId: e.target.value })}><option value="">Select host...</option>{employees.map(e => <option key={e.id} value={e.id}>{e.name} — {e.department}</option>)}</select></div>
                 <div className="form-g"><label className="form-l">Purpose *</label><select className="form-s" value={form.purpose} onChange={e => setForm({ ...form, purpose: e.target.value })}><option value="">Select purpose...</option>{PURPOSES.map(p => <option key={p} value={p}>{p}</option>)}</select></div>
-                <div className="form-g"><label className="form-l">Floor</label><select className="form-s" value={form.floor} onChange={e => setForm({ ...form, floor: e.target.value })}>{FLOORS.map(f => <option key={f} value={f}>{f}</option>)}</select></div>
-                <div className="form-g"><label className="form-l">Print Badge</label><select className="form-s" value={form.badgePrinted ? 'yes' : 'no'} onChange={e => setForm({ ...form, badgePrinted: e.target.value === 'yes' })}><option value="no">No</option><option value="yes">Yes</option></select></div>
               </div>
               <div className="form-g"><label className="form-l">Notes {form.purpose === 'Other' && <span style={{ color: 'var(--danger)' }}>*</span>}</label><textarea className="form-i" rows={3} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder={form.purpose === 'Other' ? 'Please specify the purpose...' : 'Additional notes...'} /></div>
 
@@ -354,8 +363,6 @@ export default function CheckIn() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div className="form-g"><label className="form-l">Host Employee *</label><select className="form-s" value={form.employeeId} onChange={e => setForm({ ...form, employeeId: e.target.value })}><option value="">Select host...</option>{employees.map(e => <option key={e.id} value={e.id}>{e.name} — {e.department}</option>)}</select></div>
                 <div className="form-g"><label className="form-l">Purpose *</label><select className="form-s" value={form.purpose} onChange={e => setForm({ ...form, purpose: e.target.value })}><option value="">Select purpose...</option>{PURPOSES.map(p => <option key={p} value={p}>{p}</option>)}</select></div>
-                <div className="form-g"><label className="form-l">Floor</label><select className="form-s" value={form.floor} onChange={e => setForm({ ...form, floor: e.target.value })}>{FLOORS.map(f => <option key={f} value={f}>{f}</option>)}</select></div>
-                <div className="form-g"><label className="form-l">Print Badge</label><select className="form-s" value={form.badgePrinted ? 'yes' : 'no'} onChange={e => setForm({ ...form, badgePrinted: e.target.value === 'yes' })}><option value="no">No</option><option value="yes">Yes</option></select></div>
               </div>
               <div className="form-g"><label className="form-l">Notes {form.purpose === 'Other' && <span style={{ color: 'var(--danger)' }}>*</span>}</label><textarea className="form-i" rows={3} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder={form.purpose === 'Other' ? 'Please specify the purpose...' : 'Additional notes...'} /></div>
 

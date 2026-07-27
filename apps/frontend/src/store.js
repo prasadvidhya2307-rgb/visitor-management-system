@@ -46,12 +46,12 @@ const defaultVisitors = [
 ];
 
 const defaultVisits = [
-  { id: 'vs1', visitorId: 'v1', employeeId: 'e1', purpose: 'Technical Discussion', status: 'checked_out', token: 'TK-A1B2', checkInTime: daysAgo(2, 9), checkOutTime: daysAgo(2, 11), badgePrinted: true, floor: '3rd Floor', notes: 'API integration review' },
-  { id: 'vs2', visitorId: 'v2', employeeId: 'e4', purpose: 'Design Review Meeting', status: 'checked_in', token: 'TK-C3D4', checkInTime: hoursAgo(2), checkOutTime: null, badgePrinted: true, floor: '5th Floor', notes: 'Brand refresh discussion' },
-  { id: 'vs3', visitorId: 'v3', employeeId: 'e5', purpose: 'Contract Negotiation', status: 'checked_in', token: 'TK-E5F6', checkInTime: hoursAgo(1), checkOutTime: null, badgePrinted: false, floor: '2nd Floor', notes: '' },
-  { id: 'vs4', visitorId: 'v4', employeeId: 'e2', purpose: 'Audit Follow-up', status: 'checked_out', token: 'TK-G7H8', checkInTime: daysAgo(1, 14), checkOutTime: daysAgo(1, 16), badgePrinted: true, floor: '4th Floor', notes: 'Q4 audit' },
-  { id: 'vs5', visitorId: 'v1', employeeId: 'e3', purpose: 'Invoice Review', status: 'checked_out', token: 'TK-I9J0', checkInTime: daysAgo(5, 10), checkOutTime: daysAgo(5, 12), badgePrinted: false, floor: '1st Floor', notes: '' },
-  { id: 'vs6', visitorId: 'v5', employeeId: 'e1', purpose: 'Demo Presentation', status: 'checked_in', token: 'TK-K1L2', checkInTime: hoursAgo(0.5), checkOutTime: null, badgePrinted: true, floor: '3rd Floor', notes: 'New tool demo' },
+  { id: 'vs1', visitorId: 'v1', employeeId: 'e1', purpose: 'Technical Discussion', status: 'checked_out', token: 'TK-A1B2', checkInTime: daysAgo(2, 9), checkOutTime: daysAgo(2, 11), badgePrinted: true, notes: 'API integration review' },
+  { id: 'vs2', visitorId: 'v2', employeeId: 'e4', purpose: 'Design Review Meeting', status: 'checked_in', token: 'TK-C3D4', checkInTime: hoursAgo(2), checkOutTime: null, badgePrinted: true, notes: 'Brand refresh discussion' },
+  { id: 'vs3', visitorId: 'v3', employeeId: 'e5', purpose: 'Contract Negotiation', status: 'checked_in', token: 'TK-E5F6', checkInTime: hoursAgo(1), checkOutTime: null, badgePrinted: true, notes: '' },
+  { id: 'vs4', visitorId: 'v4', employeeId: 'e2', purpose: 'Audit Follow-up', status: 'checked_out', token: 'TK-G7H8', checkInTime: daysAgo(1, 14), checkOutTime: daysAgo(1, 16), badgePrinted: true, notes: 'Q4 audit' },
+  { id: 'vs5', visitorId: 'v1', employeeId: 'e3', purpose: 'Invoice Review', status: 'checked_out', token: 'TK-I9J0', checkInTime: daysAgo(5, 10), checkOutTime: daysAgo(5, 12), badgePrinted: true, notes: '' },
+  { id: 'vs6', visitorId: 'v5', employeeId: 'e1', purpose: 'Demo Presentation', status: 'checked_in', token: 'TK-K1L2', checkInTime: hoursAgo(0.5), checkOutTime: null, badgePrinted: true, notes: 'New tool demo' },
 ];
 
 const defaultExpected = [
@@ -151,10 +151,10 @@ const store = {
   getVisits: () => get(KEYS.visits),
   getVisitById: (id) => get(KEYS.visits).find(v => v.id === id),
 
-  checkIn: ({ visitorId, employeeId, purpose, floor, notes, badgePrinted, faceData, photo }) => {
+  checkIn: ({ visitorId, employeeId, purpose, notes, badgePrinted, faceData, photo }) => {
     const visits = get(KEYS.visits);
     const nv = {
-      id: genId(), visitorId, employeeId, purpose, floor, notes,
+      id: genId(), visitorId, employeeId, purpose, notes,
       badgePrinted: badgePrinted || false,
       token: genToken(),
       status: 'checked_in',

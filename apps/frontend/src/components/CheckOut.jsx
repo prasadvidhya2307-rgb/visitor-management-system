@@ -120,7 +120,7 @@ export default function CheckOut() {
                   <div style={{ fontSize: 12, display: 'grid', gap: 6 }}>
                     <div><span style={{ color: 'var(--text2)' }}>Host: </span><strong>{empName}</strong></div>
                     <div><span style={{ color: 'var(--text2)' }}>Purpose: </span><strong>{selectedVisit.purpose}</strong></div>
-                    <div><span style={{ color: 'var(--text2)' }}>Floor: </span><strong>{selectedVisit.floor}</strong></div>
+
                     <div><span style={{ color: 'var(--text2)' }}>Duration: </span><strong>{Math.round((new Date() - new Date(selectedVisit.checkInTime)) / 3600000 * 10) / 10}h</strong></div>
                   </div>
                 </div>
@@ -223,7 +223,7 @@ export default function CheckOut() {
                         <div><span className="label">Purpose: </span><span className="value">{v.purpose}</span></div>
                         <div><span className="label">Check-In: </span><span className="value">{new Date(v.checkInTime).toLocaleTimeString()}</span></div>
                         <div><span className="label">Duration: </span><span className="value">{dur}h</span></div>
-                        <div><span className="label">Floor: </span><span className="value">{v.floor}</span></div>
+
                         <div><span className="label">Face ID: </span><span className="value">{v.faceData ? '✓ Stored' : '— None'}</span></div>
                       </div>
                     </motion.div>

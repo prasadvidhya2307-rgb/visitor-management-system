@@ -62,7 +62,7 @@ export default function VisitorProfile() {
         <div className="card-b" style={{ padding: 0, overflowX: 'auto' }}>
           <table className="tbl">
             <thead>
-              <tr><th>Token</th><th>Purpose</th><th>Host</th><th>Floor</th><th>Check-In</th><th>Check-Out</th><th>Status</th></tr>
+              <tr><th>Token</th><th>Purpose</th><th>Host</th><th>Check-In</th><th>Check-Out</th><th>Status</th></tr>
             </thead>
             <tbody>
               {visits.map(v => {
@@ -72,14 +72,13 @@ export default function VisitorProfile() {
                     <td><span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{v.token}</span></td>
                     <td>{v.purpose}</td>
                     <td>{emp?.name || 'N/A'}</td>
-                    <td>{v.floor}</td>
                     <td style={{ fontSize: 12 }}>{new Date(v.checkInTime).toLocaleString()}</td>
                     <td style={{ fontSize: 12 }}>{v.checkOutTime ? new Date(v.checkOutTime).toLocaleString() : '—'}</td>
                     <td><span className={`badge ${v.status === 'checked_in' ? 'active' : 'checked_out'}`}>{v.status.replace('_', ' ')}</span></td>
                   </tr>
                 );
               })}
-              {visits.length === 0 && <tr><td colSpan={7} style={{ textAlign: 'center', padding: 32, color: 'var(--text2)' }}>No visit history</td></tr>}
+              {visits.length === 0 && <tr><td colSpan={6} style={{ textAlign: 'center', padding: 32, color: 'var(--text2)' }}>No visit history</td></tr>}
             </tbody>
           </table>
         </div>

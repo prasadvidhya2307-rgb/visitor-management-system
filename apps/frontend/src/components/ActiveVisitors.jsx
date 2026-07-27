@@ -1,14 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Users, ArrowRightLeft, Clock } from 'lucide-react';
+import { Users, ArrowRightLeft, Clock, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import store from '../store';
 
 export default function ActiveVisitors() {
   const navigate = useNavigate();
   const [visits, setVisits] = useState([]);
+  const [search, setSearch] = useState('');
 
   useEffect(() => { setVisits(store.getActiveVisits()); }, []);
+
+  const filtered = visits.filter(v => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    const vis = store.getVisitorById(v.visitorId);
+    return vis?.name?.toLowerCase().includes(q) || v.token.toLowerCase().includes(q) || vis?.company?.toLowerCase().includes(q) || v.purpose?.toLowerCase().includes(q);
+  });
 
   function handleCheckOut(id) {
     store.checkOut(id);
@@ -17,11 +25,17 @@ export default function ActiveVisitors() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <p style={{ fontSize: 13, color: 'var(--text2)' }}>{visits.length} visitor{visits.length !== 1 ? 's' : ''} currently in the building</p>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="card-b" style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          <div className="search-bar" style={{ flex: 1 }}>
+            <Search size={16} className="s-icon" />
+            <input placeholder="Search by name, token, company, or purpose..." value={search} onChange={e => setSearch(e.target.value)} />
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--text2)', whiteSpace: 'nowrap' }}>{filtered.length} active visitor{filtered.length !== 1 ? 's' : ''}</div>
+        </div>
       </div>
 
-      {visits.length === 0 ? (
+      {filtered.length === 0 ? (
         <div className="card"><div className="card-b empty">
           <Users size={48} style={{ opacity: 0.3 }} />
           <h3>No Active Visitors</h3>
@@ -30,7 +44,7 @@ export default function ActiveVisitors() {
         </div></div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
-          {visits.map((v, i) => {
+          {filtered.map((v, i) => {
             const vis = store.getVisitorById(v.visitorId);
             const emp = store.getEmployees().find(e => e.id === v.employeeId);
             const dur = Math.round((new Date() - new Date(v.checkInTime)) / 3600000 * 10) / 10;
@@ -51,7 +65,7 @@ export default function ActiveVisitors() {
                   <div><span className="label">Host: </span><span className="value">{emp?.name || 'N/A'}</span></div>
                   <div><span className="label">Department: </span><span className="value">{emp?.department || 'N/A'}</span></div>
                   <div><span className="label">Purpose: </span><span className="value">{v.purpose}</span></div>
-                  <div><span className="label">Floor: </span><span className="value">{v.floor}</span></div>
+
                   <div><span className="label">Check-In: </span><span className="value">{new Date(v.checkInTime).toLocaleTimeString()}</span></div>
                   <div><span className="label">Duration: </span><span className="value" style={isOvertime ? { color: 'var(--danger)' } : {}}>{dur}h</span></div>
                 </div>

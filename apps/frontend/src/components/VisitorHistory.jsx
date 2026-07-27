@@ -62,12 +62,12 @@ export default function VisitorHistory() {
   const paged = filtered.slice((page - 1) * perPage, page * perPage);
 
   function exportCSV() {
-    const rows = [['Token', 'Visitor', 'Company', 'Host', 'Purpose', 'Floor', 'Check-In', 'Check-Out', 'Duration', 'Badge']];
+    const rows = [['Token', 'Visitor', 'Company', 'Host', 'Purpose', 'Check-In', 'Check-Out', 'Duration', 'Badge']];
     filtered.forEach(v => {
       const vis = store.getVisitorById(v.visitorId);
       const emp = store.getEmployees().find(e => e.id === v.employeeId);
       const dur = v.checkOutTime ? Math.round((new Date(v.checkOutTime) - new Date(v.checkInTime)) / 3600000 * 10) / 10 + 'h' : 'N/A';
-      rows.push([v.token, vis?.name || '', vis?.company || '', emp?.name || '', v.purpose, v.floor, new Date(v.checkInTime).toLocaleString(), v.checkOutTime ? new Date(v.checkOutTime).toLocaleString() : '', dur, v.badgePrinted ? 'Yes' : 'No']);
+      rows.push([v.token, vis?.name || '', vis?.company || '', emp?.name || '', v.purpose, new Date(v.checkInTime).toLocaleString(), v.checkOutTime ? new Date(v.checkOutTime).toLocaleString() : '', dur, v.badgePrinted ? 'Yes' : 'No']);
     });
     const csv = rows.map(r => r.join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -110,7 +110,6 @@ export default function VisitorHistory() {
                   { key: 'visitorName', label: 'Visitor' },
                   { key: 'purpose', label: 'Purpose' },
                   { key: 'employeeName', label: 'Host' },
-                  { key: 'floor', label: 'Floor' },
                   { key: 'checkInTime', label: 'Check-In' },
                   { key: 'checkOutTime', label: 'Check-Out' },
                   { key: 'duration', label: 'Duration' },
@@ -138,7 +137,6 @@ export default function VisitorHistory() {
                     </td>
                     <td>{v.purpose}</td>
                     <td>{emp?.name || 'N/A'}</td>
-                    <td>{v.floor}</td>
                     <td style={{ fontSize: 12 }}>{new Date(v.checkInTime).toLocaleString()}</td>
                     <td style={{ fontSize: 12 }}>{v.checkOutTime ? new Date(v.checkOutTime).toLocaleString() : '—'}</td>
                     <td><span className="badge checked_out">{dur}h</span></td>
@@ -146,7 +144,7 @@ export default function VisitorHistory() {
                   </tr>
                 );
               })}
-              {paged.length === 0 && <tr><td colSpan={9} style={{ textAlign: 'center', padding: 32, color: 'var(--text2)' }}>No records found</td></tr>}
+              {paged.length === 0 && <tr><td colSpan={8} style={{ textAlign: 'center', padding: 32, color: 'var(--text2)' }}>No records found</td></tr>}
             </tbody>
           </table>
         </div>

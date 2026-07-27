@@ -229,13 +229,57 @@ textarea.form-i{resize:vertical}
   .topbar{padding:12px 16px}
   .step-lbl{display:none}
   .step-line{width:32px}
+  .detail-grid{grid-template-columns:1fr 1fr}
+  .tbl{font-size:12px}
+  .tbl thead th{padding:10px 12px;font-size:10px}
+  .tbl tbody td{padding:8px 12px}
+  .vis-card .vis-meta{grid-template-columns:1fr 1fr}
 }
-@media(max-width:576px){
-  .stat-val{font-size:20px}
-  .stat-card{padding:14px}
+@media(max-width:768px){
+  .main-content{padding:12px}
+  .topbar{padding:10px 12px}
+  .topbar-title h1{font-size:16px}
+  .topbar-date{font-size:11px}
+  .stat-val{font-size:22px}
+  .stat-card{padding:14px 16px}
+  .stat-icon{width:36px;height:36px;font-size:16px;margin-bottom:8px}
+  .card-h{padding:14px 16px}
+  .card-b{padding:16px}
+  .steps{margin-bottom:20px}
+  .step-num{width:28px;height:28px;font-size:12px}
+  .step-line{width:24px}
+  .btn-p,.btn-o,.btn-s,.btn-d{padding:8px 14px;font-size:12px}
   .webcam-box{max-width:100%}
   .detail-grid{grid-template-columns:1fr}
   .filter-bar{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}
+  .tbl{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .tbl thead{display:table-header-group}
+  .tbl tbody{display:table-row-group}
+  .tbl tr{display:table-row}
+  .tbl td,.tbl th{display:table-cell}
+  .vis-card .vis-meta{grid-template-columns:1fr}
+  .vis-card .vis-header{flex-wrap:wrap}
+  .modal-box{width:95%;max-width:95%}
+  .modal-b{padding:16px}
+  .form-g{margin-bottom:12px}
+  .pagination button{padding:4px 10px;font-size:11px}
+  .pagination{gap:4px}
+}
+@media(max-width:480px){
+  .main-content{padding:8px}
+  .topbar-title h1{font-size:14px}
+  .stat-card{padding:12px}
+  .stat-val{font-size:18px}
+  .stat-lbl{font-size:11px}
+  .vis-card{padding:14px}
+  .card-h h3{font-size:13px}
+  .search-bar input{padding:8px 10px 8px 32px;font-size:12px}
+  .welcome-banner{padding:12px 16px;gap:10px}
+  .welcome-banner h3{font-size:14px}
+  .empty{padding:32px 16px}
+  .empty h3{font-size:13px}
+  .empty p{font-size:12px}
+  .btn-p,.btn-o,.btn-s,.btn-d{padding:8px 12px;font-size:11px}
 }
 .face-recognition{margin:0 auto}
 .face-idle{max-width:480px;margin:0 auto}

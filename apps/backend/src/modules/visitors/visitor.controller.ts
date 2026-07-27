@@ -3,7 +3,6 @@ import { asyncHandler } from "../../utils/async-handler";
 import { VisitorService } from "./visitor.service";
 import { ApiResponse } from "../../utils/api-response";
 import { createVisitorDto, updateVisitorDto } from "./visitor.types";
-import { any } from "zod";
 
 export class VisitorController {
     constructor(

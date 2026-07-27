@@ -1,29 +1,9 @@
 import { Router } from 'express'
 import { validate } from '../../middlewares/validate.middleware';
 import { createVisitorSchema, updateVisitorSchema } from './visitor.validation';
-import { VisitorController } from './visitor.controller';
-import { VisitorService } from './visitor.service';
-import { prisma } from '../../database/prisma';
-import { VisitorRepository } from './repositories/visitor.repository';
-import { VisitorMobileRepository } from './repositories/visitor-mobile.repository';
-import { VisitorEmailRepository } from './repositories/visitor-email.repository';
-import { VisitorCounterRepository } from './repositories/visitor-counter.repository';
+import { visitorController } from '../../container';
 
 const router = Router();
-
-const visitorRepository = new VisitorRepository(prisma)
-const visitorEmailRepository = new VisitorEmailRepository(prisma)
-const visitorMobileRepository = new VisitorMobileRepository(prisma)
-const visitorCounterRepository = new VisitorCounterRepository(prisma)
-
-const visitorService = new VisitorService(
-    prisma,
-    visitorRepository,
-    visitorEmailRepository,
-    visitorMobileRepository,
-    visitorCounterRepository
-)
-const visitorController = new VisitorController(visitorService)
 
 // create a visitor route
 router.post(

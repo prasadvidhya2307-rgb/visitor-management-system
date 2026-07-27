@@ -1,0 +1,1 @@
+export { default as faceRecognitionRoutes } from './face-recognition.routes'

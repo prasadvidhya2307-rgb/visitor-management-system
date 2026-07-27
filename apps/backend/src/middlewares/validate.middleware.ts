@@ -12,7 +12,6 @@ export const validate = (schema: ZodType) =>
                 message: issue.message
             }))
 
-
             return next(
                 new AppError(
                     "vaidation failed",

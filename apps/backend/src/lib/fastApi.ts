@@ -13,16 +13,23 @@ fastApiClient.interceptors.response.use(
 
         if (!error.response) {
             throw new AppError(
-                "face recognition service is not reachable",
+                "Face recognition service is not reachable.",
                 503
-            )
+            );
         }
 
-        throw new AppError(
-            (error.response.data as { message?: string })?.message ??
-            "face recognition request failed",
-            error.response.status
-        )
-    }
+        const data = error.response.data as {
+            detail?: string;
+            message?: string;
+        };
 
-)
+        console.log('data message', data.message)
+
+        throw new AppError(
+            data.detail ??
+            data.message ??
+            "Face recognition request failed.",
+            error.response.status
+        );
+    }
+);

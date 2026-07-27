@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "Bakend for business logic like authentication, employee managemnent, dahsboard and more endpoints",
+  "description": "Bakend for business logic like authentication, dahsboard and more endpoints",
   "license": "ISC",
   "author": "Vidhya Prasad",
   "type": "module",

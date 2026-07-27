@@ -1,15 +1,17 @@
-export interface RecognizedVisitorResponse {
-    recognized: true;
-    confidence: number;
-    visitorId: string;
+export interface RecognizedResponse {
+    success: true;
+    matched: true;
+    person_id: string;
+    score: number;
 }
 
-export interface UnrecognizedVisitorResponse {
-    recognized: false;
-    confidence: number;
-    visitorId: null;
+export interface UnrecognizedResponse {
+    success: true;
+    matched: false;
+    person_id: null;
+    score: number | null;
 }
 
 export type FaceRecognitionResponse =
-    | RecognizedVisitorResponse
-    | UnrecognizedVisitorResponse;
+    | RecognizedResponse
+    | UnrecognizedResponse;

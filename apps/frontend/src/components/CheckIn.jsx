@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, ArrowRight, ArrowLeft, Loader2, Camera, User, Shield, ClipboardCheck, Activity } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { CheckCircle, ArrowRight, ArrowLeft, Loader2, Camera, User, Shield, ClipboardCheck, Activity, AlertCircle } from 'lucide-react';
 import store from '../store';
+import { checkIn } from '../api';
 import FaceRecognition from './FaceRecognition';
 
 const ID_TYPES = ['aadhaar', 'pan', 'driving_license', 'passport', 'voter_id'];
 const PURPOSES = ['Technical Discussion', 'Interview', 'Business Meeting', 'Contract Negotiation', 'Design Review', 'Training', 'Audit', 'Delivery', 'Maintenance', 'Other'];
 
 export default function CheckIn() {
-  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [employees, setEmployees] = useState([]);
 
@@ -19,10 +18,9 @@ export default function CheckIn() {
   const [form, setForm] = useState({ employeeId: '', purpose: '', notes: '' });
   const [result, setResult] = useState(null);
   const [processing, setProcessing] = useState(false);
+  const [apiError, setApiError] = useState('');
 
-  useEffect(() => {
-    setEmployees(store.getEmployees());
-  }, []);
+  useEffect(() => { setEmployees(store.getEmployees()); }, []);
 
   const stepLabels = ['Capture', 'Details', 'Face', 'Confirm', 'Visit', 'Activate', 'Done'];
   const currentStepNum = step;
@@ -42,21 +40,8 @@ export default function CheckIn() {
 
   function handleCreateVisitor() {
     setProcessing(true);
-    const vis = store.addVisitor({
-      name: `${visitorData.firstName} ${visitorData.lastName}`,
-      firstName: visitorData.firstName,
-      lastName: visitorData.lastName,
-      email: visitorData.email,
-      phone: visitorData.phone,
-      company: visitorData.company,
-      identityType,
-      identityNumber: visitorData.identityNumber,
-      photo: faceResult?.image || null,
-    });
     setTimeout(() => {
       setProcessing(false);
-      const updated = store.getVisitorById(vis.id);
-      setVisitorData({ ...visitorData, _id: vis.id, _visitor: updated });
       setStep(3);
     }, 800);
   }
@@ -69,23 +54,33 @@ export default function CheckIn() {
     }, 1000);
   }
 
-  function handleCreateVisit() {
+  async function handleCreateVisit() {
     setProcessing(true);
-    const id = visitorData._id;
-    const visit = store.checkIn({
-      visitorId: id,
-      employeeId: form.employeeId,
-      purpose: form.purpose,
-      notes: form.notes,
-      badgePrinted: true,
-      faceData: faceResult?.faceData || null,
-      photo: faceResult?.image || null,
-    });
-    setTimeout(() => {
-      setProcessing(false);
-      setResult(visit);
+    setApiError('');
+    try {
+      const visitor = {
+        firstName: visitorData.firstName,
+        lastName: visitorData.lastName,
+        email: visitorData.email,
+        phone: visitorData.phone,
+        company: visitorData.company || '',
+        identityType,
+        identityNumber: visitorData.identityNumber || '',
+      };
+      const visit = {
+        hostEmployeeId: form.employeeId,
+        purpose: form.purpose,
+        notes: form.notes || '',
+      };
+      const data = await checkIn(visitor, visit, faceResult.image);
+      setResult(data);
       setStep(6);
-    }, 800);
+    } catch (err) {
+      setApiError(err.message);
+      setStep(6);
+    } finally {
+      setProcessing(false);
+    }
   }
 
   function handleActivateMedia() {
@@ -103,12 +98,12 @@ export default function CheckIn() {
     setIdentityType('aadhaar');
     setForm({ employeeId: '', purpose: '', notes: '' });
     setFaceResult(null);
+    setApiError('');
   }
 
   const visitorName = `${visitorData.firstName} ${visitorData.lastName}`;
   const empName = employees.find(e => e.id === form.employeeId)?.name || '';
-
-  const checkInDate = result ? new Date(result.checkInTime) : new Date();
+  const checkInDate = result ? new Date(result.checkInTime || result.createdAt) : new Date();
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
@@ -129,24 +124,23 @@ export default function CheckIn() {
       </div>
 
       <AnimatePresence mode="wait">
-        {step === 7 && result && (
+        {step === 7 && (
           <motion.div key="s7" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="card" style={{ maxWidth: 520, margin: '0 auto' }}>
             <div className="card-b">
               <div className="success-box">
                 <div className="success-icon"><CheckCircle size={40} /></div>
-                <h2>Visitor Checked In!</h2>
-                <p style={{ color: 'var(--text2)' }}>Workflow completed · Token: <strong>{result.token}</strong></p>
+                <h2>Workflow Completed</h2>
+                <p style={{ color: 'var(--text2)' }}>{result ? `Token: ${result.token || result.visit?.token || '—'}` : 'Visitor checked in successfully'}</p>
                 <div className="detail-grid">
                   <div className="detail-item"><div className="lbl">Visitor</div><div className="val">{visitorName}</div></div>
                   <div className="detail-item"><div className="lbl">Host</div><div className="val">{empName}</div></div>
-                  <div className="detail-item"><div className="lbl">Purpose</div><div className="val">{result.purpose}</div></div>
+                  <div className="detail-item"><div className="lbl">Purpose</div><div className="val">{form.purpose}</div></div>
                   <div className="detail-item"><div className="lbl">Date</div><div className="val">{checkInDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div></div>
                   <div className="detail-item"><div className="lbl">Time</div><div className="val">{checkInDate.toLocaleTimeString()}</div></div>
                   <div className="detail-item"><div className="lbl">Face ID</div><div className="val" style={{ color: 'var(--success)' }}>Registered</div></div>
                 </div>
                 <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 20 }}>
                   <button className="btn-p" onClick={resetAll}>Check In Another</button>
-                  <button className="btn-o" onClick={() => navigate('/active')}>View Active</button>
                 </div>
               </div>
             </div>
@@ -162,24 +156,37 @@ export default function CheckIn() {
                   <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }} style={{ display: 'inline-block', margin: '20px 0' }}>
                     <Loader2 size={48} style={{ color: 'var(--primary)' }} />
                   </motion.div>
-                  <p style={{ color: 'var(--text2)', fontSize: 14 }}>Activating media & finalizing...</p>
+                  <p style={{ color: 'var(--text2)', fontSize: 14 }}>Sending to backend & executing workflow...</p>
                 </>
-              ) : (
+              ) : apiError ? (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center', marginBottom: 16, color: 'var(--danger)' }}>
+                    <AlertCircle size={24} /> <strong>API Error</strong>
+                  </div>
+                  <p style={{ color: 'var(--text2)', fontSize: 13, marginBottom: 12 }}>{apiError}</p>
+                  <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+                    <button className="btn-d" onClick={handleCreateVisit}>Retry</button>
+                    <button className="btn-o" onClick={() => setStep(5)}>Back</button>
+                  </div>
+                </>
+              ) : result ? (
                 <>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 16, color: 'var(--success)' }}>
-                    <CheckCircle size={24} /> <strong>Visit Created Successfully</strong>
+                    <CheckCircle size={24} /> <strong>Workflow Executed Successfully</strong>
                   </div>
                   <div style={{ background: 'var(--bg)', borderRadius: 'var(--r-sm)', padding: 16, border: '1px solid var(--border)', textAlign: 'left', fontSize: 12 }}>
                     <div style={{ display: 'grid', gap: 8 }}>
-                      <div><span style={{ color: 'var(--text2)' }}>Token: </span><strong>{result?.token}</strong></div>
+                      <div><span style={{ color: 'var(--text2)' }}>Workflow ID: </span><strong>{result.id || '—'}</strong></div>
+                      <div><span style={{ color: 'var(--text2)' }}>Status: </span><strong>{result.status || '—'}</strong></div>
                       <div><span style={{ color: 'var(--text2)' }}>Visitor: </span><strong>{visitorName}</strong></div>
                       <div><span style={{ color: 'var(--text2)' }}>Host: </span><strong>{empName}</strong></div>
                       <div><span style={{ color: 'var(--text2)' }}>Purpose: </span><strong>{form.purpose}</strong></div>
                     </div>
                   </div>
-                  <p style={{ fontSize: 12, color: 'var(--text2)', marginTop: 12 }}>Activating media to complete the workflow...</p>
-                  <button className="btn-s" style={{ marginTop: 12 }} onClick={handleActivateMedia}><Activity size={16} /> Activate Media</button>
+                  <button className="btn-s" style={{ marginTop: 16 }} onClick={handleActivateMedia}><Activity size={16} /> Complete</button>
                 </>
+              ) : (
+                <p style={{ color: 'var(--text2)', fontSize: 13 }}>No response from server.</p>
               )}
             </div>
           </motion.div>
@@ -194,7 +201,7 @@ export default function CheckIn() {
               <div className="form-g"><label className="form-l">Notes {form.purpose === 'Other' && <span style={{ color: 'var(--danger)' }}>*</span>}</label><textarea className="form-i" rows={3} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder={form.purpose === 'Other' ? 'Please specify the purpose...' : 'Additional notes...'} /></div>
               <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', marginTop: 16 }}>
                 <button className="btn-o" onClick={() => setStep(4)}><ArrowLeft size={14} /> Back</button>
-                <button className="btn-p" disabled={!form.employeeId || !form.purpose || (form.purpose === 'Other' && !form.notes.trim())} onClick={handleCreateVisit}>{processing ? <><Loader2 size={14} className="spinner" /> Processing...</> : <>Next <ArrowRight size={14} /></>}</button>
+                <button className="btn-p" disabled={!form.employeeId || !form.purpose || (form.purpose === 'Other' && !form.notes.trim())} onClick={handleCreateVisit}>{processing ? <><Loader2 size={14} /> Processing...</> : <>Submit to Backend <ArrowRight size={14} /></>}</button>
               </div>
             </div>
           </motion.div>
@@ -206,10 +213,9 @@ export default function CheckIn() {
             <div className="card-b">
               <div style={{ background: 'var(--success-bg)', borderRadius: 'var(--r-sm)', padding: 12, border: '1px solid var(--success)', marginBottom: 16, fontSize: 12 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#065F46' }}>
-                  <CheckCircle size={16} /> Face registered successfully for <strong>{visitorName}</strong>
+                  <CheckCircle size={16} /> Face data ready for <strong>{visitorName}</strong>
                 </div>
               </div>
-
               <div style={{ background: 'var(--bg)', borderRadius: 'var(--r-sm)', padding: 16, border: '1px solid var(--border)', fontSize: 12 }}>
                 <h4 style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Visitor Registration Summary</h4>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -221,13 +227,11 @@ export default function CheckIn() {
                   <div><span style={{ color: 'var(--text2)' }}>Photo: </span><strong style={{ color: faceResult?.image ? 'var(--success)' : 'var(--text3)' }}>{faceResult?.image ? 'Captured' : 'None'}</strong></div>
                 </div>
               </div>
-
               {faceResult?.image && (
                 <div style={{ textAlign: 'center', marginTop: 12 }}>
                   <img src={faceResult.image} alt="face" style={{ width: 80, height: 60, objectFit: 'cover', borderRadius: 8, border: '2px solid var(--primary)' }} />
                 </div>
               )}
-
               <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', marginTop: 16 }}>
                 <button className="btn-o" onClick={() => setStep(2)}><ArrowLeft size={14} /> Back</button>
                 <button className="btn-s" onClick={() => setStep(5)}>Complete Registration <ArrowRight size={14} /></button>
@@ -250,11 +254,11 @@ export default function CheckIn() {
                   <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }} style={{ display: 'inline-block', margin: '20px 0' }}>
                     <Loader2 size={48} style={{ color: 'var(--primary)' }} />
                   </motion.div>
-                  <p style={{ color: 'var(--text2)', fontSize: 14 }}>Extracting face data & registering face for {visitorName}...</p>
+                  <p style={{ color: 'var(--text2)', fontSize: 14 }}>Extracting face data & registering face...</p>
                 </>
               ) : (
                 <>
-                  <p style={{ color: 'var(--text2)', fontSize: 13, marginBottom: 16 }}>The captured face will be processed and registered with the visitor profile.</p>
+                  <p style={{ color: 'var(--text2)', fontSize: 13, marginBottom: 16 }}>The captured face will be processed and registered with the visitor profile via the backend.</p>
                   <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
                     <button className="btn-o" onClick={() => setStep(2)}><ArrowLeft size={14} /> Back</button>
                     <button className="btn-p" onClick={handleRegisterFace}><Shield size={16} /> Register Face</button>

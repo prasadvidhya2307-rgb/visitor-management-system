@@ -26,7 +26,7 @@ function addActivity(type, message, visitorName) {
 function getToday() { return new Date().toISOString().slice(0, 10); }
 
 const defaultEmployees = [
-  { id: 'e1', name: 'Rahul Sharma', department: 'Engineering', email: 'rahul@corp.com', phone: '9876543210', designation: 'Tech Lead', createdAt: '2025-01-10T09:00:00Z' },
+  { id: 'c9d6d4d0-8c93-4f2c-9d16-6d2d8e5d7b11', name: 'Rahul Sharma', department: 'Engineering', email: 'rahul@corp.com', phone: '9876543210', designation: 'Tech Lead', createdAt: '2025-01-10T09:00:00Z' },
   { id: 'e2', name: 'Priya Patel', department: 'HR', email: 'priya@corp.com', phone: '9876543211', designation: 'HR Manager', createdAt: '2025-01-10T09:00:00Z' },
   { id: 'e3', name: 'Amit Kumar', department: 'Finance', email: 'amit@corp.com', phone: '9876543212', designation: 'Accountant', createdAt: '2025-01-10T09:00:00Z' },
   { id: 'e4', name: 'Sneha Reddy', department: 'Marketing', email: 'sneha@corp.com', phone: '9876543213', designation: 'Marketing Head', createdAt: '2025-01-10T09:00:00Z' },
@@ -46,16 +46,16 @@ const defaultVisitors = [
 ];
 
 const defaultVisits = [
-  { id: 'vs1', visitorId: 'v1', employeeId: 'e1', purpose: 'Technical Discussion', status: 'checked_out', token: 'TK-A1B2', checkInTime: daysAgo(2, 9), checkOutTime: daysAgo(2, 11), badgePrinted: true, notes: 'API integration review' },
+  { id: 'vs1', visitorId: 'v1', employeeId: 'c9d6d4d0-8c93-4f2c-9d16-6d2d8e5d7b11', purpose: 'Technical Discussion', status: 'checked_out', token: 'TK-A1B2', checkInTime: daysAgo(2, 9), checkOutTime: daysAgo(2, 11), badgePrinted: true, notes: 'API integration review' },
   { id: 'vs2', visitorId: 'v2', employeeId: 'e4', purpose: 'Design Review Meeting', status: 'checked_in', token: 'TK-C3D4', checkInTime: hoursAgo(2), checkOutTime: null, badgePrinted: true, notes: 'Brand refresh discussion' },
   { id: 'vs3', visitorId: 'v3', employeeId: 'e5', purpose: 'Contract Negotiation', status: 'checked_in', token: 'TK-E5F6', checkInTime: hoursAgo(1), checkOutTime: null, badgePrinted: true, notes: '' },
   { id: 'vs4', visitorId: 'v4', employeeId: 'e2', purpose: 'Audit Follow-up', status: 'checked_out', token: 'TK-G7H8', checkInTime: daysAgo(1, 14), checkOutTime: daysAgo(1, 16), badgePrinted: true, notes: 'Q4 audit' },
   { id: 'vs5', visitorId: 'v1', employeeId: 'e3', purpose: 'Invoice Review', status: 'checked_out', token: 'TK-I9J0', checkInTime: daysAgo(5, 10), checkOutTime: daysAgo(5, 12), badgePrinted: true, notes: '' },
-  { id: 'vs6', visitorId: 'v5', employeeId: 'e1', purpose: 'Demo Presentation', status: 'checked_in', token: 'TK-K1L2', checkInTime: hoursAgo(0.5), checkOutTime: null, badgePrinted: true, notes: 'New tool demo' },
+  { id: 'vs6', visitorId: 'v5', employeeId: 'c9d6d4d0-8c93-4f2c-9d16-6d2d8e5d7b11', purpose: 'Demo Presentation', status: 'checked_in', token: 'TK-K1L2', checkInTime: hoursAgo(0.5), checkOutTime: null, badgePrinted: true, notes: 'New tool demo' },
 ];
 
 const defaultExpected = [
-  { id: 'x1', visitorName: 'Sanjay Mishra', company: 'CloudBase', employeeId: 'e1', purpose: 'Architecture Review', expectedDate: getToday(), expectedTime: '14:00', phone: '9123456794', email: 'sanjay@cloudbase.com', status: 'expected' },
+  { id: 'x1', visitorName: 'Sanjay Mishra', company: 'CloudBase', employeeId: 'c9d6d4d0-8c93-4f2c-9d16-6d2d8e5d7b11', purpose: 'Architecture Review', expectedDate: getToday(), expectedTime: '14:00', phone: '9123456794', email: 'sanjay@cloudbase.com', status: 'expected' },
   { id: 'x2', visitorName: 'Meera Iyer', company: 'GreenEnergy', employeeId: 'e4', purpose: 'Partnership Discussion', expectedDate: getToday(), expectedTime: '16:00', phone: '9123456795', email: 'meera@green.com', status: 'expected' },
 ];
 

@@ -5,7 +5,7 @@ import store from '../store';
 import { checkIn } from '../api';
 import FaceRecognition from './FaceRecognition';
 
-const ID_TYPES = ['aadhaar', 'pan', 'driving_license', 'passport', 'voter_id'];
+const ID_TYPES = ['aadhaar', 'pan', 'driving_license', 'passport', 'other'];
 const PURPOSES = ['Technical Discussion', 'Interview', 'Business Meeting', 'Contract Negotiation', 'Design Review', 'Training', 'Audit', 'Delivery', 'Maintenance', 'Other'];
 const FLOORS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
@@ -89,15 +89,15 @@ export default function CheckIn() {
         pan: 'PAN',
         driving_license: 'DRIVING_LICENSE',
         passport: 'PASSPORT',
-        voter_id: 'VOTER_ID',
+        other: 'OTHER',
       };
       const visitorPayload = {
         firstName: visitorData.firstName,
         lastName: visitorData.lastName,
-        identityType: idTypeMap[identityType] || identityType.toUpperCase(),
+        identityType: idTypeMap[identityType] || 'OTHER',
         identityNumber: visitorData.identityNumber || '',
         emails: [{ email: visitorData.email, isPrimary: true }],
-        mobiles: [{ mobile: visitorData.phone, isPrimary: true }],
+        mobiles: [{ mobile: visitorData.phone || '', isPrimary: true }],
       };
       const visitPayload = {
         hostEmployeeId: form.employeeId,

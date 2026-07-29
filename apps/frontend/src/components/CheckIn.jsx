@@ -7,6 +7,20 @@ import FaceRecognition from './FaceRecognition';
 
 const ID_TYPES = ['aadhaar', 'pan', 'driving_license', 'passport', 'voter_id'];
 const PURPOSES = ['Technical Discussion', 'Interview', 'Business Meeting', 'Contract Negotiation', 'Design Review', 'Training', 'Audit', 'Delivery', 'Maintenance', 'Other'];
+const FLOORS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+const PURPOSE_MAP = {
+  'Technical Discussion': 'TECHNICAL_DISCUSSION',
+  'Interview': 'INTERVIEW',
+  'Business Meeting': 'BUSINESS_MEETING',
+  'Contract Negotiation': 'CONTRACT_NEGOTIATION',
+  'Design Review': 'DESIGN_REVIEW',
+  'Training': 'TRAINING',
+  'Audit': 'AUDIT',
+  'Delivery': 'DELIVERY',
+  'Maintenance': 'MAINTENANCE',
+  'Other': 'OTHER',
+};
 
 export default function CheckIn() {
   const [step, setStep] = useState(1);
@@ -15,7 +29,7 @@ export default function CheckIn() {
   const [faceResult, setFaceResult] = useState(null);
   const [visitorData, setVisitorData] = useState({ firstName: '', lastName: '', email: '', phone: '', company: '', identityNumber: '' });
   const [identityType, setIdentityType] = useState('aadhaar');
-  const [form, setForm] = useState({ employeeId: '', purpose: '', notes: '' });
+  const [form, setForm] = useState({ employeeId: '', purpose: '', notes: '', floor: 1 });
   const [result, setResult] = useState(null);
   const [processing, setProcessing] = useState(false);
   const [apiError, setApiError] = useState('');
@@ -58,21 +72,39 @@ export default function CheckIn() {
     setProcessing(true);
     setApiError('');
     try {
-      const visitor = {
+      const purposeMap = {
+        'Technical Discussion': 'TECHNICAL_DISCUSSION',
+        'Interview': 'INTERVIEW',
+        'Business Meeting': 'BUSINESS_MEETING',
+        'Contract Negotiation': 'CONTRACT_NEGOTIATION',
+        'Design Review': 'DESIGN_REVIEW',
+        'Training': 'TRAINING',
+        'Audit': 'AUDIT',
+        'Delivery': 'DELIVERY',
+        'Maintenance': 'MAINTENANCE',
+        'Other': 'OTHER',
+      };
+      const idTypeMap = {
+        aadhaar: 'AADHAAR',
+        pan: 'PAN',
+        driving_license: 'DRIVING_LICENSE',
+        passport: 'PASSPORT',
+        voter_id: 'VOTER_ID',
+      };
+      const visitorPayload = {
         firstName: visitorData.firstName,
         lastName: visitorData.lastName,
-        email: visitorData.email,
-        phone: visitorData.phone,
-        company: visitorData.company || '',
-        identityType,
+        identityType: idTypeMap[identityType] || identityType.toUpperCase(),
         identityNumber: visitorData.identityNumber || '',
+        emails: [{ email: visitorData.email, isPrimary: true }],
+        mobiles: [{ mobile: visitorData.phone, isPrimary: true }],
       };
-      const visit = {
+      const visitPayload = {
         hostEmployeeId: form.employeeId,
-        purpose: form.purpose,
-        notes: form.notes || '',
+        purpose: purposeMap[form.purpose] || form.purpose.toUpperCase().replace(/ /g, '_'),
+        floor: 0,
       };
-      const data = await checkIn(visitor, visit, faceResult.image);
+      const data = await checkIn(visitorPayload, visitPayload, faceResult.image);
       setResult(data);
       setStep(6);
     } catch (err) {
@@ -130,7 +162,7 @@ export default function CheckIn() {
               <div className="success-box">
                 <div className="success-icon"><CheckCircle size={40} /></div>
                 <h2>Workflow Completed</h2>
-                <p style={{ color: 'var(--text2)' }}>{result ? `Token: ${result.token || result.visit?.token || '—'}` : 'Visitor checked in successfully'}</p>
+                <p style={{ color: 'var(--text2)' }}>{result ? result.message || 'Visitor checked in successfully' : 'Done'}</p>
                 <div className="detail-grid">
                   <div className="detail-item"><div className="lbl">Visitor</div><div className="val">{visitorName}</div></div>
                   <div className="detail-item"><div className="lbl">Host</div><div className="val">{empName}</div></div>
@@ -176,8 +208,8 @@ export default function CheckIn() {
                   </div>
                   <div style={{ background: 'var(--bg)', borderRadius: 'var(--r-sm)', padding: 16, border: '1px solid var(--border)', textAlign: 'left', fontSize: 12 }}>
                     <div style={{ display: 'grid', gap: 8 }}>
-                      <div><span style={{ color: 'var(--text2)' }}>Workflow ID: </span><strong>{result.id || '—'}</strong></div>
-                      <div><span style={{ color: 'var(--text2)' }}>Status: </span><strong>{result.status || '—'}</strong></div>
+                      <div><span style={{ color: 'var(--text2)' }}>Workflow ID: </span><strong>{result.id || result.workflow?.id || '—'}</strong></div>
+                      <div><span style={{ color: 'var(--text2)' }}>Status: </span><strong>{result.status || result.workflow?.status || '—'}</strong></div>
                       <div><span style={{ color: 'var(--text2)' }}>Visitor: </span><strong>{visitorName}</strong></div>
                       <div><span style={{ color: 'var(--text2)' }}>Host: </span><strong>{empName}</strong></div>
                       <div><span style={{ color: 'var(--text2)' }}>Purpose: </span><strong>{form.purpose}</strong></div>
@@ -198,6 +230,7 @@ export default function CheckIn() {
             <div className="card-b">
               <div className="form-g"><label className="form-l">Host Employee *</label><select className="form-s" value={form.employeeId} onChange={e => setForm({ ...form, employeeId: e.target.value })}><option value="">Select host...</option>{employees.map(e => <option key={e.id} value={e.id}>{e.name} — {e.department}</option>)}</select></div>
               <div className="form-g"><label className="form-l">Purpose *</label><select className="form-s" value={form.purpose} onChange={e => setForm({ ...form, purpose: e.target.value })}><option value="">Select purpose...</option>{PURPOSES.map(p => <option key={p} value={p}>{p}</option>)}</select></div>
+              <div className="form-g"><label className="form-l">Floor</label><select className="form-s" value={form.floor} onChange={e => setForm({ ...form, floor: e.target.value })}>{FLOORS.map(f => <option key={f} value={f}>Floor {f}</option>)}</select></div>
               <div className="form-g"><label className="form-l">Notes {form.purpose === 'Other' && <span style={{ color: 'var(--danger)' }}>*</span>}</label><textarea className="form-i" rows={3} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder={form.purpose === 'Other' ? 'Please specify the purpose...' : 'Additional notes...'} /></div>
               <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', marginTop: 16 }}>
                 <button className="btn-o" onClick={() => setStep(4)}><ArrowLeft size={14} /> Back</button>

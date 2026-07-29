@@ -7,13 +7,13 @@ function dataURLtoBlob(dataURL) {
   const ab = new ArrayBuffer(bytes.length);
   const ia = new Uint8Array(ab);
   for (let i = 0; i < bytes.length; i++) ia[i] = bytes.charCodeAt(i);
-  return new Blob([ab], { type: mime });
+  return new Blob([ab], { type: 'image/jpeg' });
 }
 
 export async function recognizeFace(dataURL) {
   const blob = dataURLtoBlob(dataURL);
   const formData = new FormData();
-  formData.append('image', blob, 'face.jpg');
+  formData.append('image', blob, 'photo.jpg');
   const res = await fetch(`${BASE_URL}/face/recognize`, { method: 'POST', body: formData });
   if (!res.ok) {
     const text = await res.text();
@@ -22,12 +22,12 @@ export async function recognizeFace(dataURL) {
   return res.json();
 }
 
-export async function checkIn(visitor, visit, dataURL) {
+export async function checkIn(visitorPayload, visitPayload, dataURL) {
   const blob = dataURLtoBlob(dataURL);
   const formData = new FormData();
-  formData.append('image', blob, 'face.jpg');
-  formData.append('visitor', JSON.stringify(visitor));
-  formData.append('visit', JSON.stringify(visit));
+  formData.append('visitor', JSON.stringify(visitorPayload));
+  formData.append('visit', JSON.stringify(visitPayload));
+  formData.append('image', blob, 'photo.jpg');
   const res = await fetch(`${BASE_URL}/check-in`, { method: 'POST', body: formData });
   if (!res.ok) {
     const text = await res.text();

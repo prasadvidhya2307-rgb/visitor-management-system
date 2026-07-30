@@ -1,5 +1,8 @@
-# Environment variables
+node_modules/
+build/
 .env
+*.log
+# Environment variables
 
 # Node.js
 node_modules/
@@ -14,6 +17,3 @@ __pycache__/
 
 # VS Code
 .vscode/
-
-# Logs
-*.log

@@ -1,6 +1,11 @@
-from fastapi import HTTPException, UploadFile
+from fastapi import UploadFile
 
+from app.core.codes import ResponseCode
 from app.core.config import settings
+from app.core.exceptions import FaceServiceException
+from app.schemas.recognition import RecognizeData
+from app.schemas.register import RegisterData
+from app.schemas.response import ApiResponse
 from app.services.embedding import generate_embedding
 from app.services.vector_db import VectorDB
 from app.utils.image import decode_image
@@ -18,48 +23,86 @@ class FaceService:
             "image/png",
             "image/jpg",
         ):
-            raise HTTPException(
-                status_code=400,
-                detail="Only JPG and PNG images are allowed.",
+            raise FaceServiceException(
+                code=ResponseCode.INVALID_IMAGE,
+                message="Only JPG and PNG images are allowed.",
             )
 
         image_bytes = await image.read()
 
         if not image_bytes:
-            raise HTTPException(
-                status_code=400,
-                detail="Image is empty.",
+            raise FaceServiceException(
+                code=ResponseCode.INVALID_IMAGE,
+                message="Image is empty.",
             )
 
         cv_image = decode_image(image_bytes)
 
-        embedding = generate_embedding(cv_image)
-
-        return embedding
+        return generate_embedding(cv_image)
 
     @staticmethod
     async def register(
-        employee_id: str,
+        person_id: str,
         image: UploadFile,
-    ) -> dict:
+    ) -> ApiResponse[RegisterData]:
+
+        existing = VectorDB.get_by_person_id(person_id)
+
+        if existing:
+            return ApiResponse(
+                success=True,
+                code=ResponseCode.ALREADY_REGISTERED,
+                message="Face is already registered for this person.",
+                data=RegisterData(
+                    personId=person_id,
+                ),
+            )
 
         embedding = await FaceService._extract_embedding(image)
 
-        VectorDB.store_embedding(
-            employee_id=employee_id,
+        results = VectorDB.search_embedding(
             embedding=embedding,
         )
 
-        return {
-            "success": True,
-            "message": "Face registered successfully.",
-            "employee_id": employee_id,
-        }
+        if results:
+            match = results[0]
+
+            if (
+                match.score >= settings.FACE_DUPLICATE_THRESHOLD
+                and match.payload["person_id"] != person_id
+            ):
+                raise FaceServiceException(
+                    code=ResponseCode.DUPLICATE_FACE,
+                    message="This face is already registered with another person.",
+                    status_code=409,
+                )
+
+        try:
+            VectorDB.store_embedding(
+                person_id=person_id,
+                embedding=embedding,
+            )
+
+        except Exception as error:
+            raise FaceServiceException(
+                code=ResponseCode.TEMPORARY_ERROR,
+                message="Unable to register the face at the moment.",
+                status_code=503,
+            ) from error
+
+        return ApiResponse(
+            success=True,
+            code=ResponseCode.CREATED,
+            message="Face registered successfully.",
+            data=RegisterData(
+                personId=person_id,
+            ),
+        )
 
     @staticmethod
     async def recognize(
         image: UploadFile,
-    ) -> dict:
+    ) -> ApiResponse[RecognizeData]:
 
         embedding = await FaceService._extract_embedding(image)
 
@@ -68,24 +111,38 @@ class FaceService:
         )
 
         if not results:
-            return {
-                "success": True,
-                "matched": False,
-                "message": "No matching employee found.",
-            }
+            return ApiResponse(
+                success=True,
+                code=ResponseCode.NO_MATCH,
+                message="Face not recognized.",
+                data=RecognizeData(
+                    matched=False,
+                    personId=None,
+                    score=None,
+                ),
+            )
 
         match = results[0]
 
         if match.score < settings.FACE_MATCH_THRESHOLD:
-            return {
-                "success": True,
-                "matched": False,
-                "score": round(match.score, 4),
-            }
+            return ApiResponse(
+                success=True,
+                code=ResponseCode.NO_MATCH,
+                message="Face not recognized.",
+                data=RecognizeData(
+                    matched=False,
+                    personId=None,
+                    score=round(match.score, 4),
+                ),
+            )
 
-        return {
-            "success": True,
-            "matched": True,
-            "employee_id": match.payload["employee_id"],
-            "score": round(match.score, 4),
-        }
+        return ApiResponse(
+            success=True,
+            code=ResponseCode.MATCH_FOUND,
+            message="Face recognized successfully.",
+            data=RecognizeData(
+                matched=True,
+                personId=match.payload["person_id"],
+                score=round(match.score, 4),
+            ),
+        )

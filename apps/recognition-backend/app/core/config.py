@@ -12,11 +12,12 @@ class Settings(BaseSettings):
 
     QDRANT_HOST: str = "localhost"
     QDRANT_PORT: int = 6333
-    QDRANT_COLLECTION: str = "employees"
+    QDRANT_COLLECTION: str = "persons"
     QDRANT_VECTOR_SIZE: int = 512
 
     MODEL_NAME: str = "buffalo_l"
     FACE_MATCH_THRESHOLD: float = 0.65
+    FACE_DUPLICATE_THRESHOLD: float =0.90
 
     model_config = SettingsConfigDict(
         env_file=ENV_FILE,

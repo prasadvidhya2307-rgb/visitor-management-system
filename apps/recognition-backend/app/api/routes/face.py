@@ -1,5 +1,7 @@
 from fastapi import APIRouter, File, UploadFile
 
+from app.schemas.register import RegisterData
+from app.schemas.response import ApiResponse
 from app.services.face_service import FaceService
 
 router = APIRouter(
@@ -8,12 +10,16 @@ router = APIRouter(
 )
 
 
-@router.post("/register/{employee_id}", status_code=201)
+@router.post(
+    "/register/{person_id}",
+    status_code=201,
+    response_model=ApiResponse[RegisterData],
+)
 async def register_face(
-    employee_id: str,
+    person_id: str,
     image: UploadFile = File(...),
 ):
     return await FaceService.register(
-        employee_id=employee_id,
+        person_id=person_id,
         image=image,
     )

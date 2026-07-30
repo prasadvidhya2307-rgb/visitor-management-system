@@ -4,6 +4,7 @@ import { parseJson } from "../../middlewares/parse-json.middleware";
 import { validate } from "../../middlewares/validate.middleware";
 import { checkInSchema } from "./check-in.validation";
 import { checkInController } from "../../container";
+import { createVisitSchema } from "../visit/visit.validation";
 
 const router = Router();
 
@@ -17,7 +18,8 @@ router.post(
 )
 
 router.post(
-    '/:visitorId/',
+    '/:visitorId',
+    validate(createVisitSchema),
     checkInController.existingCheckIn
 )
 

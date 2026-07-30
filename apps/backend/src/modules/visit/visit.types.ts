@@ -1,10 +1,11 @@
 import z from "zod";
-import { createVisitSchema } from "./visit.validate";
+import { createVisitSchema, updateVisitSchema } from "./visit.validation";
 import { VisitPurpose, VisitStatus } from "../../generated/prisma/enums";
 import { VisitorResponseDto } from "../visitors/visitor.types";
-import { EmployeeResponseDto } from "../employeee/employee.types";
+import { EmployeeResponseDto } from "../employee/employee.types";
 
 export type CreateVisitDto = z.infer<typeof createVisitSchema>
+export type UpdateVisitDto = z.infer<typeof updateVisitSchema>
 
 /**
  * node to frontend reponse contarct 

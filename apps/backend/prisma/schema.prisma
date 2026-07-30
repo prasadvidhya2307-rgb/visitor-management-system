@@ -61,6 +61,10 @@ model Employee {
 
   hostedVisits        Visit[]      @relation("VisitHost")
 
+  isActive  Boolean  @default(true)
+  isDeleted Boolean  @default(false)
+  deletedAt DateTime?
+
   @@index([department])
   @@index([email])
   @@index([mobile])

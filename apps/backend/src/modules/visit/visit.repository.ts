@@ -66,4 +66,17 @@ export class VisitRepository {
             },
         });
     }
+
+    public async findByVisitorId(
+        visitorId: string,
+    ): Promise<Visit[]> {
+        return this.prisma.visit.findMany({
+            where: {
+                visitorId,
+            },
+            orderBy: {
+                createdAt: "desc",
+            },
+        });
+    }
 }

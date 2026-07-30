@@ -60,7 +60,7 @@ const defaultExpected = [
 ];
 
 const defaultPreRegistered = [
-  { id: 'p1', name: 'Arjun Reddy', company: 'FinEdge', email: 'arjun@finedge.com', phone: '9123456796', employeeId: 'e2', purpose: 'Compliance Training', validFrom: getToday(), validTo: '2026-08-25', recurring: true, frequency: 'weekly', status: 'active' },
+  { id: 'p1', name: 'Arjun Reddy', company: 'FinEdge', email: 'arjun@finedge.com', phone: '9123456796', employeeId: 'e2', purpose: 'Compliance Training', identityType: 'aadhaar', identityNumber: '2233-4455-6677', validFrom: getToday(), validTo: '2026-08-25', recurring: true, frequency: 'weekly', status: 'active' },
 ];
 
 const defaultSettings = {
@@ -72,7 +72,7 @@ const defaultSettings = {
 };
 
 function initStore() {
-  if (!localStorage.getItem(KEYS.employees)) set(KEYS.employees, defaultEmployees);
+  set(KEYS.employees, defaultEmployees);
   if (!localStorage.getItem(KEYS.visitors)) set(KEYS.visitors, defaultVisitors);
   if (!localStorage.getItem(KEYS.visits)) set(KEYS.visits, defaultVisits);
   if (!localStorage.getItem(KEYS.expected)) set(KEYS.expected, defaultExpected);

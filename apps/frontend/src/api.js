@@ -22,6 +22,17 @@ export async function recognizeFace(dataURL) {
   return res.json();
 }
 
+export async function existingVisitorCheckIn(visitorId, visitPayload) {
+  const formData = new FormData();
+  formData.append('visit', JSON.stringify(visitPayload));
+  const res = await fetch(`${BASE_URL}/visitors/${visitorId}/check-in`, { method: 'POST', body: formData });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
 export async function checkIn(visitorPayload, visitPayload, dataURL) {
   const blob = dataURLtoBlob(dataURL);
   const formData = new FormData();

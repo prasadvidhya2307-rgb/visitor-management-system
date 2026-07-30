@@ -9,3 +9,5 @@ export interface EmployeeResponseDto {
     email: string;
     mobile: string;
 }
+
+// export interface Emplpoy

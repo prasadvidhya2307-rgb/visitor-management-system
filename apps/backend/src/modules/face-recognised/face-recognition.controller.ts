@@ -46,6 +46,8 @@ export class FaceRecognitionController {
                     result.data.personId!
                 );
 
+                console.log('visitor', visitor)
+
             return FaceApiResponse.success<NodeResponseToFrontendRecognizeData>(
                 res,
                 message,

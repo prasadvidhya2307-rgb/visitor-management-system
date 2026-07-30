@@ -2,14 +2,15 @@ import { Request, Response } from 'express'
 import { asyncHandler } from "../../utils/async-handler";
 import { FaceRecognitionService } from './face-recognition.service';
 import { AppError } from '../../utils/app-error';
-import { ApiResponse } from '../../utils/api-response';
+import { FaceApiResponse } from '../../utils/api-response';
 import { VisitorService } from '../visitors/visitor.service';
+import { NodeResponseToFrontendRecognizeData } from './face-recognition.types';
 
 export class FaceRecognitionController {
 
     constructor(
         private readonly faceRecognitionService: FaceRecognitionService,
-        private readonly visitorSerive: VisitorService
+        private readonly visitorService: VisitorService
     ) { }
 
     public recognize = asyncHandler(
@@ -28,26 +29,42 @@ export class FaceRecognitionController {
             }
 
             const result = await this.faceRecognitionService.recognize(file)
+            const { code, data, message } = result
 
-            if (!result.matched) {
-                return ApiResponse.success(
+
+            if (!result.data?.matched) {
+                return FaceApiResponse.success(
                     res,
-                    "face not recognized",
-                    result
+                    message,
+                    code,
+                    data
                 )
             }
 
-            const visitor = await this.visitorSerive.getVisitor(result.person_id)
+            const visitor =
+                await this.visitorService.getVisitor(
+                    result.data.personId!
+                );
 
-            return ApiResponse.success(
+            return FaceApiResponse.success<NodeResponseToFrontendRecognizeData>(
                 res,
-                "face recognized successfully",
-                visitor
+                message,
+                code,
+                {
+                    matched: data?.matched!,
+                    visitor: {
+                        ...visitor,
+                        emails: visitor.emails.map(e => e.email),
+                        mobiles: visitor.mobiles.map(m => m.mobile),
+
+                    },
+                    score: data?.score!
+                }
             )
 
         }
     )
 
-    public register = () => {}
+    public register = () => { }
 
 }

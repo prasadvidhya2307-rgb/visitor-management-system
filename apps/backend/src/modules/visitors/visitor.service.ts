@@ -1,6 +1,6 @@
-import { Prisma, PrismaClient } from "../../generated/prisma/client";
+import { Prisma, PrismaClient, RegistrationStatus } from "../../generated/prisma/client";
 import { AppError } from "../../utils/app-error";
-import { visitorCounterRepository } from "./repositories/visitor-counter.repository";
+import { VisitorCounterRepository } from "./repositories/visitor-counter.repository";
 import { VisitorEmailRepository } from "./repositories/visitor-email.repository";
 import { VisitorMobileRepository } from "./repositories/visitor-mobile.repository";
 import { VisitorRepository } from "./repositories/visitor.repository";
@@ -12,13 +12,13 @@ export class VisitorService {
         private readonly visitorRepository: VisitorRepository,
         private readonly visitorEmailRepository: VisitorEmailRepository,
         private readonly visitorMobileRepository: VisitorMobileRepository,
-        private readonly visitorCounterRepository: visitorCounterRepository
+        private readonly visitorCounterRepository: VisitorCounterRepository
     ) { }
 
     /**
      * Create visitor
      */
-    public async createVisitor(dto: createVisitorDto) {
+    public async createVisitor(dto: createVisitorDto, registrationsImageId: string) {
         await this.validateDuplicateIdentity(dto.identityNumber);
 
         return this.prisma.$transaction(async (tx) => {
@@ -29,7 +29,13 @@ export class VisitorService {
                 firstName: dto.firstName,
                 lastName: dto.lastName,
                 identityType: dto.identityType,
-                identityNumber: dto.identityNumber
+                identityNumber: dto.identityNumber,
+                registrationStatus: RegistrationStatus.PENDING,
+                registrationImage: {
+                    connect: {
+                        id: registrationsImageId
+                    }
+                }
             });
 
             if (dto.mobiles.length > 0) {
@@ -56,6 +62,31 @@ export class VisitorService {
 
             return visitor;
         });
+    }
+
+    /**
+     * complete registration
+    */
+    public async completeRegistration(
+        id: string
+    ) {
+        await this.prisma.$transaction(async (tx) => {
+            await this.visitorRepository.updateById(tx, id, {
+                registrationStatus: RegistrationStatus.COMPLETED,
+                faceRegistered: true
+            })
+        })
+    }
+
+    public async failRegistration(
+        id: string
+    ) {
+        await this.prisma.$transaction(async (tx) => {
+            await this.visitorRepository.updateById(tx, id, {
+                registrationStatus: RegistrationStatus.FAILED,
+                faceRegistered: false
+            })
+        })
     }
 
     /**
@@ -171,6 +202,10 @@ export class VisitorService {
                 id
             );
         });
+    }
+
+    public async rollbackRegistration(id: string) {
+        await this.visitorRepository.rollbackRegistration(id)
     }
 
     /**

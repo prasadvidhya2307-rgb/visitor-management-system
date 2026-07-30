@@ -14,6 +14,8 @@ export const uplaod = multer({
             "image/png"
         ]
 
+        console.log(file)
+
         if (!allowedMimeTypes.includes(file.mimetype)) {
             return cb(
                 new AppError(

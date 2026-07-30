@@ -8,52 +8,100 @@ datasource db {
 }
 
 model Visitor {
-  id             String          @id @default(uuid())
-  visitorCode    String          @unique
-  firstName      String
-  lastName       String?
-  identityType   IdentityType
-  identityNumber String          @unique
-  profileImageId String?
-  faceRegistered Boolean         @default(false)
-  lastVisitedAt  DateTime?
+  id                  String               @id @default(uuid())
+  visitorCode         String               @unique
+
+  firstName           String
+  lastName            String?
+
+  identityType        IdentityType
+  identityNumber      String               @unique
+
+  registrationImageId String?
+  registrationImage   Media?               @relation(fields: [registrationImageId], references: [id])
+
+  faceRegistered      Boolean              @default(false)
+  registrationStatus  RegistrationStatus   @default(PENDING)
+
+  lastVisitedAt       DateTime?
+
   /// Soft delete
-  isActive       Boolean         @default(true)
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  deletedAt      DateTime?
-  isDeleted      Boolean         @default(false)
-  emails         VisitorEmail[]
-  mobiles        VisitorMobile[]
-  profileImage   Media?          @relation(fields: [profileImageId], references: [id])
-  visits         Visit[]
+  isActive            Boolean              @default(true)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  deletedAt           DateTime?
+  isDeleted           Boolean              @default(false)
+
+  emails              VisitorEmail[]
+  mobiles             VisitorMobile[]
+  visits              Visit[]
+  registrationWorkflows VisitorRegistrationWorkflow[] @relation("WorkflowVisitor")
 
   @@index([visitorCode])
   @@index([firstName])
   @@index([lastName])
+  @@index([registrationStatus])
   @@map("visitors")
 }
 
+model Employee {
+  id                  String       @id @default(uuid())
+
+  firstName           String
+  lastName            String
+
+  department          Department
+  designation         String?
+
+  email               String       @unique
+  mobile              String       @unique
+
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  hostedVisits        Visit[]      @relation("VisitHost")
+
+  @@index([department])
+  @@index([email])
+  @@index([mobile])
+
+  @@map("employees")
+}
+
 model Visit {
-  id         String      @id @default(uuid())
-  visitorId  String
-  purpose    String
-  status     VisitStatus @default(CHECKED_IN)
-  checkInAt  DateTime    @default(now())
-  checkOutAt DateTime?
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-  visitor    Visitor     @relation(fields: [visitorId], references: [id])
+  id                  String         @id @default(uuid())
+
+  visitorId           String
+  hostEmployeeId      String
+
+  purpose             VisitPurpose
+  floor               Int
+  notes               String?
+
+  status              VisitStatus    @default(CHECKED_IN)
+
+  checkInAt           DateTime       @default(now())
+  checkOutAt          DateTime?
+
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  visitor             Visitor        @relation(fields: [visitorId], references: [id])
+  hostEmployee        Employee       @relation("VisitHost", fields: [hostEmployeeId], references: [id])
 
   @@index([visitorId])
+  @@index([hostEmployeeId])
+  @@index([purpose])
   @@index([status])
   @@index([checkInAt])
+
   @@map("visits")
 }
 
 model VisitorCounter {
   year         Int      @id
   lastSequence Int      @default(0)
+
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -61,42 +109,104 @@ model VisitorCounter {
 }
 
 model Media {
-  id        String    @id @default(uuid())
+  id        String      @id @default(uuid())
+
   fileName  String
   filePath  String
   mimeType  String
   fileSize  BigInt
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+
+  status    MediaStatus @default(TEMPORARY)
+
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
   visitors  Visitor[]
+
+  @@index([status])
 
   @@map("media")
 }
 
 model VisitorEmail {
   id        String   @id @default(uuid())
+
   visitorId String
   email     String
   isPrimary Boolean  @default(false)
+
   createdAt DateTime @default(now())
+
   visitor   Visitor  @relation(fields: [visitorId], references: [id], onDelete: Cascade)
 
   @@index([visitorId])
   @@index([email])
+
   @@map("visitor_emails")
 }
 
 model VisitorMobile {
   id        String   @id @default(uuid())
+
   visitorId String
   mobile    String
   isPrimary Boolean  @default(false)
+
   createdAt DateTime @default(now())
+
   visitor   Visitor  @relation(fields: [visitorId], references: [id], onDelete: Cascade)
 
   @@index([visitorId])
   @@index([mobile])
+
   @@map("visitor_mobiles")
+}
+
+model VisitorRegistrationWorkflow {
+  id String @id @default(uuid())
+
+  mediaId   String?
+  visitorId String?
+  visitId   String?
+  visitor Visitor? @relation("WorkflowVisitor", fields: [visitorId], references: [id])
+
+  currentStep WorkflowStep
+  status      WorkflowStatus @default(RUNNING)
+
+  createMediaCompleted          Boolean @default(false)
+  createVisitorCompleted        Boolean @default(false)
+  registerFaceCompleted         Boolean @default(false)
+  completeRegistrationCompleted Boolean @default(false)
+  createVisitCompleted          Boolean @default(false)
+  activateMediaCompleted        Boolean @default(false)
+
+  retryCount Int @default(0)
+  lastError String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([visitorId])
+  @@index([status])
+  @@index([currentStep])
+
+  @@map("visitor_registration_workflows")
+}
+
+enum WorkflowStep {
+  CREATE_MEDIA
+  CREATE_VISITOR
+  REGISTER_FACE
+  COMPLETE_REGISTRATION
+  CREATE_VISIT
+  ACTIVATE_MEDIA
+  COMPLETED
+}
+
+enum WorkflowStatus {
+  RUNNING
+  FAILED
+  COMPLETED
 }
 
 enum IdentityType {
@@ -107,7 +217,43 @@ enum IdentityType {
   OTHER
 }
 
+enum Department {
+  ENGINEERING
+  HR
+  FINANCE
+  MARKETING
+  OPERATIONS
+  LEGAL
+  SALES
+  IT
+  ADMIN
+}
+
+enum VisitPurpose {
+  TECHNICAL_DISCUSSION
+  INTERVIEW
+  BUSINESS_MEETING
+  CONTRACT_NEGOTIATION
+  DESIGN_REVIEW
+  TRAINING
+  AUDIT
+  DELIVERY
+  MAINTENANCE
+  OTHER
+}
+
 enum VisitStatus {
   CHECKED_IN
   CHECKED_OUT
+}
+
+enum RegistrationStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum MediaStatus {
+  TEMPORARY
+  ACTIVE
 }

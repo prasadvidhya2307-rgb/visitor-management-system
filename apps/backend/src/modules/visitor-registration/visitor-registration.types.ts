@@ -1,0 +1,1 @@
+export type { createVisitorDto } from '../visitors/visitor.types'

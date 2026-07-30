@@ -1,0 +1,1 @@
+export { default as checkInRoutes } from './check-in.routes'

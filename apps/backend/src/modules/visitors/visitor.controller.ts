@@ -15,7 +15,7 @@ export class VisitorController {
             req: Request<{}, {}, createVisitorDto>,
             res: Response
         ) => {
-            const visitor = await this.visitorService.createVisitor(req.body)
+            const visitor = await this.visitorService.createVisitor(req.body, "123")
 
             return ApiResponse.success(
                 res,

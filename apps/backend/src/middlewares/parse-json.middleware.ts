@@ -3,11 +3,11 @@ import { AppError } from "../utils/app-error";
 
 export const parseJson = (field: string): RequestHandler =>
     (req, _res, next) => {
-        const value = req.body([field]);
+        const value = req.body[field];
 
         if (value === undefined) {
             return next(
-                new AppError("field is required.", 400)
+                new AppError(`${field} is required`, 400)
             );
         }
 
@@ -18,7 +18,7 @@ export const parseJson = (field: string): RequestHandler =>
         }
 
         try {
-            req.body = JSON.parse(value);
+            req.body[field] = JSON.parse(value);
             next();
         } catch {
             next(

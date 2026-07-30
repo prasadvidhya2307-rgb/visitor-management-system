@@ -1,17 +1,15 @@
-export interface ValidationError {
-    field: string,
-    message: string
-}
+// export interface ValidationError {
+//     field: string;
+//     message: string;
+// }
 
-export class AppError extends Error {
-    public readonly statusCode: number;
-    public readonly errors?: ValidationError[]
-
-    constructor(message: string, statusCode = 500, errors?: ValidationError[]) {
+export class AppError<T = unknown> extends Error {
+    constructor(
+        message: string,
+        public readonly statusCode: number,
+        public readonly data?: T,
+    ) {
         super(message);
-
-        this.statusCode = statusCode;
-        this.errors = errors
         Error.captureStackTrace(this, this.constructor);
     }
 }

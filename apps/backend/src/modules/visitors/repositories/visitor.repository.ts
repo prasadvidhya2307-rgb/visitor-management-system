@@ -1,4 +1,4 @@
-import { PrismaClient, Visitor, Prisma } from "../../../generated/prisma/client";
+import { PrismaClient, Visitor, Prisma, RegistrationStatus } from "../../../generated/prisma/client";
 
 export class VisitorRepository {
     constructor(
@@ -22,12 +22,30 @@ export class VisitorRepository {
      */
     public async findById(
         id: string
-    ): Promise<Visitor | null> {
+    ) {
         return this.prisma.visitor.findFirst({
             where: {
                 id,
                 isDeleted: false,
             },
+
+            include: {
+                emails: {
+                    select: {
+                        email: true
+                    }
+                },
+                mobiles: {
+                    select: {
+                        mobile: true
+                    }
+                },
+                registrationImage: {
+                    select: {
+                        filePath: true
+                    }
+                },   
+            }
         });
     }
 
@@ -53,6 +71,15 @@ export class VisitorRepository {
             where: {
                 isDeleted: false,
             },
+
+            include: {
+                registrationImage: {
+                    select: {
+                        filePath: true,
+                    }
+                }
+            },
+
             orderBy: {
                 createdAt: "desc",
             },
@@ -75,6 +102,7 @@ export class VisitorRepository {
         });
     }
 
+
     /**
      * Soft delete visitor
      */
@@ -91,5 +119,13 @@ export class VisitorRepository {
                 deletedAt: new Date(),
             },
         });
+    }
+
+    public async rollbackRegistration(
+        id: string
+    ): Promise<void> {
+        await this.prisma.visitor.delete({
+            where: { id }
+        })
     }
 }

@@ -3,7 +3,6 @@ import { asyncHandler } from "../../utils/async-handler";
 import { AppError } from "../../utils/app-error";
 import { ApiResponse } from "../../utils/api-response";
 import { WorkflowService } from "../workflow/workflow.service";
-import { privateDecrypt } from "node:crypto";
 import { CheckInService } from "./check-in.service";
 import { CreateVisitDto } from "../visit/visit.types";
 

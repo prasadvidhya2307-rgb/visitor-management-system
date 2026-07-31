@@ -12,7 +12,7 @@ import { preRegistrationRoutes } from '../modules/pre-registration/index.js';
 const router = Router();
 
 router.use('/health', healthRoutes);
-router.use('/visitor', visitorRoutes)
+router.use('/visitor', visitorRoutes);
 router.use('/face', faceRecognitionRoutes)
 router.use('/check-in', checkInRoutes)
 router.use('/employee', employeeRoutes)

@@ -3,7 +3,7 @@ import { PrismaClient, Media, Prisma, MediaStatus } from "../../generated/prisma
 export class MediaRepository {
     constructor(
         private readonly prisma: PrismaClient
-    ) {}
+    ) { }
 
     /**
      * Create media
@@ -44,6 +44,17 @@ export class MediaRepository {
             },
             data: {
                 status,
+            },
+        });
+    }
+
+    public async delete(
+        tx: Prisma.TransactionClient,
+        id: string,
+    ): Promise<void> {
+        await tx.media.delete({
+            where: {
+                id,
             },
         });
     }

@@ -6,19 +6,22 @@ services:
     container_name: postgres
     restart: unless-stopped
 
+    env_file:
+      - ./.env
+
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: visitor_management
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
 
     expose:
       - "5432"
 
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data_production:/var/lib/postgresql/data
 
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -32,10 +35,14 @@ services:
       - "6333"
 
     volumes:
-      - qdrant_data:/qdrant/storage
+      - qdrant_data_production:/qdrant/storage
 
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:6333/healthz"]
+      test:
+        [
+          "CMD-SHELL",
+          "bash -c '</dev/tcp/localhost/6333'"
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -49,7 +56,10 @@ services:
     restart: unless-stopped
 
     env_file:
-      - ./.env.production
+      - ./.env
+
+    environment:
+      NODE_ENV: production
 
     expose:
       - "8000"
@@ -59,10 +69,10 @@ services:
         condition: service_healthy
 
     volumes:
-      - insightface_models:/root/.insightface
+      - insightface_models_production:/root/.insightface
 
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8000/health"]
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -70,14 +80,17 @@ services:
 
   backend:
     build:
-      context: ./apps/backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./apps/backend/Dockerfile
 
     container_name: backend
     restart: unless-stopped
 
     env_file:
-      - ./.env.production
+      - ./.env
+
+    environment:
+      NODE_ENV: production
 
     ports:
       - "5000:5000"
@@ -118,6 +131,6 @@ services:
         condition: service_healthy
 
 volumes:
-  postgres_data:
-  qdrant_data:
-  insightface_models:
+  postgres_data_production:
+  qdrant_data_production:
+  insightface_models_production:

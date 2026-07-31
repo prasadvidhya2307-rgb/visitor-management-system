@@ -88,10 +88,15 @@ export const employeeService = new EmployeeService(
 export const faceRecognitionService =
     new FaceRecognitionService();
 
+export const mediaService = new MediaService(
+    mediaRepository,
+    prisma,
+);
 export const visitorRegistrationService =
     new VisitorRegistrationService(
+        mediaService,
         faceRecognitionService,
-        visitorService,
+        visitorService
     );
 
 export const visitService = new VisitService(
@@ -100,10 +105,6 @@ export const visitService = new VisitService(
     employeeRepository
 );
 
-export const mediaService = new MediaService(
-    mediaRepository,
-    prisma,
-);
 
 export const checkInService = new CheckInService(
     mediaService,

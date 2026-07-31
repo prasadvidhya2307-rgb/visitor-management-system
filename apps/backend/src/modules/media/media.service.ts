@@ -54,4 +54,29 @@ export class MediaService {
             await this.mediaRepository.updateStatus(tx, mediaId, MediaStatus.ACTIVE);
         });
     }
+
+    public async deleteTemporary(mediaId: string): Promise<void> {
+        const media = await this.mediaRepository.findById(mediaId);
+
+        if (!media) {
+            return;
+        }
+
+        const absolutePath = path.join(
+            process.cwd(),
+            "storage",
+            "media",
+            media.filePath,
+        );
+
+        try {
+            await fs.unlink(absolutePath);
+        } catch {
+            // Ignore if file does not exist
+        }
+
+        await this.prisma.$transaction(async (tx) => {
+            await this.mediaRepository.delete(tx, mediaId);
+        });
+    }
 }

@@ -5,8 +5,8 @@ import {
     VisitPurpose,
 } from "../../generated/prisma/client";
 
-import { EmployeeResponseDto } from "../employee/employee.types";
-import { VisitorResponseDto } from "../visitors/visitor.types";
+import { EmployeeResponseDto } from "../employee/employee.types.js";
+import { VisitorResponseDto } from "../visitors/visitor.types.js";
 
 export interface CreatePreRegistrationDto {
     firstName: string;

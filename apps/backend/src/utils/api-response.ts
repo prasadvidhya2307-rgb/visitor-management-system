@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { FaceRecognitionCode } from "../modules/face-recognised/face-recognition.types";
+import { FaceRecognitionCode } from "../modules/face-recognised/face-recognition.types.js";
 
 export class ApiResponse {
 

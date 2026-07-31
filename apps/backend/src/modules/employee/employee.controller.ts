@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
-import { ApiResponse } from "../../utils/api-response";
-import { EmployeeService } from "./employee.service";
+import { ApiResponse } from "../../utils/api-response.js";
+import { EmployeeService } from "./employee.service.js";
 import {
     CreateEmployeeDto,
     UpdateEmployeeDto,
-} from "./employee.types";
-import { asyncHandler } from "../../utils/async-handler";
+} from "./employee.types.js";
+import { asyncHandler } from "../../utils/async-handler.js";
 
 export class EmployeeController {
     constructor(

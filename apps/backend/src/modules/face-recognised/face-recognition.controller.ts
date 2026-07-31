@@ -1,10 +1,10 @@
 import { Request, Response } from 'express'
-import { asyncHandler } from "../../utils/async-handler";
-import { FaceRecognitionService } from './face-recognition.service';
-import { AppError } from '../../utils/app-error';
-import { FaceApiResponse } from '../../utils/api-response';
-import { VisitorService } from '../visitors/visitor.service';
-import { NodeResponseToFrontendRecognizeData } from './face-recognition.types';
+import { asyncHandler } from "../../utils/async-handler.js";
+import { FaceRecognitionService } from './face-recognition.service.js';
+import { AppError } from '../../utils/app-error.js';
+import { FaceApiResponse } from '../../utils/api-response.js';
+import { VisitorService } from '../visitors/visitor.service.js';
+import { NodeResponseToFrontendRecognizeData } from './face-recognition.types.js';
 
 export class FaceRecognitionController {
 

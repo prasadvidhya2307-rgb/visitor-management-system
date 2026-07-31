@@ -1,8 +1,8 @@
 import FormData from "form-data";
 
-import { fastApiClient } from "../../lib/fastApi";
-import { FAST_API_ENDPOINTS } from "../../constants/endpoints";
-import { AppError } from "../../utils/app-error";
+import { fastApiClient } from "../../lib/fastApi.js";
+import { FAST_API_ENDPOINTS } from "../../constants/endpoints.js";
+import { AppError } from "../../utils/app-error.js";
 
 import {
     FaceRecognitionResponseToNode,

@@ -1,12 +1,12 @@
 import { PrismaClient, PreRegistrationStatus, PreRegistration } from "../../generated/prisma/client";
-import { AppError } from "../../utils/app-error";
-import { EmployeeService } from "../employee/employee.service";
-import { PreRegistrationRepository } from "./pre-registration.repository";
+import { AppError } from "../../utils/app-error.js";
+import { EmployeeService } from "../employee/employee.service.js";
+import { PreRegistrationRepository } from "./pre-registration.repository.js";
 import {
     CreatePreRegistrationDto,
     PreRegistrationResponseDto,
     UpdatePreRegistrationDto,
-} from "./pre-registration.types";
+} from "./pre-registration.types.js";
 
 export class PreRegistrationService {
     constructor(

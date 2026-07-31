@@ -1,9 +1,9 @@
-import { FaceRecognitionService } from "../face-recognised/face-recognition.service";
-import { MediaService } from "../media/media.service";
-import { VisitService } from "../visit/visit.service";
-import { CreateVisitDto } from "../visit/visit.types";
-import { VisitorService } from "../visitors/visitor.service";
-import { CheckInDto } from "./check-in.types";
+import { FaceRecognitionService } from "../face-recognised/face-recognition.service.js";
+import { MediaService } from "../media/media.service.js";
+import { VisitService } from "../visit/visit.service.js";
+import { CreateVisitDto } from "../visit/visit.types.js";
+import { VisitorService } from "../visitors/visitor.service.js";
+import { CheckInDto } from "./check-in.types.js";
 
 export class CheckInService {
     constructor(

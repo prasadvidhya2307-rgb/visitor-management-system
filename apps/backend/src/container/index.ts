@@ -1,42 +1,42 @@
-import { prisma } from "../database/prisma";
+import { prisma } from "../database/prisma.js";
 
-import { CheckInController } from "../modules/check-in/check-in.controller";
-import { CheckInService } from "../modules/check-in/check-in.service";
+import { CheckInController } from "../modules/check-in/check-in.controller.js";
+import { CheckInService } from "../modules/check-in/check-in.service.js";
 
-import { EmployeeController } from "../modules/employee/employee.controller";
-import { EmployeeRepository } from "../modules/employee/employee.repository";
-import { EmployeeService } from "../modules/employee/employee.service";
+import { EmployeeController } from "../modules/employee/employee.controller.js";
+import { EmployeeRepository } from "../modules/employee/employee.repository.js";
+import { EmployeeService } from "../modules/employee/employee.service.js";
 
-import { FaceRecognitionController } from "../modules/face-recognised/face-recognition.controller";
-import { FaceRecognitionService } from "../modules/face-recognised/face-recognition.service";
+import { FaceRecognitionController } from "../modules/face-recognised/face-recognition.controller.js";
+import { FaceRecognitionService } from "../modules/face-recognised/face-recognition.service.js";
 
-import { MediaRepository } from "../modules/media/media.repository";
-import { MediaService } from "../modules/media/media.service";
-import { VisitController } from "../modules/visit/visit.controller";
+import { MediaRepository } from "../modules/media/media.repository.js";
+import { MediaService } from "../modules/media/media.service.js";
+import { VisitController } from "../modules/visit/visit.controller.js";
 
-import { VisitRepository } from "../modules/visit/visit.repository";
-import { VisitService } from "../modules/visit/visit.service";
+import { VisitRepository } from "../modules/visit/visit.repository.js";
+import { VisitService } from "../modules/visit/visit.service.js";
 
-import { VisitorRegistrationController } from "../modules/visitor-registration/visitor-registration.controller";
-import { VisitorRegistrationService } from "../modules/visitor-registration/visitor-registration.service";
+import { VisitorRegistrationController } from "../modules/visitor-registration/visitor-registration.controller.js";
+import { VisitorRegistrationService } from "../modules/visitor-registration/visitor-registration.service.js";
 
-import { VisitorCounterRepository } from "../modules/visitors/repositories/visitor-counter.repository";
-import { VisitorEmailRepository } from "../modules/visitors/repositories/visitor-email.repository";
-import { VisitorMobileRepository } from "../modules/visitors/repositories/visitor-mobile.repository";
-import { VisitorRepository } from "../modules/visitors/repositories/visitor.repository";
+import { VisitorCounterRepository } from "../modules/visitors/repositories/visitor-counter.repository.js";
+import { VisitorEmailRepository } from "../modules/visitors/repositories/visitor-email.repository.js";
+import { VisitorMobileRepository } from "../modules/visitors/repositories/visitor-mobile.repository.js";
+import { VisitorRepository } from "../modules/visitors/repositories/visitor.repository.js";
 
-import { VisitorController } from "../modules/visitors/visitor.controller";
-import { VisitorService } from "../modules/visitors/visitor.service";
+import { VisitorController } from "../modules/visitors/visitor.controller.js";
+import { VisitorService } from "../modules/visitors/visitor.service.js";
 
-import { WorkflowRepository } from "../modules/workflow/workflow.repository";
-import { WorkflowService } from "../modules/workflow/workflow.service";
+import { WorkflowRepository } from "../modules/workflow/workflow.repository.js";
+import { WorkflowService } from "../modules/workflow/workflow.service.js";
 
-import { CheckOutController } from "../modules/check-out/check-out.controller";
-import { CheckOutService } from "../modules/check-out/check-out.service";
+import { CheckOutController } from "../modules/check-out/check-out.controller.js";
+import { CheckOutService } from "../modules/check-out/check-out.service.js";
 
-import { PreRegistrationRepository } from "../modules/pre-registration/pre-registration.repository";
-import { PreRegistrationService } from "../modules/pre-registration/pre-registration.service";
-import { PreRegistrationController } from "../modules/pre-registration/pre-registration.controller";
+import { PreRegistrationRepository } from "../modules/pre-registration/pre-registration.repository.js";
+import { PreRegistrationService } from "../modules/pre-registration/pre-registration.service.js";
+import { PreRegistrationController } from "../modules/pre-registration/pre-registration.controller.js";
 
 // -----------------------------------------------------------------------------
 // Repositories

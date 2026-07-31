@@ -5,7 +5,7 @@ import {
     PrismaClient,
 } from "../../generated/prisma/client";
 
-import { AppError } from "../../utils/app-error";
+import { AppError } from "../../utils/app-error.js";
 
 export class PreRegistrationRepository {
     constructor(

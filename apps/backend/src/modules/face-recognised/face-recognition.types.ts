@@ -4,7 +4,7 @@
  * 1. node <---> fast api (contains peronId inside data)
  * 2. node <---> frontend (we will add visitor inside data in controller layer)
  */
-import { createVisitorDto, VisitorResponseDto } from "../visitors/visitor.types";
+import { createVisitorDto, VisitorResponseDto } from "../visitors/visitor.types.js";
 
 export enum FaceRecognitionCode {
   CREATED = "CREATED",

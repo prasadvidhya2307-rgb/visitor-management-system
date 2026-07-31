@@ -1,1 +1,1 @@
-export { default as checkOutRoutes } from './check-out.routes'
+export { default as checkOutRoutes } from './check-out.routes.js'

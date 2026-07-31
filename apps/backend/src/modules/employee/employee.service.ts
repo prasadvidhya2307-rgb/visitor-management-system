@@ -2,8 +2,8 @@ import {
     Employee,
     PrismaClient,
 } from "../../generated/prisma/client";
-import { AppError } from "../../utils/app-error";
-import { EmployeeRepository } from "./employee.repository";
+import { AppError } from "../../utils/app-error.js";
+import { EmployeeRepository } from "./employee.repository.js";
 import {
     CreateEmployeeDto,
     EmployeeResponseDto,

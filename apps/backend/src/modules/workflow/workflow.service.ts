@@ -3,15 +3,15 @@ import {
     WorkflowStatus,
     WorkflowStep,
 } from "../../generated/prisma/client";
-import { WorkflowError } from "../../middlewares/workflow.error";
-import { AppError } from "../../utils/app-error";
-import { CheckInDto, CheckInResponse } from "../check-in/check-in.types";
-import { FaceRecognitionService } from "../face-recognised/face-recognition.service";
-import { MediaService } from "../media/media.service";
-import { VisitService } from "../visit/visit.service";
-import { VisitorService } from "../visitors/visitor.service";
-import { VisitorResponseDto } from "../visitors/visitor.types";
-import { WorkflowRepository } from "./workflow.repository";
+import { WorkflowError } from "../../middlewares/workflow.error.js";
+import { AppError } from "../../utils/app-error.js";
+import { CheckInDto, CheckInResponse } from "../check-in/check-in.types.js";
+import { FaceRecognitionService } from "../face-recognised/face-recognition.service.js";
+import { MediaService } from "../media/media.service.js";
+import { VisitService } from "../visit/visit.service.js";
+import { VisitorService } from "../visitors/visitor.service.js";
+import { VisitorResponseDto } from "../visitors/visitor.types.js";
+import { WorkflowRepository } from "./workflow.repository.js";
 
 export class WorkflowService {
     constructor(

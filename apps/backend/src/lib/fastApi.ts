@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
-import { env } from "../config/env";
-import { AppError } from "../utils/app-error";
-import { FaceApiResponseBody } from "../modules/face-recognised/face-recognition.types";
+import { env } from "../config/env.js";
+import { AppError } from "../utils/app-error.js";
+import { FaceApiResponseBody } from "../modules/face-recognised/face-recognition.types.js";
 
 export const fastApiClient = axios.create({
   baseURL: env.FASTAPI_URL,

@@ -1,1 +1,1 @@
-export { default as visitRoutes } from './visit.routes'
+export { default as visitRoutes } from './visit.routes.js'

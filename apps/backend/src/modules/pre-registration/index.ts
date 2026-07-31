@@ -1,1 +1,1 @@
-export { default as preRegistrationRoutes } from './pre-registration.routes'
+export { default as preRegistrationRoutes } from './pre-registration.routes.js'

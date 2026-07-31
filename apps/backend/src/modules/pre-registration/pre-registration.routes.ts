@@ -1,11 +1,11 @@
 import { Router } from "express";
 
-import { validate } from "../../middlewares/validate.middleware";
+import { validate } from "../../middlewares/validate.middleware.js";
 
 import {
     createPreRegistrationSchema,
     updatePreRegistrationSchema,
-} from "./pre-registration.validation";
+} from "./pre-registration.validation.js";
 
 import { preRegistrationController } from "../../container";
 

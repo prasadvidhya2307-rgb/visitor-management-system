@@ -1,8 +1,8 @@
-import { asyncHandler } from "../../utils/async-handler";
+import { asyncHandler } from "../../utils/async-handler.js";
 import { Request, Response } from 'express'
-import { VisitorRegistrationService } from "./visitor-registration.service";
-import { ApiResponse } from "../../utils/api-response";
-import { AppError } from "../../utils/app-error";
+import { VisitorRegistrationService } from "./visitor-registration.service.js";
+import { ApiResponse } from "../../utils/api-response.js";
+import { AppError } from "../../utils/app-error.js";
 
 export class VisitorRegistrationController {
 

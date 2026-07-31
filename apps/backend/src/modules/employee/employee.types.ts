@@ -3,7 +3,7 @@ import { z } from "zod";
 import {
     createEmployeeSchema,
     updateEmployeeSchema,
-} from "./employee.validation";
+} from "./employee.validation.js";
 import { Department } from "../../generated/prisma/enums";
 
 export type CreateEmployeeDto =

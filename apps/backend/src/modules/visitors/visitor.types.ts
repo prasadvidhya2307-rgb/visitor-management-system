@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { createEmailSchema, createMobileSchema, createVisitorSchema, updateVisitorSchema } from "./visitor.validation";
+import { createEmailSchema, createMobileSchema, createVisitorSchema, updateVisitorSchema } from "./visitor.validation.js";
 import { IdentityType, RegistrationStatus } from '../../generated/prisma/enums';
 
 

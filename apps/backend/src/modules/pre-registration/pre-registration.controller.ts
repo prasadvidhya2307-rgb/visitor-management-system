@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 
-import { ApiResponse } from "../../utils/api-response";
+import { ApiResponse } from "../../utils/api-response.js";
 
-import { PreRegistrationService } from "./pre-registration.service";
+import { PreRegistrationService } from "./pre-registration.service.js";
 import {
     CreatePreRegistrationDto,
     UpdatePreRegistrationDto,

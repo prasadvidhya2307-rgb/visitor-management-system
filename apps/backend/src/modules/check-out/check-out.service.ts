@@ -1,14 +1,14 @@
 import { Visit } from "../../generated/prisma/client";
 
-import { FaceRecognitionService } from "../face-recognised/face-recognition.service";
+import { FaceRecognitionService } from "../face-recognised/face-recognition.service.js";
 import {
     FaceRecognitionCode,
     FaceRecognitionResponseToNode,
-} from "../face-recognised/face-recognition.types";
+} from "../face-recognised/face-recognition.types.js";
 
-import { VisitService } from "../visit/visit.service";
-import { VisitorService } from "../visitors/visitor.service";
-import { VisitorResponseDto } from "../visitors/visitor.types";
+import { VisitService } from "../visit/visit.service.js";
+import { VisitorService } from "../visitors/visitor.service.js";
+import { VisitorResponseDto } from "../visitors/visitor.types.js";
 
 export class CheckOutService {
     constructor(

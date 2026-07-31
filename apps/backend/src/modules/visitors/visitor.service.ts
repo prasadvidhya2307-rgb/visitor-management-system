@@ -1,10 +1,10 @@
 import { Prisma, PrismaClient, RegistrationStatus } from "../../generated/prisma/client";
-import { AppError } from "../../utils/app-error";
-import { VisitorCounterRepository } from "./repositories/visitor-counter.repository";
-import { VisitorEmailRepository } from "./repositories/visitor-email.repository";
-import { VisitorMobileRepository } from "./repositories/visitor-mobile.repository";
-import { VisitorRepository } from "./repositories/visitor.repository";
-import { createVisitorDto, updateVisitorDto } from "./visitor.types";
+import { AppError } from "../../utils/app-error.js";
+import { VisitorCounterRepository } from "./repositories/visitor-counter.repository.js";
+import { VisitorEmailRepository } from "./repositories/visitor-email.repository.js";
+import { VisitorMobileRepository } from "./repositories/visitor-mobile.repository.js";
+import { VisitorRepository } from "./repositories/visitor.repository.js";
+import { createVisitorDto, updateVisitorDto } from "./visitor.types.js";
 
 export class VisitorService {
     constructor(

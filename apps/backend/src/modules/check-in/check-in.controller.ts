@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
-import { asyncHandler } from "../../utils/async-handler";
-import { AppError } from "../../utils/app-error";
-import { ApiResponse } from "../../utils/api-response";
-import { WorkflowService } from "../workflow/workflow.service";
-import { CheckInService } from "./check-in.service";
-import { CreateVisitDto } from "../visit/visit.types";
+import { asyncHandler } from "../../utils/async-handler.js";
+import { AppError } from "../../utils/app-error.js";
+import { ApiResponse } from "../../utils/api-response.js";
+import { WorkflowService } from "../workflow/workflow.service.js";
+import { CheckInService } from "./check-in.service.js";
+import { CreateVisitDto } from "../visit/visit.types.js";
 
 export class CheckInController {
     constructor(

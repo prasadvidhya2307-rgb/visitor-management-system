@@ -1,7 +1,7 @@
 import { Router } from "express";
 
-import { checkOutController } from "../../container";
-import { uplaod } from "../../middlewares/upload.middleware";
+import { checkOutController } from "../../container/index.js";
+import { uplaod } from "../../middlewares/upload.middleware.js";
 
 const router = Router();
 

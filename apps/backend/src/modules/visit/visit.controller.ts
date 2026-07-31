@@ -1,13 +1,13 @@
 import { Request, Response } from "express";
 
-import { asyncHandler } from "../../utils/async-handler";
-import { ApiResponse } from "../../utils/api-response";
+import { asyncHandler } from "../../utils/async-handler.js";
+import { ApiResponse } from "../../utils/api-response.js";
 
-import { VisitService } from "./visit.service";
+import { VisitService } from "./visit.service.js";
 import {
     CreateVisitDto,
     UpdateVisitDto,
-} from "./visit.types";
+} from "./visit.types.js";
 
 export class VisitController {
     constructor(

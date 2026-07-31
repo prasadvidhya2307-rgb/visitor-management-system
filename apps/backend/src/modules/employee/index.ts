@@ -1,1 +1,1 @@
-export { default as employeeRoutes} from './employee.routes'
+export { default as employeeRoutes} from './employee.routes.js'

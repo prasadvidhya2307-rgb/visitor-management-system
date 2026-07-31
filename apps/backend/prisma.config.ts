@@ -12,6 +12,6 @@ export default defineConfig({
     },
 
     datasource: {
-        url: env("DATABASE_URL"),
+        url: "postgresql://postgres:postgres@postgress:5432/visitor_management",
     },
 });

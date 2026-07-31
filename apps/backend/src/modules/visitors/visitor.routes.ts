@@ -1,9 +1,9 @@
 import { Router } from 'express'
-import { validate } from '../../middlewares/validate.middleware';
-import { createVisitorSchema, updateVisitorSchema } from './visitor.validation';
-import { visitorController, visitorRegistrationController } from '../../container';
-import { uplaod } from '../../middlewares/upload.middleware'
-import { parseJson } from '../../middlewares/parse-json.middleware';
+import { validate } from '../../middlewares/validate.middleware.js';
+import { createVisitorSchema, updateVisitorSchema } from './visitor.validation.js';
+import { visitorController, visitorRegistrationController } from '../../container/index.js';
+import { uplaod } from '../../middlewares/upload.middleware.js'
+import { parseJson } from '../../middlewares/parse-json.middleware.js';
 
 const router = Router();
 

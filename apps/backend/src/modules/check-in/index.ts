@@ -1,1 +1,1 @@
-export { default as checkInRoutes } from './check-in.routes'
+export { default as checkInRoutes } from './check-in.routes.js'

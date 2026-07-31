@@ -1,1 +1,1 @@
-export type { createVisitorDto } from '../visitors/visitor.types'
+export type { createVisitorDto } from '../visitors/visitor.types.js'

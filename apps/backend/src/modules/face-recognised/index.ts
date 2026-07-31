@@ -1,1 +1,1 @@
-export { default as faceRecognitionRoutes } from './face-recognition.routes'
+export { default as faceRecognitionRoutes } from './face-recognition.routes.js'

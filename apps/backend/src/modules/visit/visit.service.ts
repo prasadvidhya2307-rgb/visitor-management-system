@@ -3,9 +3,9 @@ import {
     Visit,
 } from "../../generated/prisma/client";
 
-import { AppError } from "../../utils/app-error";
-import { EmployeeRepository } from "../employee/employee.repository";
-import { VisitRepository } from "./visit.repository";
+import { AppError } from "../../utils/app-error.js";
+import { EmployeeRepository } from "../employee/employee.repository.js";
+import { VisitRepository } from "./visit.repository.js";
 import {
     CreateVisitDto,
     UpdateVisitDto,

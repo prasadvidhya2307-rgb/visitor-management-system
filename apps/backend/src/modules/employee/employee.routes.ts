@@ -4,8 +4,8 @@ import {
     createEmployeeSchema,
     updateEmployeeSchema,
 } from "./employee.validation";
-import { employeeController } from "../../container";
-import { validate } from "../../middlewares/validate.middleware";
+import { employeeController } from "../../container/index.js";
+import { validate } from "../../middlewares/validate.middleware.js";
 
 const router = Router();
 

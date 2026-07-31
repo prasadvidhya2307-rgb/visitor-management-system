@@ -8,7 +8,7 @@ import {
     PrismaClient,
 } from "../../generated/prisma/client";
 
-import { MediaRepository } from "./media.repository";
+import { MediaRepository } from "./media.repository.js";
 
 export class MediaService {
     private readonly registrationDirectory = path.join(

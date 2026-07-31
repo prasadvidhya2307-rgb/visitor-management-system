@@ -1,8 +1,8 @@
 import z from "zod";
-import { createVisitSchema, updateVisitSchema } from "./visit.validation";
+import { createVisitSchema, updateVisitSchema } from "./visit.validation.js";
 import { VisitPurpose, VisitStatus } from "../../generated/prisma/enums";
-import { VisitorResponseDto } from "../visitors/visitor.types";
-import { EmployeeResponseDto } from "../employee/employee.types";
+import { VisitorResponseDto } from "../visitors/visitor.types.js";
+import { EmployeeResponseDto } from "../employee/employee.types.js";
 
 export type CreateVisitDto = z.infer<typeof createVisitSchema>
 export type UpdateVisitDto = z.infer<typeof updateVisitSchema>

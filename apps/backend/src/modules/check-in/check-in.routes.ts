@@ -1,10 +1,10 @@
 import { Router } from "express";
-import { uplaod } from "../../middlewares/upload.middleware";
-import { parseJson } from "../../middlewares/parse-json.middleware";
-import { validate } from "../../middlewares/validate.middleware";
-import { checkInSchema } from "./check-in.validation";
-import { checkInController } from "../../container";
-import { createVisitSchema } from "../visit/visit.validation";
+import { uplaod } from "../../middlewares/upload.middleware.js";
+import { parseJson } from "../../middlewares/parse-json.middleware.js";
+import { validate } from "../../middlewares/validate.middleware.js";
+import { checkInSchema } from "./check-in.validation.js";
+import { checkInController } from "../../container/index.js";
+import { createVisitSchema } from "../visit/visit.validation.js";
 
 const router = Router();
 

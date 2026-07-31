@@ -1,5 +1,5 @@
 import { RequestHandler } from "express";
-import { AppError } from "../utils/app-error";
+import { AppError } from "../utils/app-error.js";
 
 export const parseJson = (field: string): RequestHandler =>
     (req, _res, next) => {

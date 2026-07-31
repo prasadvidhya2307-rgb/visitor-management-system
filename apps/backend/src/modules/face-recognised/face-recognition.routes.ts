@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { uplaod } from "../../middlewares/upload.middleware";
-import { faceRecognitionConstroller } from "../../container";
+import { uplaod } from "../../middlewares/upload.middleware.js";
+import { faceRecognitionConstroller } from "../../container/index.js";
 
 const router = Router();
 

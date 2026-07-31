@@ -3,7 +3,7 @@ import {
     Prisma,
     PrismaClient,
 } from "../../generated/prisma/client";
-import { AppError } from "../../utils/app-error";
+import { AppError } from "../../utils/app-error.js";
 
 export class EmployeeRepository {
     constructor(

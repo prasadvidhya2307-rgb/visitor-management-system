@@ -1,8 +1,8 @@
 import { Media, Visitor } from "../../generated/prisma/client";
-import { FaceRecognitionService } from "../face-recognised/face-recognition.service";
-import { MediaService } from "../media/media.service";
-import { VisitorService } from "../visitors/visitor.service";
-import { createVisitorDto } from "./visitor-registration.types";
+import { FaceRecognitionService } from "../face-recognised/face-recognition.service.js";
+import { MediaService } from "../media/media.service.js";
+import { VisitorService } from "../visitors/visitor.service.js";
+import { createVisitorDto } from "./visitor-registration.types.js";
 
 export class VisitorRegistrationService {
     constructor(

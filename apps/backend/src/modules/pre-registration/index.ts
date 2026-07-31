@@ -1,0 +1,1 @@
+export { default as preRegistrationRoutes } from './pre-registration.routes'

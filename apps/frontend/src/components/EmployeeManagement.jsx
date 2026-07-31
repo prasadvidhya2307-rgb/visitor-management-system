@@ -1,33 +1,86 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserCog, Plus, Edit2, Trash2, X } from 'lucide-react';
-import store from '../store';
+import {
+  createEmployee,
+  deleteEmployee,
+  getEmployees,
+  updateEmployee,
+} from '../api';
 
 const DEPARTMENTS = ['Engineering', 'HR', 'Finance', 'Marketing', 'Operations', 'Legal', 'Sales', 'IT', 'Admin'];
+
+function displayDepartment(department) {
+  return department
+    .toLowerCase()
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+function toUiEmployee(employee) {
+  return {
+    id: employee.id,
+    name: `${employee.firstName} ${employee.lastName}`.trim(),
+    email: employee.email,
+    phone: employee.mobile,
+    department: displayDepartment(employee.department),
+    designation: employee.designation || '',
+  };
+}
+
+function toApiEmployee(form) {
+  return {
+    firstName: form.firstName.trim(),
+    lastName: form.lastName.trim(),
+    department: form.department.toUpperCase().replace(/\s+/g, '_'),
+    designation: form.designation.trim() || undefined,
+    email: form.email.trim(),
+    mobile: form.phone.trim(),
+  };
+}
 
 export default function EmployeeManagement() {
   const [employees, setEmployees] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editId, setEditId] = useState(null);
-  const [form, setForm] = useState({ name: '', email: '', phone: '', department: '', designation: '' });
+  const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '', department: '', designation: '' });
 
-  useEffect(() => { setEmployees(store.getEmployees()); }, []);
+  useEffect(() => { loadEmployees(); }, []);
 
-  function openAdd() { setEditId(null); setForm({ name: '', email: '', phone: '', department: '', designation: '' }); setShowModal(true); }
-  function openEdit(emp) { setEditId(emp.id); setForm({ name: emp.name, email: emp.email, phone: emp.phone, department: emp.department, designation: emp.designation }); setShowModal(true); }
-
-  function handleSubmit(e) {
-    e.preventDefault();
-    if (editId) store.updateEmployee(editId, form);
-    else store.addEmployee(form);
-    setShowModal(false);
-    setEmployees(store.getEmployees());
+  async function loadEmployees() {
+    try {
+      const data = await getEmployees();
+      setEmployees(data.map(toUiEmployee));
+    } catch (error) {
+      window.alert(error.message || 'Unable to load employees.');
+    }
   }
 
-  function handleDelete(id) {
+  function openAdd() { setEditId(null); setForm({ firstName: '', lastName: '', email: '', phone: '', department: '', designation: '' }); setShowModal(true); }
+  function openEdit(emp) { setEditId(emp.id); setForm({ firstName: emp.firstName, lastName: emp.lastName, email: emp.email, phone: emp.phone, department: emp.department, designation: emp.designation }); setShowModal(true); }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    try {
+      const employee = toApiEmployee(form);
+      if (editId) await updateEmployee(editId, employee);
+      else await createEmployee(employee);
+      setShowModal(false);
+      await loadEmployees();
+    } catch (error) {
+      window.alert(error.message || 'Unable to save employee.');
+    }
+  }
+
+  async function handleDelete(id) {
     if (window.confirm('Delete this employee?')) {
-      store.deleteEmployee(id);
-      setEmployees(store.getEmployees());
+      try {
+        await deleteEmployee(id);
+        await loadEmployees();
+      } catch (error) {
+        window.alert(error.message || 'Unable to delete employee.');
+      }
     }
   }
 
@@ -78,7 +131,10 @@ export default function EmployeeManagement() {
               <div className="modal-h"><h3>{editId ? 'Edit Employee' : 'Add Employee'}</h3><button onClick={() => setShowModal(false)}><X size={20} /></button></div>
               <form onSubmit={handleSubmit}>
                 <div className="modal-b">
-                  <div className="form-g"><label className="form-l">Full Name *</label><input className="form-i" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <div className="form-g"><label className="form-l">First Name *</label><input className="form-i" required value={form.firstName} onChange={e => setForm({ ...form, firstName: e.target.value })} /></div>
+                    <div className="form-g"><label className="form-l">Last Name *</label><input className="form-i" required value={form.lastName} onChange={e => setForm({ ...form, lastName: e.target.value })} /></div>
+                  </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                     <div className="form-g"><label className="form-l">Department *</label><select className="form-s" required value={form.department} onChange={e => setForm({ ...form, department: e.target.value })}><option value="">Select...</option>{DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}</select></div>
                     <div className="form-g"><label className="form-l">Designation</label><input className="form-i" value={form.designation} onChange={e => setForm({ ...form, designation: e.target.value })} /></div>

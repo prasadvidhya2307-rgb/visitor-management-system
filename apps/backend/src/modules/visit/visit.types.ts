@@ -16,8 +16,8 @@ export interface VisitResponseDto {
     floor: number;
     notes: string | null;
     status: VisitStatus;
-    checkInAt: string;
-    checkOutAt: string | null;
-    visitor: VisitorResponseDto;
-    hostEmployee: EmployeeResponseDto;
+    checkInAt: Date;
+    checkOutAt: Date | null;
+    createdAt: Date | null
+    updatedAt: Date | null
 }

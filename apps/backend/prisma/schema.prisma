@@ -36,6 +36,7 @@ model Visitor {
   mobiles             VisitorMobile[]
   visits              Visit[]
   registrationWorkflows VisitorRegistrationWorkflow[] @relation("WorkflowVisitor")
+  preRegistrations PreRegistration[]
 
   @@index([visitorCode])
   @@index([firstName])
@@ -60,6 +61,7 @@ model Employee {
   updatedAt           DateTime     @updatedAt
 
   hostedVisits        Visit[]      @relation("VisitHost")
+  preRegistrations PreRegistration[]
 
   isActive  Boolean  @default(true)
   isDeleted Boolean  @default(false)
@@ -100,6 +102,43 @@ model Visit {
   @@index([checkInAt])
 
   @@map("visits")
+}
+
+model PreRegistration {
+  id String @id @default(uuid())
+
+  firstName String
+  lastName String
+
+  company String?
+
+  email String?
+  phone String?
+
+  hostEmployeeId String
+  hostEmployee Employee @relation(fields: [hostEmployeeId], references: [id])
+
+  purpose VisitPurpose
+
+  floor Int
+  notes String?
+
+  validFrom DateTime
+  validTo DateTime
+
+  isRecurring Boolean @default(false)
+
+  recurrenceType RecurrenceType @default(NONE)
+
+  status PreRegistrationStatus @default(PENDING)
+
+  visitorId String?
+  visitor Visitor? @relation(fields: [visitorId], references: [id])
+
+  checkedInAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model VisitorCounter {
@@ -260,4 +299,18 @@ enum RegistrationStatus {
 enum MediaStatus {
   TEMPORARY
   ACTIVE
+}
+
+enum PreRegistrationStatus {
+  PENDING
+  CHECKED_IN
+  EXPIRED
+  CANCELLED
+}
+
+enum RecurrenceType {
+  NONE
+  DAILY
+  WEEKLY
+  MONTHLY
 }

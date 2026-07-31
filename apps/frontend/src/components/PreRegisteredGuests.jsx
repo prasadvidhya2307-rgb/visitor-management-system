@@ -1,151 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ClipboardCheck, Plus, Trash2, Edit2, X, Search } from 'lucide-react';
-import store from '../store';
+import { ClipboardCheck, Plus, Trash2, Edit2, X, Search, RefreshCw } from 'lucide-react';
+import { cancelPreRegistration, createPreRegistration, getEmployees, getPreRegistrations, updatePreRegistration } from '../api';
 
-const FREQUENCIES = ['daily', 'weekly', 'monthly'];
+const PURPOSES = ['TECHNICAL_DISCUSSION', 'INTERVIEW', 'BUSINESS_MEETING', 'CONTRACT_NEGOTIATION', 'DESIGN_REVIEW', 'TRAINING', 'AUDIT', 'DELIVERY', 'MAINTENANCE', 'OTHER'];
+const RECURRENCES = ['NONE', 'DAILY', 'WEEKLY', 'MONTHLY'];
+const readable = value => value ? String(value).replace(/_/g, ' ') : '—';
+const nameOf = person => [person?.firstName, person?.lastName].filter(Boolean).join(' ') || 'N/A';
+const dateInput = value => value ? new Date(value).toISOString().slice(0, 10) : '';
+const emptyForm = () => ({ firstName: '', lastName: '', company: '', email: '', phone: '', hostEmployeeId: '', purpose: 'TECHNICAL_DISCUSSION', floor: 0, notes: '', validFrom: new Date().toISOString().slice(0, 10), validTo: '', recurrence: 'NONE' });
 
 export default function PreRegisteredGuests() {
-  const [guests, setGuests] = useState([]);
-  const [employees, setEmployees] = useState([]);
-  const [search, setSearch] = useState('');
-  const [showModal, setShowModal] = useState(false);
-  const [editId, setEditId] = useState(null);
-  const [form, setForm] = useState({ name: '', company: '', email: '', phone: '', employeeId: '', purpose: '', validFrom: new Date().toISOString().slice(0, 10), validTo: '', recurring: false, frequency: 'weekly' });
-
-  useEffect(() => { refresh(); }, []);
-
-  function refresh() {
-    setGuests(store.getPreRegistered());
-    setEmployees(store.getEmployees());
-  }
-
-  const filtered = guests.filter(g =>
-    g.name?.toLowerCase().includes(search.toLowerCase()) ||
-    g.company?.toLowerCase().includes(search.toLowerCase()) ||
-    g.email?.toLowerCase().includes(search.toLowerCase()) ||
-    g.phone?.includes(search) ||
-    g.purpose?.toLowerCase().includes(search.toLowerCase())
-  );
-
-  function openAdd() {
-    setEditId(null);
-    setForm({ name: '', company: '', email: '', phone: '', employeeId: '', purpose: '', validFrom: new Date().toISOString().slice(0, 10), validTo: '', recurring: false, frequency: 'weekly' });
-    setShowModal(true);
-  }
-
-  function openEdit(g) {
-    setEditId(g.id);
-    setForm({ name: g.name, company: g.company, email: g.email, phone: g.phone, employeeId: g.employeeId, purpose: g.purpose, validFrom: g.validFrom, validTo: g.validTo, recurring: g.recurring, frequency: g.frequency });
-    setShowModal(true);
-  }
-
-  function handleSubmit(e) {
-    e.preventDefault();
-    if (editId) store.updatePreRegistered(editId, form);
-    else store.addPreRegistered(form);
-    setShowModal(false);
-    refresh();
-  }
-
-  function handleDelete(id) { store.deletePreRegistered(id); refresh(); }
-
-  function handleRevoke(id) { store.updatePreRegistered(id, { status: 'revoked' }); refresh(); }
-
-  return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, gap: 12, flexWrap: 'wrap' }}>
-        <div style={{ position: 'relative', flex: '1 1 250px', maxWidth: 400 }}>
-          <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text2)' }} />
-          <input className="form-i" style={{ paddingLeft: 36 }} placeholder="Search by name, company, email, phone, purpose..." value={search} onChange={e => setSearch(e.target.value)} />
-        </div>
-        <p style={{ fontSize: 13, color: 'var(--text2)' }}>{filtered.length} of {guests.length} guest{guests.length !== 1 ? 's' : ''}</p>
-        <button className="btn-p" onClick={openAdd}><Plus size={16} /> Add Guest</button>
-      </div>
-
-      {guests.length === 0 ? (
-        <div className="card"><div className="card-b empty">
-          <ClipboardCheck size={48} style={{ opacity: 0.3 }} />
-          <h3>No Pre-Registered Guests</h3>
-          <p>Pre-register recurring visitors for faster check-in.</p>
-          <button className="btn-p" style={{ marginTop: 12 }} onClick={openAdd}>Add Guest</button>
-        </div></div>
-      ) : (
-        <div className="card">
-          <div className="card-b" style={{ padding: 0, overflowX: 'auto' }}>
-            <table className="tbl">
-              <thead>
-                <tr>
-                  <th>Guest</th><th>Company</th><th>Host</th><th>Purpose</th><th>Valid</th><th>Frequency</th><th>Status</th><th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.length === 0 && guests.length > 0 && (
-                  <tr><td colSpan={8} style={{ textAlign: 'center', padding: 32, color: 'var(--text2)' }}>No guests match "{search}"</td></tr>
-                )}
-                {filtered.map(g => {
-                  const emp = employees.find(e => e.id === g.employeeId);
-                  return (
-                    <tr key={g.id}>
-                      <td>
-                        <div className="vis-row">
-                          <div className="vis-av">{g.name?.charAt(0)}</div>
-                          <div className="vis-info"><h4>{g.name}</h4><p>{g.email}</p></div>
-                        </div>
-                      </td>
-                      <td>{g.company}</td>
-                      <td>{emp?.name || 'N/A'}</td>
-                      <td>{g.purpose}</td>
-                      <td style={{ fontSize: 12 }}>{g.validFrom} to {g.validTo}</td>
-                      <td>{g.recurring ? g.frequency : 'One-time'}</td>
-                      <td><span className={`badge ${g.status === 'active' ? 'active' : 'cancelled'}`}>{g.status}</span></td>
-                      <td>
-                        <div style={{ display: 'flex', gap: 6 }}>
-                          <button className="btn-o btn-sm" onClick={() => openEdit(g)}><Edit2 size={14} /></button>
-                          {g.status === 'active' && <button className="btn-o btn-sm" onClick={() => handleRevoke(g.id)} style={{ color: 'var(--danger)', borderColor: 'var(--danger)' }}>Revoke</button>}
-                          <button className="btn-o btn-sm" onClick={() => handleDelete(g.id)}><Trash2 size={14} /></button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      <AnimatePresence>
-        {showModal && (
-          <motion.div className="modal-bg" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowModal(false)}>
-            <motion.div className="modal-box" initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }} onClick={e => e.stopPropagation()}>
-              <div className="modal-h"><h3>{editId ? 'Edit Guest' : 'Add Pre-Registered Guest'}</h3><button onClick={() => setShowModal(false)}><X size={20} /></button></div>
-              <form onSubmit={handleSubmit}>
-                <div className="modal-b">
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <div className="form-g"><label className="form-l">Name *</label><input className="form-i" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
-                    <div className="form-g"><label className="form-l">Company *</label><input className="form-i" required value={form.company} onChange={e => setForm({ ...form, company: e.target.value })} /></div>
-                    <div className="form-g"><label className="form-l">Email</label><input className="form-i" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></div>
-                    <div className="form-g"><label className="form-l">Phone</label><input className="form-i" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
-                    <div className="form-g"><label className="form-l">Host Employee *</label><select className="form-s" required value={form.employeeId} onChange={e => setForm({ ...form, employeeId: e.target.value })}><option value="">Select...</option>{employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}</select></div>
-                    <div className="form-g"><label className="form-l">Purpose</label><input className="form-i" value={form.purpose} onChange={e => setForm({ ...form, purpose: e.target.value })} /></div>
-                    <div className="form-g"><label className="form-l">Valid From *</label><input className="form-i" type="date" required value={form.validFrom} onChange={e => setForm({ ...form, validFrom: e.target.value })} /></div>
-                    <div className="form-g"><label className="form-l">Valid To *</label><input className="form-i" type="date" required value={form.validTo} onChange={e => setForm({ ...form, validTo: e.target.value })} /></div>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <div className="form-g"><label className="form-l">Recurring</label><select className="form-s" value={form.recurring ? 'yes' : 'no'} onChange={e => setForm({ ...form, recurring: e.target.value === 'yes' })}><option value="no">No</option><option value="yes">Yes</option></select></div>
-                    {form.recurring && <div className="form-g"><label className="form-l">Frequency</label><select className="form-s" value={form.frequency} onChange={e => setForm({ ...form, frequency: e.target.value })}>{FREQUENCIES.map(f => <option key={f} value={f}>{f}</option>)}</select></div>}
-                  </div>
-                </div>
-                <div className="modal-f">
-                  <button type="button" className="btn-o" onClick={() => setShowModal(false)}>Cancel</button>
-                  <button type="submit" className="btn-p">{editId ? 'Update' : 'Add'}</button>
-                </div>
-              </form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  );
+  const [guests, setGuests] = useState([]); const [employees, setEmployees] = useState([]); const [search, setSearch] = useState(''); const [showModal, setShowModal] = useState(false); const [editId, setEditId] = useState(null); const [form, setForm] = useState(emptyForm); const [error, setError] = useState(''); const [loading, setLoading] = useState(true); const [saving, setSaving] = useState(false);
+  const load = async () => { setLoading(true); setError(''); try { const [registrations, employeeData] = await Promise.all([getPreRegistrations(), getEmployees()]); setGuests(registrations); setEmployees(employeeData); } catch (requestError) { setError(requestError.message || 'Unable to load pre-registered guests.'); } finally { setLoading(false); } };
+  useEffect(() => { load(); }, []);
+  const filtered = guests.filter(guest => [nameOf(guest), guest.company, guest.email, guest.phone, guest.purpose, guest.hostEmployee && nameOf(guest.hostEmployee)].some(value => String(value || '').toLowerCase().includes(search.toLowerCase())));
+  const openAdd = () => { setEditId(null); setForm(emptyForm()); setShowModal(true); };
+  const openEdit = guest => { setEditId(guest.id); setForm({ firstName: guest.firstName || '', lastName: guest.lastName || '', company: guest.company || '', email: guest.email || '', phone: guest.phone || '', hostEmployeeId: guest.hostEmployeeId || '', purpose: guest.purpose || 'TECHNICAL_DISCUSSION', floor: guest.floor ?? 0, notes: guest.notes || '', validFrom: dateInput(guest.validFrom), validTo: dateInput(guest.validTo), recurrence: guest.recurrenceType || 'NONE' }); setShowModal(true); };
+  const submit = async event => { event.preventDefault(); setSaving(true); setError(''); const payload = { ...form, floor: Number(form.floor), company: form.company || undefined, email: form.email || undefined, phone: form.phone || undefined, notes: form.notes || undefined }; try { if (editId) await updatePreRegistration(editId, payload); else await createPreRegistration(payload); setShowModal(false); await load(); } catch (requestError) { setError(requestError.message || 'Unable to save pre-registration.'); } finally { setSaving(false); } };
+  const cancel = async id => { if (!window.confirm('Cancel this pre-registration?')) return; try { await cancelPreRegistration(id); await load(); } catch (requestError) { setError(requestError.message || 'Unable to cancel pre-registration.'); } };
+  return <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, gap: 12, flexWrap: 'wrap' }}><div style={{ position: 'relative', flex: '1 1 250px', maxWidth: 400 }}><Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text2)' }} /><input className="form-i" style={{ paddingLeft: 36 }} placeholder="Search pre-registrations..." value={search} onChange={event => setSearch(event.target.value)} /></div><p style={{ fontSize: 13, color: 'var(--text2)' }}>{filtered.length} of {guests.length} guest{guests.length !== 1 ? 's' : ''}</p><button className="btn-o" onClick={load} disabled={loading}><RefreshCw size={16} /> Refresh</button><button className="btn-p" onClick={openAdd}><Plus size={16} /> Add Guest</button></div>{error && <div style={{ padding: 12, marginBottom: 16, borderRadius: 8, background: 'var(--danger-bg)', color: 'var(--danger)' }}>{error}</div>}<div className="card"><div className="card-b" style={{ padding: 0, overflowX: 'auto' }}><table className="tbl"><thead><tr><th>Guest</th><th>Host</th><th>Purpose</th><th>Floor</th><th>Valid</th><th>Recurrence</th><th>Status</th><th>Actions</th></tr></thead><tbody>{loading ? <tr><td colSpan={8} style={{ textAlign: 'center', padding: 32, color: 'var(--text2)' }}>Loading pre-registrations...</td></tr> : filtered.map(guest => <tr key={guest.id}><td><div className="vis-row"><div className="vis-av">{nameOf(guest).charAt(0)}</div><div className="vis-info"><h4>{nameOf(guest)}</h4><p>{guest.email || guest.phone || guest.company || ''}</p></div></div></td><td>{nameOf(guest.hostEmployee) || nameOf(employees.find(employee => employee.id === guest.hostEmployeeId))}</td><td>{readable(guest.purpose)}</td><td>{guest.floor}</td><td style={{ fontSize: 12 }}>{dateInput(guest.validFrom)} to {dateInput(guest.validTo)}</td><td>{readable(guest.recurrenceType)}</td><td><span className={`badge ${guest.status === 'PENDING' ? 'active' : 'cancelled'}`}>{readable(guest.status)}</span></td><td><div style={{ display: 'flex', gap: 6 }}><button className="btn-o btn-sm" disabled={guest.status !== 'PENDING'} onClick={() => openEdit(guest)}><Edit2 size={14} /></button>{guest.status === 'PENDING' && <button className="btn-o btn-sm" onClick={() => cancel(guest.id)} style={{ color: 'var(--danger)', borderColor: 'var(--danger)' }}><Trash2 size={14} /></button>}</div></td></tr>)}{!loading && !filtered.length && <tr><td colSpan={8} style={{ textAlign: 'center', padding: 32, color: 'var(--text2)' }}><ClipboardCheck size={28} style={{ marginBottom: 8, opacity: .5 }} /><div>No pre-registered guests found.</div></td></tr>}</tbody></table></div></div><AnimatePresence>{showModal && <motion.div className="modal-bg" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowModal(false)}><motion.div className="modal-box" initial={{ scale: .9 }} animate={{ scale: 1 }} exit={{ scale: .9 }} onClick={event => event.stopPropagation()}><div className="modal-h"><h3>{editId ? 'Edit Pre-Registration' : 'Add Pre-Registered Guest'}</h3><button onClick={() => setShowModal(false)}><X size={20} /></button></div><form onSubmit={submit}><div className="modal-b"><div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}><div className="form-g"><label className="form-l">First Name *</label><input className="form-i" required minLength="2" value={form.firstName} onChange={event => setForm({ ...form, firstName: event.target.value })} /></div><div className="form-g"><label className="form-l">Last Name *</label><input className="form-i" required minLength="2" value={form.lastName} onChange={event => setForm({ ...form, lastName: event.target.value })} /></div><div className="form-g"><label className="form-l">Company</label><input className="form-i" value={form.company} onChange={event => setForm({ ...form, company: event.target.value })} /></div><div className="form-g"><label className="form-l">Email</label><input className="form-i" type="email" value={form.email} onChange={event => setForm({ ...form, email: event.target.value })} /></div><div className="form-g"><label className="form-l">Phone</label><input className="form-i" value={form.phone} onChange={event => setForm({ ...form, phone: event.target.value })} /></div><div className="form-g"><label className="form-l">Host Employee *</label><select className="form-s" required value={form.hostEmployeeId} onChange={event => setForm({ ...form, hostEmployeeId: event.target.value })}><option value="">Select...</option>{employees.map(employee => <option key={employee.id} value={employee.id}>{nameOf(employee)}</option>)}</select></div><div className="form-g"><label className="form-l">Purpose *</label><select className="form-s" value={form.purpose} onChange={event => setForm({ ...form, purpose: event.target.value })}>{PURPOSES.map(purpose => <option key={purpose} value={purpose}>{readable(purpose)}</option>)}</select></div><div className="form-g"><label className="form-l">Floor *</label><input className="form-i" type="number" min="0" required value={form.floor} onChange={event => setForm({ ...form, floor: event.target.value })} /></div><div className="form-g"><label className="form-l">Valid From *</label><input className="form-i" type="date" required value={form.validFrom} onChange={event => setForm({ ...form, validFrom: event.target.value })} /></div><div className="form-g"><label className="form-l">Valid To *</label><input className="form-i" type="date" required value={form.validTo} onChange={event => setForm({ ...form, validTo: event.target.value })} /></div><div className="form-g"><label className="form-l">Recurrence *</label><select className="form-s" value={form.recurrence} onChange={event => setForm({ ...form, recurrence: event.target.value })}>{RECURRENCES.map(recurrence => <option key={recurrence} value={recurrence}>{readable(recurrence)}</option>)}</select></div><div className="form-g"><label className="form-l">Notes {form.purpose === 'OTHER' ? '*' : ''}</label><input className="form-i" required={form.purpose === 'OTHER'} value={form.notes} onChange={event => setForm({ ...form, notes: event.target.value })} /></div></div></div><div className="modal-f"><button type="button" className="btn-o" onClick={() => setShowModal(false)}>Cancel</button><button type="submit" className="btn-p" disabled={saving}>{saving ? 'Saving...' : editId ? 'Update' : 'Add'}</button></div></form></motion.div></motion.div>}</AnimatePresence></motion.div>;
 }

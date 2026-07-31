@@ -4,13 +4,12 @@ import {
 } from "../../generated/prisma/client";
 
 import { AppError } from "../../utils/app-error";
-
 import { EmployeeRepository } from "../employee/employee.repository";
-
 import { VisitRepository } from "./visit.repository";
 import {
     CreateVisitDto,
     UpdateVisitDto,
+    VisitResponseDto,
 } from "./visit.types";
 
 export class VisitService {
@@ -18,7 +17,7 @@ export class VisitService {
         private readonly prisma: PrismaClient,
         private readonly visitRepository: VisitRepository,
         private readonly employeeRepository: EmployeeRepository,
-    ) {}
+    ) { }
 
     /**
      * Create visit
@@ -27,6 +26,18 @@ export class VisitService {
         visitorId: string,
         dto: CreateVisitDto,
     ): Promise<Visit> {
+        const activeVisit =
+            await this.visitRepository.findActiveVisit(
+                visitorId,
+            );
+
+        if (activeVisit) {
+            throw new AppError(
+                "Visitor is already checked in.",
+                409,
+            );
+        }
+
         const employee =
             await this.employeeRepository.findById(
                 dto.hostEmployeeId,
@@ -65,7 +76,7 @@ export class VisitService {
      */
     public async getVisit(
         visitId: string,
-    ): Promise<Visit> {
+    ): Promise<VisitResponseDto> {
         const visit =
             await this.visitRepository.findById(
                 visitId,
@@ -78,7 +89,17 @@ export class VisitService {
             );
         }
 
-        return visit;
+        return {
+            id: visit.id,
+            purpose: visit.purpose,
+            floor: visit.floor,
+            notes: visit.notes,
+            status: visit.status,
+            checkInAt: visit.checkInAt,
+            checkOutAt: visit.checkOutAt,
+            createdAt: visit.createdAt,
+            updatedAt: visit.updatedAt
+        }
     }
 
     /**
@@ -161,6 +182,43 @@ export class VisitService {
 
         await this.prisma.$transaction(async (tx) => {
             await this.visitRepository.deleteById(
+                tx,
+                visitId,
+            );
+        });
+    }
+
+    /**
+ * Get active visit of a visitor
+ */
+    public async getActiveVisit(
+        visitorId: string,
+    ): Promise<Visit> {
+        const visit =
+            await this.visitRepository.findActiveVisit(
+                visitorId,
+            );
+
+        if (!visit) {
+            throw new AppError(
+                "No active visit found.",
+                404,
+            );
+        }
+
+        return visit;
+    }
+
+    /**
+ * Checkout visitor
+ */
+    public async checkoutVisit(
+        visitId: string,
+    ): Promise<Visit> {
+        await this.getVisit(visitId);
+
+        return this.prisma.$transaction(async (tx) => {
+            return this.visitRepository.checkout(
                 tx,
                 visitId,
             );

@@ -74,6 +74,8 @@ export class WorkflowService {
             );
         }
 
+        
+
         return this.checkInResponse(workflow.id);
     }
 
@@ -124,6 +126,8 @@ export class WorkflowService {
                     : 500,
             );
         }
+
+         console.log("result of visitor create + visit", this.checkInResponse(workflowId))
 
         return this.checkInResponse(workflowId);
     }
@@ -343,33 +347,39 @@ export class WorkflowService {
     }
 
     private async checkInResponse(
-        workflowId: string,
-    ): Promise<CheckInResponse> {
-        const workflow =
-            await this.workflowRepository.findByIdOrThrow(
-                workflowId,
-            );
+    workflowId: string,
+): Promise<CheckInResponse> {
+    const workflow =
+        await this.workflowRepository.findByIdOrThrow(
+            workflowId,
+        );
 
-        if (!workflow.visitorId || !workflow.visitId) {
-            throw new AppError(
-                "Workflow is in an inconsistent state.",
-                500,
-            );
-        }
-
-        const visitor =
-            await this.visitorService.getVisitor(
-                workflow.visitorId,
-            );
-
-        const visitorData: VisitorResponseDto = {
-            ...visitor,
-            emails: visitor.emails.map(e => e.email),
-            mobiles: visitor.mobiles.map(m => m.mobile),
-        };
-
-        return {
-            visitor: visitorData,
-        };
+    if (!workflow.visitorId || !workflow.visitId) {
+        throw new AppError(
+            "Workflow is in an inconsistent state.",
+            500,
+        );
     }
+
+    const visitor =
+        await this.visitorService.getVisitor(
+            workflow.visitorId,
+        );
+
+    const visit =
+        await this.visitService.getVisit(
+            workflow.visitId,
+        );
+
+    const visitorData: VisitorResponseDto = {
+        ...visitor,
+        emails: visitor.emails.map(e => e.email),
+        mobiles: visitor.mobiles.map(m => m.mobile),
+    };
+
+    return {
+        visitor: visitorData,
+        visit,
+    };
+}
 }

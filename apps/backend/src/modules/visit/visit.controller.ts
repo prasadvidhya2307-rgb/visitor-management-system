@@ -12,7 +12,7 @@ import {
 export class VisitController {
     constructor(
         private readonly visitService: VisitService,
-    ) {}
+    ) { }
 
     /**
      * Create a new visit
@@ -91,10 +91,12 @@ export class VisitController {
                     req.params.visitorId,
                 );
 
+                console.log('visits of a visitor', visits)
+
             return ApiResponse.success(
                 res,
                 "Visitor visits fetched successfully.",
-                visits,
+                { visits },
             );
         },
     );

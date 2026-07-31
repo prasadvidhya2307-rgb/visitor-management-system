@@ -13,47 +13,6 @@ export class CheckInService {
         private readonly faceRecognitionService: FaceRecognitionService,
     ) { }
 
-    // public async checkIn(
-    //     dto: CheckInDto,
-    //     image: Express.Multer.File,
-    // ) {
-    //     const media = await this.mediaService.createTemporary(image);
-
-    //     const visitor = await this.visitorService.createVisitor(
-    //         dto.visitor,
-    //         media.id,
-    //     );
-
-    //     try {
-    //         await this.faceRecognitionService.registerFace(
-    //             visitor.id,
-    //             image,
-    //         );
-    //     } catch (error) {
-    //         await this.visitorService.failRegistration(visitor.id);
-    //         throw error;
-    //     }
-
-    //     await this.visitorService.completeRegistration(
-    //         visitor.id,
-    //     );
-
-    //     const visit = await this.visitService.createVisit({
-    //         ...dto.visit,
-    //         visitorId: visitor.id,
-    //     });
-
-    //     await this.mediaService.markActive(
-    //         media.id,
-    //     );
-
-    //     return {
-    //         visitor,
-    //         visit,
-    //     };
-    // }
-
-
     public async existingCheckIn(
         visitorId: string,
         dto: CreateVisitDto,

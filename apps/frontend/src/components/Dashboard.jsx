@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Users, UserPlus, UserMinus, Clock, CalendarClock, TrendingUp, ArrowRight } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
-import store from '../store';
+import { getEmployees, getVisitors, getVisits, visitIsCheckedOut } from '../api';
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#6366F1', '#EC4899'];
 
@@ -15,7 +15,11 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    setStats(store.getDashboardStats());
+    const localStats = store.getDashboardStats();
+    setStats(localStats);
+    getVisitors()
+      .then(visitors => setStats(current => current ? { ...current, totalVisitors: visitors.length } : current))
+      .catch(() => {});
     setDaily(store.getDailyStats());
     setActivity(store.getActivity().slice(0, 15));
     setEmployees(store.getEmployees());
@@ -29,16 +33,16 @@ export default function Dashboard() {
     { label: "Today's Check-Ins", value: stats.todayCheckIns, icon: UserPlus, color: 'amber', colorVar: 'var(--warning)' },
     { label: 'Checked Out Today', value: stats.checkedOutToday, icon: UserMinus, color: 'purple', colorVar: 'var(--info)' },
     { label: 'Expected Today', value: stats.expectedToday, icon: CalendarClock, color: 'red', colorVar: 'var(--danger)' },
-    { label: 'Departments', value: store.getDepartmentStats().length, icon: TrendingUp, color: 'indigo', colorVar: '#8B5CF6' },
+    { label: 'Departments', value: new Set(employees.map(employee => employee.department)).size, icon: TrendingUp, color: 'indigo', colorVar: '#8B5CF6' },
   ];
 
-  const deptData = store.getDepartmentStats();
+  const deptData = Object.entries(employees.reduce((counts, employee) => { counts[employee.department || 'Unassigned'] = (counts[employee.department || 'Unassigned'] || 0) + 1; return counts; }, {})).map(([name, value]) => ({ name: name.replace(/_/g, ' '), value }));
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
       {stats.todayCheckIns > 0 && (
         <div className="welcome-banner">
-          <div style={{ fontSize: 36 }}>👋</div>
+          <div style={{ fontSize: 36 }}>ðŸ‘‹</div>
           <div>
             <h3>Welcome back, Admin!</h3>
             <p>{stats.activeVisitors} visitor{stats.activeVisitors !== 1 ? 's' : ''} currently in the building. {stats.expectedToday} expected today.</p>

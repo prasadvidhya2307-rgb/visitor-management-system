@@ -1,0 +1,1 @@
+export { default as checkOutRoutes } from './check-out.routes'

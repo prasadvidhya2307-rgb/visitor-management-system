@@ -31,6 +31,13 @@ import { VisitorService } from "../modules/visitors/visitor.service";
 import { WorkflowRepository } from "../modules/workflow/workflow.repository";
 import { WorkflowService } from "../modules/workflow/workflow.service";
 
+import { CheckOutController } from "../modules/check-out/check-out.controller";
+import { CheckOutService } from "../modules/check-out/check-out.service";
+
+import { PreRegistrationRepository } from "../modules/pre-registration/pre-registration.repository";
+import { PreRegistrationService } from "../modules/pre-registration/pre-registration.service";
+import { PreRegistrationController } from "../modules/pre-registration/pre-registration.controller";
+
 // -----------------------------------------------------------------------------
 // Repositories
 // -----------------------------------------------------------------------------
@@ -57,6 +64,9 @@ export const workflowRepository =
 
 export const employeeRepository =
     new EmployeeRepository(prisma);
+
+export const preRegistrationRepository =
+    new PreRegistrationRepository(prisma);
 
 // -----------------------------------------------------------------------------
 // Services
@@ -110,6 +120,19 @@ export const workflowService = new WorkflowService(
     faceRecognitionService,
 );
 
+export const checkOutService = new CheckOutService(
+    faceRecognitionService,
+    visitorService,
+    visitService,
+);
+
+export const preRegistrationService =
+    new PreRegistrationService(
+        prisma,
+        preRegistrationRepository,
+        employeeService,
+    );
+
 // -----------------------------------------------------------------------------
 // Controllers
 // -----------------------------------------------------------------------------
@@ -141,3 +164,12 @@ export const checkInController =
 export const visitController = new VisitController(
     visitService,
 );
+
+export const checkOutController = new CheckOutController(
+    checkOutService,
+);
+
+export const preRegistrationController =
+    new PreRegistrationController(
+        preRegistrationService,
+    );

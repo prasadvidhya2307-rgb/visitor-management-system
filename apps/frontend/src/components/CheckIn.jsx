@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, ArrowRight, ArrowLeft, Loader2, Camera, User, Shield, ClipboardCheck, Activity, AlertCircle, UserPlus, UserCheck as UserCheckIcon, Search } from 'lucide-react';
 import store from '../store';
-import { recognizeFace, checkIn, existingVisitorCheckIn } from '../api';
+import { recognizeFace, newVisitorCheckIn, existingVisitorCheckIn, getEmployees } from '../api';
 import FaceRecognition from './FaceRecognition';
 
 const ID_TYPES = ['aadhaar', 'pan', 'driving_license', 'passport', 'other'];
@@ -29,9 +29,24 @@ const ID_TYPE_MAP = {
   other: 'OTHER',
 };
 
+function getFriendlySubmissionError(error) {
+  const message = (error || '').toLowerCase();
+
+  if (message.includes('network') || message.includes('failed to fetch') || message.includes('timeout')) {
+    return { title: 'Connection problem', description: 'We could not reach the check-in service. Please check your connection and try again.' };
+  }
+  if (message.includes('internal server error') || message.includes('server error') || message.includes('500')) {
+    return { title: 'Check-in service is temporarily unavailable', description: 'Your visitor details are still here. Please try again in a moment, or go back and review the information.' };
+  }
+  if (message.includes('already') || message.includes('duplicate')) {
+    return { title: 'This visitor may already be checked in', description: 'Please review the visitor details or check Active Visitors before submitting again.' };
+  }
+  return { title: 'We could not complete the check-in', description: 'Your visitor details are still here. Please try again, or go back and review the information.' };
+}
 export default function CheckIn() {
   const [step, setStep] = useState(1);
   const [employees, setEmployees] = useState([]);
+  const [employeesError, setEmployeesError] = useState('');
 
   const [faceResult, setFaceResult] = useState(null);
   const [recognizing, setRecognizing] = useState(false);
@@ -59,7 +74,24 @@ export default function CheckIn() {
   const [result, setResult] = useState(null);
   const [apiError, setApiError] = useState('');
 
-  useEffect(() => { setEmployees(store.getEmployees()); }, []);
+  useEffect(() => {
+    async function loadEmployees() {
+      try {
+        const data = await getEmployees();
+        setEmployees(data.map(employee => ({
+          id: employee.id,
+          name: [employee.firstName, employee.lastName].filter(Boolean).join(' '),
+          department: employee.department
+            ? employee.department.toLowerCase().split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+            : '',
+        })));
+      } catch (error) {
+        setEmployeesError(error.message || 'Unable to load employees.');
+      }
+    }
+
+    loadEmployees();
+  }, []);
 
   function getVisitorName() {
     if (visitorMode === 'recognized' && recognizedVisitor) {
@@ -73,7 +105,10 @@ export default function CheckIn() {
 
   const visitorName = getVisitorName();
   const empName = employees.find(e => e.id === form.employeeId)?.name || '';
-  const checkInDate = result ? new Date(result.checkInTime || result.createdAt) : new Date();
+const checkInPayload = result?.data || result;
+  const checkedInVisitor = checkInPayload?.visitor;
+  const checkedInVisit = checkInPayload?.visit;
+  const checkInDate = checkedInVisit?.checkInAt ? new Date(checkedInVisit.checkInAt) : new Date();
 
   // --- Step 1: Capture Face & Auto-Recognize ---
   function handleFaceCaptured(data) {
@@ -90,11 +125,11 @@ export default function CheckIn() {
         if (!data.success) {
           setRecognitionError(data.message || 'Recognition failed');
           setVisitorMode(null);
-        } else if (data.data?.code === 'MATCH_FOUND' && data.data?.visitor) {
+        } else if (data.code === 'MATCH_FOUND' && data.data?.visitor) {
           setRecognizedVisitor(data.data.visitor);
           setVisitorMode('recognized');
         } else {
-          setRecognitionError(data.message || 'No matching visitor found');
+          setRecognitionError(data.message || data.messaage || 'No matching visitor found');
           setVisitorMode(null);
         }
         setStep(3);
@@ -164,7 +199,7 @@ export default function CheckIn() {
       vData = {
         firstName: foundPreregGuest.name?.split(' ')[0] || '',
         lastName: foundPreregGuest.name?.split(' ').slice(1).join(' ') || '',
-        identityType: foundPreregGuest.identityType || 'AADHAAR',
+        identityType: ID_TYPE_MAP[foundPreregGuest.identityType] || foundPreregGuest.identityType || 'AADHAAR',
         identityNumber: foundPreregGuest.identityNumber || preregAadhar,
         emails: [{ email: foundPreregGuest.email || '', isPrimary: true }],
         mobiles: [{ mobile: foundPreregGuest.phone || '', isPrimary: true }],
@@ -192,7 +227,7 @@ export default function CheckIn() {
       if (visitorId) {
         data = await existingVisitorCheckIn(visitorId, visitPayload);
       } else {
-        data = await checkIn(vData, visitPayload, faceResult.image);
+        data = await newVisitorCheckIn(vData, visitPayload, faceResult.image);
       }
       setResult(data);
       setStep(8);
@@ -253,6 +288,7 @@ export default function CheckIn() {
                 <p style={{ color: 'var(--text2)' }}>{result ? result.message || 'Visitor checked in successfully' : 'Done'}</p>
                 <div className="detail-grid">
                   <div className="detail-item"><div className="lbl">Visitor</div><div className="val">{visitorName}</div></div>
+                  <div className="detail-item"><div className="lbl">Visitor Code</div><div className="val" style={{ fontFamily: 'monospace', fontWeight: 700 }}>{checkedInVisitor?.visitorCode || '—'}</div></div>
                   <div className="detail-item"><div className="lbl">Host</div><div className="val">{empName}</div></div>
                   <div className="detail-item"><div className="lbl">Purpose</div><div className="val">{form.purpose || preregPurpose}</div></div>
                   <div className="detail-item"><div className="lbl">Date</div><div className="val">{checkInDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div></div>
@@ -279,17 +315,30 @@ export default function CheckIn() {
                   </motion.div>
                   <p style={{ color: 'var(--text2)', fontSize: 14 }}>Sending to backend...</p>
                 </>
-              ) : apiError ? (
-                <>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center', marginBottom: 16, color: 'var(--danger)' }}>
-                    <AlertCircle size={24} /> <strong>API Error</strong>
+                            ) : apiError ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 14, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 280, damping: 22 }}
+                  style={{ maxWidth: 390, margin: '0 auto' }}
+                >
+                  <motion.div
+                    animate={{ x: [0, -5, 5, -3, 3, 0] }}
+                    transition={{ duration: 0.45, delay: 0.1 }}
+                    style={{ width: 52, height: 52, borderRadius: '50%', background: 'var(--danger-bg)', color: 'var(--danger)', display: 'grid', placeItems: 'center', margin: '0 auto 14px' }}
+                  >
+                    <AlertCircle size={28} />
+                  </motion.div>
+                  <h3 style={{ fontSize: 17, margin: '0 0 8px', color: 'var(--text)' }}>{getFriendlySubmissionError(apiError).title}</h3>
+                  <p style={{ color: 'var(--text2)', fontSize: 13, lineHeight: 1.6, margin: '0 0 10px' }}>{getFriendlySubmissionError(apiError).description}</p>
+                  <p style={{ color: 'var(--text3)', fontSize: 12, margin: '0 0 20px' }}>No check-in was created. You can safely try again.</p>
+                  <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+                    <motion.button className="btn-p" onClick={handleSubmitVisit} disabled={processing} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                      {processing ? <><Loader2 size={14} /> Trying again...</> : <>Try Again <ArrowRight size={14} /></>}
+                    </motion.button>
+                    <button className="btn-o" onClick={() => setStep(7)}>Review details</button>
                   </div>
-                  <p style={{ color: 'var(--text2)', fontSize: 13, marginBottom: 12 }}>{apiError}</p>
-                  <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
-                    <button className="btn-d" onClick={handleSubmitVisit}>Retry</button>
-                    <button className="btn-o" onClick={() => setStep(7)}>Back</button>
-                  </div>
-                </>
+                </motion.div>
               ) : result ? (
                 <>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 16, color: 'var(--success)' }}>
@@ -297,8 +346,8 @@ export default function CheckIn() {
                   </div>
                   <div style={{ background: 'var(--bg)', borderRadius: 'var(--r-sm)', padding: 16, border: '1px solid var(--border)', textAlign: 'left', fontSize: 12 }}>
                     <div style={{ display: 'grid', gap: 8 }}>
-                      <div><span style={{ color: 'var(--text2)' }}>ID: </span><strong>{result.id || result.workflow?.id || '—'}</strong></div>
-                      <div><span style={{ color: 'var(--text2)' }}>Status: </span><strong>{result.status || result.workflow?.status || '—'}</strong></div>
+                      <div><span style={{ color: 'var(--text2)' }}>ID: </span><strong>{result.id || result.workflow?.id || 'â€”'}</strong></div>
+                      <div><span style={{ color: 'var(--text2)' }}>Status: </span><strong>{result.status || result.workflow?.status || 'â€”'}</strong></div>
                       <div><span style={{ color: 'var(--text2)' }}>Visitor: </span><strong>{visitorName}</strong></div>
                       <div><span style={{ color: 'var(--text2)' }}>Host: </span><strong>{empName}</strong></div>
                       <div><span style={{ color: 'var(--text2)' }}>Purpose: </span><strong>{form.purpose || preregPurpose}</strong></div>
@@ -318,7 +367,7 @@ export default function CheckIn() {
           <motion.div key="s7" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="card" style={{ maxWidth: 560, margin: '0 auto' }}>
             <div className="card-h"><h3><ClipboardCheck size={16} style={{ marginRight: 8, verticalAlign: 'middle' }} />Visit Details</h3></div>
             <div className="card-b">
-              <div className="form-g"><label className="form-l">Host Employee *</label><select className="form-s" value={form.employeeId} onChange={e => setForm({ ...form, employeeId: e.target.value })}><option value="">Select host...</option>{employees.map(e => <option key={e.id} value={e.id}>{e.name} — {e.department}</option>)}</select></div>
+              <div className="form-g"><label className="form-l">Host Employee *</label><select className="form-s" value={form.employeeId} onChange={e => setForm({ ...form, employeeId: e.target.value })}><option value="">Select host...</option>{employees.map(e => <option key={e.id} value={e.id}>{e.name} â€” {e.department}</option>)}</select></div>
               {visitorMode !== 'preregistered' && (
                 <div className="form-g"><label className="form-l">Purpose *</label><select className="form-s" value={form.purpose} onChange={e => setForm({ ...form, purpose: e.target.value })}><option value="">Select purpose...</option>{PURPOSES.map(p => <option key={p} value={p}>{p}</option>)}</select></div>
               )}
@@ -358,7 +407,7 @@ export default function CheckIn() {
                   <div><span style={{ color: 'var(--text2)' }}>Email: </span><strong>{visitorData.email}</strong></div>
                   <div><span style={{ color: 'var(--text2)' }}>Phone: </span><strong>{visitorData.phone}</strong></div>
                   <div><span style={{ color: 'var(--text2)' }}>Company: </span><strong>{visitorData.company || 'N/A'}</strong></div>
-                  <div><span style={{ color: 'var(--text2)' }}>Identity: </span><strong>{identityType.replace('_', ' ').toUpperCase()} — {visitorData.identityNumber || 'N/A'}</strong></div>
+                  <div><span style={{ color: 'var(--text2)' }}>Identity: </span><strong>{identityType.replace('_', ' ').toUpperCase()} â€” {visitorData.identityNumber || 'N/A'}</strong></div>
                   <div><span style={{ color: 'var(--text2)' }}>Photo: </span><strong style={{ color: faceResult?.image ? 'var(--success)' : 'var(--text3)' }}>{faceResult?.image ? 'Captured' : 'None'}</strong></div>
                 </div>
               </div>
@@ -440,7 +489,7 @@ export default function CheckIn() {
           <motion.div key="s4" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="card" style={{ maxWidth: 560, margin: '0 auto' }}>
             {visitorMode === 'new' && (
               <>
-                <div className="card-h"><h3><User size={16} style={{ marginRight: 8, verticalAlign: 'middle' }} />New Visitor — Details</h3></div>
+                <div className="card-h"><h3><User size={16} style={{ marginRight: 8, verticalAlign: 'middle' }} />New Visitor â€” Details</h3></div>
                 <div className="card-b">
                   {processing ? (
                     <div style={{ textAlign: 'center', padding: 40 }}>
@@ -499,7 +548,7 @@ export default function CheckIn() {
                 <div className="card-b">
                   <div style={{ background: 'var(--success-bg)', borderRadius: 'var(--r-sm)', padding: 12, border: '1px solid var(--success)', marginBottom: 16, fontSize: 12 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#065F46' }}>
-                      <UserCheckIcon size={16} /> Face recognized — existing visitor
+                      <UserCheckIcon size={16} /> Face recognized â€” existing visitor
                     </div>
                   </div>
                   <div style={{ background: 'var(--bg)', borderRadius: 'var(--r-sm)', padding: 16, border: '1px solid var(--border)', fontSize: 12 }}>
@@ -509,7 +558,7 @@ export default function CheckIn() {
                       <div><span style={{ color: 'var(--text2)' }}>Visitor Code: </span><strong>{recognizedVisitor.visitorCode || 'N/A'}</strong></div>
                       <div><span style={{ color: 'var(--text2)' }}>Email: </span><strong>{typeof recognizedVisitor.emails?.[0] === 'string' ? recognizedVisitor.emails[0] : (recognizedVisitor.emails?.[0]?.email || 'N/A')}</strong></div>
                       <div><span style={{ color: 'var(--text2)' }}>Mobile: </span><strong>{typeof recognizedVisitor.mobiles?.[0] === 'string' ? recognizedVisitor.mobiles[0] : (recognizedVisitor.mobiles?.[0]?.mobile || 'N/A')}</strong></div>
-                      <div><span style={{ color: 'var(--text2)' }}>Identity: </span><strong>{recognizedVisitor.identityType || ''} — {recognizedVisitor.identityNumber || 'N/A'}</strong></div>
+                      <div><span style={{ color: 'var(--text2)' }}>Identity: </span><strong>{recognizedVisitor.identityType || ''} â€” {recognizedVisitor.identityNumber || 'N/A'}</strong></div>
                       <div><span style={{ color: 'var(--text2)' }}>Status: </span><strong>{recognizedVisitor.registrationStatus || 'N/A'}</strong></div>
                     </div>
                   </div>
@@ -601,3 +650,7 @@ export default function CheckIn() {
     </motion.div>
   );
 }
+
+
+
+

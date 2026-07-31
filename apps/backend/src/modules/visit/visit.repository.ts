@@ -23,6 +23,10 @@ export class VisitRepository {
             where: {
                 id,
             },
+
+            include: {
+                hostEmployee: true
+            }
         });
     }
 
@@ -34,6 +38,10 @@ export class VisitRepository {
             orderBy: {
                 createdAt: "desc",
             },
+
+            include: {
+                hostEmployee: true
+            }
         });
     }
 
@@ -77,6 +85,45 @@ export class VisitRepository {
             orderBy: {
                 createdAt: "desc",
             },
+
+            include: {
+                hostEmployee: true
+            }
         });
     }
+
+    /**
+ * Find active visit of a visitor
+ */
+    public async findActiveVisit(
+        visitorId: string,
+    ): Promise<Visit | null> {
+        return this.prisma.visit.findFirst({
+            where: {
+                visitorId,
+                checkOutAt: null,
+            },
+            orderBy: {
+                checkOutAt: "desc",
+            },
+        });
+    }
+
+    /**
+     * Checkout a visit
+     */
+    public async checkout(
+        tx: Prisma.TransactionClient,
+        visitId: string,
+    ): Promise<Visit> {
+        return tx.visit.update({
+            where: {
+                id: visitId,
+            },
+            data: {
+                checkOutAt: new Date(),
+            },
+        });
+    }
+
 }

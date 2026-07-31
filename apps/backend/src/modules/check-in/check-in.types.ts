@@ -8,5 +8,5 @@ export type CheckInDto = z.infer<typeof checkInSchema>
 
 export interface CheckInResponse {
     visitor: VisitorResponseDto,
-    // visit: VisitResponseDto
+    visit: VisitResponseDto
 }

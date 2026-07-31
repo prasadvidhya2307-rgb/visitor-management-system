@@ -1,4 +1,4 @@
-import { PrismaClient, PreRegistrationStatus, PreRegistration } from "../../generated/prisma/client";
+import { PrismaClient, PreRegistrationStatus, PreRegistration } from "@prisma/client";
 import { AppError } from "../../utils/app-error.js";
 import { EmployeeService } from "../employee/employee.service.js";
 import { PreRegistrationRepository } from "./pre-registration.repository.js";

@@ -1,5 +1,6 @@
 import { z } from 'zod'
-import { IdentityType } from '../../generated/prisma/enums'
+import pkg from '@prisma/client'
+const { IdentityType } = pkg
 
 export const createMobileSchema = z.object({
     mobile: z

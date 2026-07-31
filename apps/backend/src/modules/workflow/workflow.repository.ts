@@ -4,7 +4,7 @@ import {
     VisitorRegistrationWorkflow,
     WorkflowStatus,
     WorkflowStep,
-} from "../../generated/prisma/client";
+} from "@prisma/client";
 
 import { AppError } from "../../utils/app-error.js";
 

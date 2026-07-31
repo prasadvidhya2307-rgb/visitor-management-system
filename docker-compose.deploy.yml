@@ -1,0 +1,110 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "12345"
+      POSTGRES_DB: visitor_management
+    expose:
+      - "5432"
+    volumes:
+      - postgres_data_production:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: qdrant
+    restart: unless-stopped
+    expose:
+      - "6333"
+    volumes:
+      - qdrant_data_production:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/6333'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  recognition-backend:
+    image: aayushdocker4201/vms-recognition-backend:latest
+    container_name: recognition-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      QDRANT_HOST: qdrant
+      QDRANT_PORT: "6333"
+      QDRANT_COLLECTION: persons
+      QDRANT_VECTOR_SIZE: "512"
+      FACE_MATCH_THRESHOLD: "0.65"
+      FACE_DUPLICATE_THRESHOLD: "0.90"
+      LOG_LEVEL: info
+    expose:
+      - "8000"
+    depends_on:
+      qdrant:
+        condition: service_healthy
+    volumes:
+      - insightface_models_production:/root/.insightface
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  backend:
+    image: aayushdocker4201/vms-backend:latest
+    container_name: backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "5000"
+      DATABASE_URL: "postgresql://postgres:12345@postgres:5432/visitor_management"
+      FASTAPI_URL: http://recognition-backend:8000
+      JWT_SECRET: your-super-secret-jwt-keys
+      JWT_EXPIRES_IN: 7d
+      QDRANT_HOST: qdrant
+      QDRANT_PORT: "6333"
+      QDRANT_COLLECTION: persons
+      LOG_LEVEL: info
+    ports:
+      - "5000:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      recognition-backend:
+        condition: service_healthy
+    volumes:
+      - backend_storage:/app/storage
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:5000/api/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  frontend:
+    image: aayushdocker4201/vms-frontend:latest
+    container_name: frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  postgres_data_production:
+  qdrant_data_production:
+  insightface_models_production:
+  backend_storage:

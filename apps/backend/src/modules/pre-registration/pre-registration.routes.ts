@@ -7,7 +7,7 @@ import {
     updatePreRegistrationSchema,
 } from "./pre-registration.validation.js";
 
-import { preRegistrationController } from "../../container";
+import { preRegistrationController } from "../../container/index.js";
 
 const router = Router();
 

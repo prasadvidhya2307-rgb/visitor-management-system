@@ -2,7 +2,7 @@ import {
     VisitorRegistrationWorkflow,
     WorkflowStatus,
     WorkflowStep,
-} from "../../generated/prisma/client";
+} from "@prisma/client";
 import { WorkflowError } from "../../middlewares/workflow.error.js";
 import { AppError } from "../../utils/app-error.js";
 import { CheckInDto, CheckInResponse } from "../check-in/check-in.types.js";

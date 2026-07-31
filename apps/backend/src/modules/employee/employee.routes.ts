@@ -3,7 +3,7 @@ import { Router } from "express";
 import {
     createEmployeeSchema,
     updateEmployeeSchema,
-} from "./employee.validation";
+} from "./employee.validation.js";
 import { employeeController } from "../../container/index.js";
 import { validate } from "../../middlewares/validate.middleware.js";
 

@@ -4,7 +4,7 @@ import {
     createEmployeeSchema,
     updateEmployeeSchema,
 } from "./employee.validation.js";
-import { Department } from "../../generated/prisma/enums";
+import { Department } from "@prisma/client";
 
 export type CreateEmployeeDto =
     z.infer<typeof createEmployeeSchema>;

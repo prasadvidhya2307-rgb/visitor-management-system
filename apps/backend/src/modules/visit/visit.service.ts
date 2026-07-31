@@ -1,7 +1,7 @@
 import {
     PrismaClient,
     Visit,
-} from "../../generated/prisma/client";
+} from "@prisma/client";
 
 import { AppError } from "../../utils/app-error.js";
 import { EmployeeRepository } from "../employee/employee.repository.js";

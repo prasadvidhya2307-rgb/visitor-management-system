@@ -1,6 +1,6 @@
 import z from "zod";
 import { createVisitSchema, updateVisitSchema } from "./visit.validation.js";
-import { VisitPurpose, VisitStatus } from "../../generated/prisma/enums";
+import { VisitPurpose, VisitStatus } from "@prisma/client";
 import { VisitorResponseDto } from "../visitors/visitor.types.js";
 import { EmployeeResponseDto } from "../employee/employee.types.js";
 

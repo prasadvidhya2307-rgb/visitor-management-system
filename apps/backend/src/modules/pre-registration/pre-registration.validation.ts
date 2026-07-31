@@ -3,7 +3,7 @@ import { z } from "zod";
 import {
     RecurrenceType,
     VisitPurpose,
-} from "../../generated/prisma/client";
+} from "@prisma/client";
 
 const preRegistrationSchema = z.object({
     firstName: z

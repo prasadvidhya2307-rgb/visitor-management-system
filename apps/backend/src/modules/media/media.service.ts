@@ -6,7 +6,7 @@ import {
     Media,
     MediaStatus,
     PrismaClient,
-} from "../../generated/prisma/client";
+} from "@prisma/client";
 
 import { MediaRepository } from "./media.repository.js";
 

@@ -3,7 +3,7 @@ import {
     PreRegistrationStatus,
     RecurrenceType,
     VisitPurpose,
-} from "../../generated/prisma/client";
+} from "@prisma/client";
 
 import { EmployeeResponseDto } from "../employee/employee.types.js";
 import { VisitorResponseDto } from "../visitors/visitor.types.js";

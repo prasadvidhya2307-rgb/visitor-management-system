@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient, RegistrationStatus } from "../../generated/prisma/client";
+import { Prisma, PrismaClient, RegistrationStatus } from "@prisma/client";
 import { AppError } from "../../utils/app-error.js";
 import { VisitorCounterRepository } from "./repositories/visitor-counter.repository.js";
 import { VisitorEmailRepository } from "./repositories/visitor-email.repository.js";

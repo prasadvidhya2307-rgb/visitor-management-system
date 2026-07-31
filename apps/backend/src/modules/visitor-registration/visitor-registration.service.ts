@@ -1,4 +1,4 @@
-import { Media, Visitor } from "../../generated/prisma/client";
+import { Media, Visitor } from "@prisma/client";
 import { FaceRecognitionService } from "../face-recognised/face-recognition.service.js";
 import { MediaService } from "../media/media.service.js";
 import { VisitorService } from "../visitors/visitor.service.js";

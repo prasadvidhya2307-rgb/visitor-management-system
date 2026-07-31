@@ -1,4 +1,4 @@
-import { PrismaClient, VisitorMobile, Prisma } from "../../../generated/prisma/client";
+import { PrismaClient, VisitorMobile, Prisma } from "@prisma/client";
 
 export class VisitorMobileRepository {
     constructor(

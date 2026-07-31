@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient, Visit } from "../../generated/prisma/client";
+import { Prisma, PrismaClient, Visit } from "@prisma/client";
 
 export class VisitRepository {
     constructor(private readonly prisma: PrismaClient) { }

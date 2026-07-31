@@ -1,4 +1,4 @@
-import { WorkflowStep } from "../generated/prisma/client";
+import { WorkflowStep } from "@prisma/client";
 import { AppError } from "../utils/app-error.js";
 
 export class WorkflowError extends AppError {

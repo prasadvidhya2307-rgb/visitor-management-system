@@ -1,4 +1,4 @@
-import { Department } from "../../generated/prisma/client";
+import { Department } from "@prisma/client";
 import { z } from "zod";
 
 export const createEmployeeSchema = z.object({

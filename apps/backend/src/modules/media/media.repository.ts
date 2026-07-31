@@ -1,4 +1,4 @@
-import { PrismaClient, Media, Prisma, MediaStatus } from "../../generated/prisma/client";
+import { PrismaClient, Media, Prisma, MediaStatus } from "@prisma/client";
 
 export class MediaRepository {
     constructor(

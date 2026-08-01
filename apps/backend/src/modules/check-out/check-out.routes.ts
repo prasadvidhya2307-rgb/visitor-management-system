@@ -1,13 +1,13 @@
 import { Router } from "express";
 
 import { checkOutController } from "../../container/index.js";
-import { uplaod } from "../../middlewares/upload.middleware.js";
+import { upload } from "../../middlewares/upload.middleware.js";
 
 const router = Router();
 
 router.post(
     "/",
-    uplaod.single("image"),
+    upload.single("image"),
     checkOutController.checkOut,
 );
 

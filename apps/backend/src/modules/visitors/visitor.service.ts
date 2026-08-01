@@ -204,6 +204,12 @@ export class VisitorService {
         });
     }
 
+    public async getAllDeletedVisitor() {
+        return await this.visitorRepository.getAllDeleted()
+    }
+
+    // public async 
+
     public async rollbackRegistration(id: string) {
         await this.visitorRepository.rollbackRegistration(id)
     }

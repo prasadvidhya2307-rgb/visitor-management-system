@@ -121,6 +121,29 @@ export class VisitorRepository {
         });
     }
 
+    public async getAllDeleted() {
+
+        return this.prisma.visitor.findMany({
+            where: {
+                isDeleted: true
+            },
+
+            include: {
+                emails: {
+                    select: {
+                        email: true
+                    }
+                },
+                mobiles: {
+                    select: {
+                        mobile: true
+                    }
+                },
+            }
+        })
+
+    }
+
     public async rollbackRegistration(
         id: string
     ): Promise<void> {

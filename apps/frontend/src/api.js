@@ -72,6 +72,12 @@ export async function getVisitors() {
   return Array.isArray(response.data) ? response.data.map(normalizeVisitor) : [];
 }
 
+export async function getDeletedVisitors() {
+  const response = await request('/visitor/deleted');
+  const visitors = response.data?.deletedVisitor || [];
+  return Array.isArray(visitors) ? visitors.map(normalizeVisitor) : [];
+}
+
 export async function updateVisitor(visitorId, visitor) {
   const response = await request(`/visitor/${visitorId}`, {
     method: 'PUT',

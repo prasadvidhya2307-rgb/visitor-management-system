@@ -1,44 +1,54 @@
-import { Router } from 'express'
-import { validate } from '../../middlewares/validate.middleware.js';
-import { createVisitorSchema, updateVisitorSchema } from './visitor.validation.js';
-import { visitorController, visitorRegistrationController } from '../../container/index.js';
-import { uplaod } from '../../middlewares/upload.middleware.js'
-import { parseJson } from '../../middlewares/parse-json.middleware.js';
+import { Router } from "express";
+
+import { visitorController, visitorRegistrationController } from "../../container/index.js";
+import { parseJson } from "../../middlewares/parse-json.middleware.js";
+import { upload } from "../../middlewares/upload.middleware.js";
+import { validate } from "../../middlewares/validate.middleware.js";
+import {
+    createVisitorSchema,
+    updateVisitorSchema,
+} from "./visitor.validation.js";
 
 const router = Router();
 
-// create a visitor route
+// Create a visitor
 router.post(
-    '/',
-    uplaod.single("image"),
+    "/",
+    upload.single("image"),
     parseJson("visitor"),
     validate(createVisitorSchema),
-    visitorRegistrationController.register
-)
+    visitorRegistrationController.register,
+);
 
-// get a vistor route
+// Get all deleted visitors
 router.get(
-    '/:id',
-    visitorController.getVisitor
-)
+    "/deleted",
+    visitorController.getAllDeletedVisitor,
+);
 
-// get all visitors route 
+// Get all visitors
 router.get(
-    '/',
-    visitorController.getAllVistors
-)
+    "/",
+    visitorController.getAllVisitors,
+);
 
-// update a visitor route
+// Get a visitor by ID
+router.get(
+    "/:id",
+    visitorController.getVisitor,
+);
+
+// Update a visitor
 router.put(
-    '/:id',
+    "/:id",
     validate(updateVisitorSchema),
-    visitorController.updateVisitor
-)
+    visitorController.updateVisitor,
+);
 
-// delete a visitor route 
+// Delete a visitor
 router.delete(
-    '/:id',
-    visitorController.deleteVisitor
-)
+    "/:id",
+    visitorController.deleteVisitor,
+);
 
-export default router
+export default router;

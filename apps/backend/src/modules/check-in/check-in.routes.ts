@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { uplaod } from "../../middlewares/upload.middleware.js";
+import { upload } from "../../middlewares/upload.middleware.js";
 import { parseJson } from "../../middlewares/parse-json.middleware.js";
 import { validate } from "../../middlewares/validate.middleware.js";
 import { checkInSchema } from "./check-in.validation.js";
@@ -10,7 +10,7 @@ const router = Router();
 
 router.post(
     '/',
-    uplaod.single("image"),
+    upload.single("image"),
     parseJson("visitor"),
     parseJson("visit"),
     validate(checkInSchema),

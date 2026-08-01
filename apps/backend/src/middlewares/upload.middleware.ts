@@ -1,7 +1,7 @@
 import multer from "multer";
 import { AppError } from "../utils/app-error.js";
 
-export const uplaod = multer({
+export const upload = multer({
     storage: multer.memoryStorage(),
 
     limits: {

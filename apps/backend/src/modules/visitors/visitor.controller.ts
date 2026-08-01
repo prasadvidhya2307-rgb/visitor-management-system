@@ -39,7 +39,7 @@ export class VisitorController {
         }
     )
 
-    public getAllVistors = asyncHandler(
+    public getAllVisitors = asyncHandler(
         async (
             _req: Request,
             res: Response
@@ -83,6 +83,18 @@ export class VisitorController {
                 res,
                 "vistor deleted successfully",
                 null
+            )
+        }
+    )
+
+    public getAllDeletedVisitor = asyncHandler(
+        async (_req: Request, res: Response) => {
+            const deletedVisitor = await this.visitorService.getAllDeletedVisitor()
+
+            return ApiResponse.success(
+                res,
+                "fetched deleted visitors",
+                { deletedVisitor }
             )
         }
     )

@@ -24,6 +24,8 @@ export class VisitorRegistrationController {
                     req.file
                 );
 
+                console.log('visitor from register visitor', visitor)
+
             return ApiResponse.success(
                 res,
                 "visitor registered successfully.",

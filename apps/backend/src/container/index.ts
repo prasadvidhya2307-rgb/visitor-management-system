@@ -38,6 +38,11 @@ import { PreRegistrationRepository } from "../modules/pre-registration/pre-regis
 import { PreRegistrationService } from "../modules/pre-registration/pre-registration.service.js";
 import { PreRegistrationController } from "../modules/pre-registration/pre-registration.controller.js";
 
+import { DashboardRepository } from "../modules/dashboard/dashboard.repository.js";
+import { DashboardService } from "../modules/dashboard/dashboard.service.js";
+import { DashboardController } from '../modules/dashboard/dashboard.controller.js'
+
+
 // -----------------------------------------------------------------------------
 // Repositories
 // -----------------------------------------------------------------------------
@@ -67,6 +72,9 @@ export const employeeRepository =
 
 export const preRegistrationRepository =
     new PreRegistrationRepository(prisma);
+
+export const dashboardRepository =
+    new DashboardRepository(prisma);
 
 // -----------------------------------------------------------------------------
 // Services
@@ -134,6 +142,11 @@ export const preRegistrationService =
         employeeService,
     );
 
+export const dashboardService =
+    new DashboardService(
+        dashboardRepository,
+    );
+
 // -----------------------------------------------------------------------------
 // Controllers
 // -----------------------------------------------------------------------------
@@ -174,3 +187,8 @@ export const preRegistrationController =
     new PreRegistrationController(
         preRegistrationService,
     );
+
+export const dashboardController =
+    new DashboardController(
+        dashboardService,
+    );    

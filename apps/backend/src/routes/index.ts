@@ -7,6 +7,7 @@ import { employeeRoutes } from '../modules/employee/index.js';
 import { visitRoutes } from '../modules/visit/index.js';
 import { checkOutRoutes } from '../modules/check-out/index.js';
 import { preRegistrationRoutes } from '../modules/pre-registration/index.js';
+import { dashboardRoutes } from '../modules/dashboard/index.js';
 
 
 const router = Router();
@@ -19,5 +20,6 @@ router.use('/employee', employeeRoutes)
 router.use('/visit', visitRoutes)
 router.use("/check-out", checkOutRoutes);
 router.use("/pre-registrations", preRegistrationRoutes)
+router.use("/dashboard", dashboardRoutes)
 
 export default router

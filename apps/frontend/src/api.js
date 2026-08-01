@@ -179,3 +179,18 @@ export async function cancelPreRegistration(id) {
   const response = await request(`/pre-registrations/${id}`, { method: 'DELETE' });
   return response.data;
 }
+
+export async function getDashboard() {
+  const response = await request('/dashboard');
+  const dashboard = response.data?.dashboard || {};
+
+  // Keep the backend's current field names at the API boundary. The dashboard
+  // service exposes the two "toatal" keys, while the UI uses correctly named
+  // properties.
+  return {
+    totalVisitors: dashboard.totalVisitors ?? 0,
+    activeVisitors: dashboard.activeVisitors ?? 0,
+    todayCheckIns: dashboard.toatalCheckIns ?? 0,
+    checkedOutToday: dashboard.toatalCheckOut ?? 0,
+  };
+}

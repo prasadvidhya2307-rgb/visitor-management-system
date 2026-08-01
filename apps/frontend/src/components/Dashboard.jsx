@@ -56,7 +56,7 @@ export default function Dashboard() {
 
       {stats.todayCheckIns > 0 && (
         <div className="welcome-banner">
-          <div style={{ fontSize: 36 }}>ðŸ‘‹</div>
+          <div style={{ fontSize: 36 }}>Hello!</div>
           <div>
             <h3>Welcome back, Admin!</h3>
             <p>{stats.activeVisitors} visitor{stats.activeVisitors !== 1 ? 's' : ''} currently in the building.</p>

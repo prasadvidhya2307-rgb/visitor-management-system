@@ -288,7 +288,7 @@ const checkInPayload = result?.data || result;
                 <p style={{ color: 'var(--text2)' }}>{result ? result.message || 'Visitor checked in successfully' : 'Done'}</p>
                 <div className="detail-grid">
                   <div className="detail-item"><div className="lbl">Visitor</div><div className="val">{visitorName}</div></div>
-                  <div className="detail-item"><div className="lbl">Visitor Code</div><div className="val" style={{ fontFamily: 'monospace', fontWeight: 700 }}>{checkedInVisitor?.visitorCode || '—'}</div></div>
+                  <div className="detail-item"><div className="lbl">Visitor Code</div><div className="val" style={{ fontFamily: 'monospace', fontWeight: 700 }}>{checkedInVisitor?.visitorCode || '-'}</div></div>
                   <div className="detail-item"><div className="lbl">Host</div><div className="val">{empName}</div></div>
                   <div className="detail-item"><div className="lbl">Purpose</div><div className="val">{form.purpose || preregPurpose}</div></div>
                   <div className="detail-item"><div className="lbl">Date</div><div className="val">{checkInDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div></div>
@@ -346,8 +346,8 @@ const checkInPayload = result?.data || result;
                   </div>
                   <div style={{ background: 'var(--bg)', borderRadius: 'var(--r-sm)', padding: 16, border: '1px solid var(--border)', textAlign: 'left', fontSize: 12 }}>
                     <div style={{ display: 'grid', gap: 8 }}>
-                      <div><span style={{ color: 'var(--text2)' }}>ID: </span><strong>{result.id || result.workflow?.id || 'â€”'}</strong></div>
-                      <div><span style={{ color: 'var(--text2)' }}>Status: </span><strong>{result.status || result.workflow?.status || 'â€”'}</strong></div>
+                      <div><span style={{ color: 'var(--text2)' }}>ID: </span><strong>{result.id || result.workflow?.id || '-'}</strong></div>
+                      <div><span style={{ color: 'var(--text2)' }}>Status: </span><strong>{result.status || result.workflow?.status || '-'}</strong></div>
                       <div><span style={{ color: 'var(--text2)' }}>Visitor: </span><strong>{visitorName}</strong></div>
                       <div><span style={{ color: 'var(--text2)' }}>Host: </span><strong>{empName}</strong></div>
                       <div><span style={{ color: 'var(--text2)' }}>Purpose: </span><strong>{form.purpose || preregPurpose}</strong></div>
@@ -367,7 +367,7 @@ const checkInPayload = result?.data || result;
           <motion.div key="s7" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="card" style={{ maxWidth: 560, margin: '0 auto' }}>
             <div className="card-h"><h3><ClipboardCheck size={16} style={{ marginRight: 8, verticalAlign: 'middle' }} />Visit Details</h3></div>
             <div className="card-b">
-              <div className="form-g"><label className="form-l">Host Employee *</label><select className="form-s" value={form.employeeId} onChange={e => setForm({ ...form, employeeId: e.target.value })}><option value="">Select host...</option>{employees.map(e => <option key={e.id} value={e.id}>{e.name} â€” {e.department}</option>)}</select></div>
+              <div className="form-g"><label className="form-l">Host Employee *</label><select className="form-s" value={form.employeeId} onChange={e => setForm({ ...form, employeeId: e.target.value })}><option value="">Select host...</option>{employees.map(e => <option key={e.id} value={e.id}>{e.name} - {e.department}</option>)}</select></div>
               {visitorMode !== 'preregistered' && (
                 <div className="form-g"><label className="form-l">Purpose *</label><select className="form-s" value={form.purpose} onChange={e => setForm({ ...form, purpose: e.target.value })}><option value="">Select purpose...</option>{PURPOSES.map(p => <option key={p} value={p}>{p}</option>)}</select></div>
               )}
@@ -407,7 +407,7 @@ const checkInPayload = result?.data || result;
                   <div><span style={{ color: 'var(--text2)' }}>Email: </span><strong>{visitorData.email}</strong></div>
                   <div><span style={{ color: 'var(--text2)' }}>Phone: </span><strong>{visitorData.phone}</strong></div>
                   <div><span style={{ color: 'var(--text2)' }}>Company: </span><strong>{visitorData.company || 'N/A'}</strong></div>
-                  <div><span style={{ color: 'var(--text2)' }}>Identity: </span><strong>{identityType.replace('_', ' ').toUpperCase()} â€” {visitorData.identityNumber || 'N/A'}</strong></div>
+                  <div><span style={{ color: 'var(--text2)' }}>Identity: </span><strong>{identityType.replace('_', ' ').toUpperCase()} - {visitorData.identityNumber || 'N/A'}</strong></div>
                   <div><span style={{ color: 'var(--text2)' }}>Photo: </span><strong style={{ color: faceResult?.image ? 'var(--success)' : 'var(--text3)' }}>{faceResult?.image ? 'Captured' : 'None'}</strong></div>
                 </div>
               </div>
@@ -489,7 +489,7 @@ const checkInPayload = result?.data || result;
           <motion.div key="s4" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="card" style={{ maxWidth: 560, margin: '0 auto' }}>
             {visitorMode === 'new' && (
               <>
-                <div className="card-h"><h3><User size={16} style={{ marginRight: 8, verticalAlign: 'middle' }} />New Visitor â€” Details</h3></div>
+                <div className="card-h"><h3><User size={16} style={{ marginRight: 8, verticalAlign: 'middle' }} />New Visitor - Details</h3></div>
                 <div className="card-b">
                   {processing ? (
                     <div style={{ textAlign: 'center', padding: 40 }}>
@@ -548,7 +548,7 @@ const checkInPayload = result?.data || result;
                 <div className="card-b">
                   <div style={{ background: 'var(--success-bg)', borderRadius: 'var(--r-sm)', padding: 12, border: '1px solid var(--success)', marginBottom: 16, fontSize: 12 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#065F46' }}>
-                      <UserCheckIcon size={16} /> Face recognized â€” existing visitor
+                      <UserCheckIcon size={16} /> Face recognized - existing visitor
                     </div>
                   </div>
                   <div style={{ background: 'var(--bg)', borderRadius: 'var(--r-sm)', padding: 16, border: '1px solid var(--border)', fontSize: 12 }}>
@@ -558,7 +558,7 @@ const checkInPayload = result?.data || result;
                       <div><span style={{ color: 'var(--text2)' }}>Visitor Code: </span><strong>{recognizedVisitor.visitorCode || 'N/A'}</strong></div>
                       <div><span style={{ color: 'var(--text2)' }}>Email: </span><strong>{typeof recognizedVisitor.emails?.[0] === 'string' ? recognizedVisitor.emails[0] : (recognizedVisitor.emails?.[0]?.email || 'N/A')}</strong></div>
                       <div><span style={{ color: 'var(--text2)' }}>Mobile: </span><strong>{typeof recognizedVisitor.mobiles?.[0] === 'string' ? recognizedVisitor.mobiles[0] : (recognizedVisitor.mobiles?.[0]?.mobile || 'N/A')}</strong></div>
-                      <div><span style={{ color: 'var(--text2)' }}>Identity: </span><strong>{recognizedVisitor.identityType || ''} â€” {recognizedVisitor.identityNumber || 'N/A'}</strong></div>
+                      <div><span style={{ color: 'var(--text2)' }}>Identity: </span><strong>{recognizedVisitor.identityType || ''} - {recognizedVisitor.identityNumber || 'N/A'}</strong></div>
                       <div><span style={{ color: 'var(--text2)' }}>Status: </span><strong>{recognizedVisitor.registrationStatus || 'N/A'}</strong></div>
                     </div>
                   </div>

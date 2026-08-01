@@ -17,4 +17,4 @@ __pycache__/
 
 # VS Code
 .vscode/
-apps/backend/storage/*
+apps/backend/src/storage*

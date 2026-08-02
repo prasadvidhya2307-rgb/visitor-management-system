@@ -43,7 +43,8 @@ export default function VisitorHistory() {
     else { setSortField(field); setSortDir('desc'); }
   }
 
-  let filtered = Array.from(new Map(visits.map(visit => [visit.visitorId, visit])).values());
+  const localDate = value => { const date = new Date(value); const offset = date.getTimezoneOffset() * 60000; return new Date(date.getTime() - offset).toISOString().slice(0, 10); };
+  let filtered = [...visits];
   if (search) {
     const q = search.toLowerCase();
     filtered = filtered.filter(v => {
@@ -52,8 +53,9 @@ export default function VisitorHistory() {
     });
   }
   if (purposeFilter) filtered = filtered.filter(v => v.purpose === purposeFilter);
-  if (dateFrom) filtered = filtered.filter(v => v.checkInTime?.slice(0, 10) >= dateFrom);
-  if (dateTo) filtered = filtered.filter(v => v.checkOutTime?.slice(0, 10) <= dateTo);
+  if (dateFrom) filtered = filtered.filter(v => localDate(v.checkInTime) >= dateFrom);
+  if (dateTo) filtered = filtered.filter(v => localDate(v.checkInTime) <= dateTo);
+  filtered = Array.from(filtered.reduce((latest, visit) => { if (!latest.has(visit.visitorId)) latest.set(visit.visitorId, visit); return latest; }, new Map()).values());
 
   filtered.sort((a, b) => {
     let va = a[sortField], vb = b[sortField];

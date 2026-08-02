@@ -153,6 +153,8 @@ export default function CheckIn() {
   async function handleSubmitVisit() {
     setProcessing(true);
     setApiError('');
+    const autoPrintWindow = window.open('', '_blank', 'width=520,height=920');
+    if (autoPrintWindow) autoPrintWindow.document.write('<p style="font-family:Arial;padding:24px">Preparing visitor token...</p>');
 
     let vData, vPurpose, visitorId;
     if (visitorMode === 'recognized' && recognizedVisitor) {
@@ -195,9 +197,12 @@ export default function CheckIn() {
         data = await checkIn(vData, visitPayload, faceResult.image);
       }
       if (visitorMode === 'preregistered' && foundPreregGuest?.id) await completePreRegistration(foundPreregGuest.id, data.visitor.id);
+      await printToken(data, autoPrintWindow, false);
+      data = { ...data, visit: { ...data.visit, badgePrinted: Boolean(autoPrintWindow), badgePrintedAt: autoPrintWindow ? new Date().toISOString() : null } };
       setResult(data);
       setStep(8);
     } catch (err) {
+      if (autoPrintWindow) autoPrintWindow.close();
       setApiError(err.message);
       notify(err.message || 'Check-in failed.', 'error');
       setStep(8);
@@ -206,16 +211,17 @@ export default function CheckIn() {
     }
   }
 
-  async function printToken() {
+  async function printToken(tokenData = result, existingPopup = null, updateScreen = true) {
     try {
-      const qr = await QRCode.toDataURL(getPublicVisitUrl(result.visit.id), { width: 220, margin: 1 });
-      const popup = window.open('', '_blank', 'width=760,height=900');
+      const qr = await QRCode.toDataURL(getPublicVisitUrl(tokenData.visit.id), { width: 220, margin: 1, color: { dark: '#312E81', light: '#FFFFFF' } });
+      const popup = existingPopup || window.open('', '_blank', 'width=520,height=920');
       if (!popup) throw new Error('Allow pop-ups to print the visitor token.');
-      popup.document.write(`<html><head><title>Visitor Token ${result.visitor.visitorCode}</title><style>body{font-family:Arial;padding:24px}.token{border:2px solid #111;border-radius:16px;padding:24px;max-width:620px}.head{display:flex;gap:20px;align-items:center}.photo{width:140px;height:140px;object-fit:cover;border-radius:12px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}.code{font-size:28px;font-weight:800}.qr{width:180px}.muted{color:#555}@media print{button{display:none}}</style></head><body><div class="token"><div class="head"><img class="photo" src="${faceResult.image}"/><div><div class="muted">VISITOR TOKEN</div><div class="code">${result.visitor.visitorCode}</div><h2>${visitorName}</h2><div>${result.visitor.company || ''}</div></div><img class="qr" src="${qr}"/></div><div class="grid"><div><b>Visit ID</b><br/>${result.visit.id}</div><div><b>Status</b><br/>${result.visit.status.replace('_', ' ')}</div><div><b>Host</b><br/>${empName}</div><div><b>Purpose</b><br/>${form.purpose || preregPurpose}</div><div><b>Check-in</b><br/>${new Date(result.visit.checkInAt).toLocaleString()}</div><div><b>Identity</b><br/>${result.visitor.identityType}: ${result.visitor.identityNumber}</div></div></div><button onclick="window.print()">Print</button></body></html>`);
+      popup.document.open();
+      popup.document.write(`<html><head><title>Visitor Token ${tokenData.visitor.visitorCode}</title><style>@page{size:90mm 150mm;margin:5mm}*{box-sizing:border-box}body{margin:0;background:#EEF2FF;font-family:Arial,sans-serif;color:#172033}.token{width:86mm;min-height:140mm;margin:8px auto;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 18px 45px rgba(49,46,129,.18);border:1px solid #DDE3F2}.top{padding:18px;text-align:center;background:linear-gradient(145deg,#4338CA,#6366F1);color:#fff}.brand{font-size:11px;letter-spacing:2px;font-weight:700;opacity:.85}.tick{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:12px auto 7px;background:#10B981;color:white;border:4px solid rgba(255,255,255,.35);font-size:24px;font-weight:bold}.checked{font-size:14px;font-weight:800}.photo{width:105px;height:105px;object-fit:cover;border-radius:50%;border:5px solid white;margin-top:-4px;box-shadow:0 8px 20px rgba(15,23,42,.22)}.body{padding:18px 20px 20px;text-align:center}.name{font-size:22px;font-weight:800;margin:8px 0 3px}.company{font-size:12px;color:#64748B}.code{display:inline-block;margin:12px 0;padding:7px 14px;border-radius:20px;background:#EEF2FF;color:#4338CA;font-size:17px;font-weight:800;letter-spacing:1px}.details{text-align:left;display:grid;gap:8px;padding:13px;border-radius:12px;background:#F8FAFC;border:1px solid #E5E9F2;font-size:11px}.row{display:flex;justify-content:space-between;gap:12px}.row span{color:#64748B}.row b{text-align:right}.qr{width:118px;height:118px;margin:13px auto 4px}.scan{font-size:9px;color:#64748B}.print-btn{display:block;margin:10px auto;padding:9px 18px;border:0;border-radius:8px;background:#4F46E5;color:#fff;font-weight:bold}@media print{body{background:#fff}.token{margin:0;box-shadow:none}.print-btn{display:none}}</style></head><body><div class="token"><div class="top"><div class="brand">VISITOR MANAGEMENT</div><div class="tick">✓</div><div class="checked">CHECKED IN SUCCESSFULLY</div><img class="photo" src="${faceResult.image}"/></div><div class="body"><div class="name">${visitorName}</div><div class="company">${tokenData.visitor.company || 'Visitor'}</div><div class="code">${tokenData.visitor.visitorCode}</div><div class="details"><div class="row"><span>Host</span><b>${empName}</b></div><div class="row"><span>Purpose</span><b>${form.purpose || preregPurpose}</b></div><div class="row"><span>Check-in</span><b>${new Date(tokenData.visit.checkInAt).toLocaleString()}</b></div><div class="row"><span>Status</span><b>${tokenData.visit.status.replace('_', ' ')}</b></div><div class="row"><span>Identity</span><b>${tokenData.visitor.identityType}: ${tokenData.visitor.identityNumber}</b></div></div><img class="qr" src="${qr}"/><div class="scan">Scan to view verified visitor and visit details</div></div></div><button class="print-btn" onclick="window.print()">Print Token</button><script>window.addEventListener('load',()=>setTimeout(()=>window.print(),500));</script></body></html>`);
       popup.document.close();
-      await markBadgePrinted(result.visit.id);
-      setResult(current => ({ ...current, visit: { ...current.visit, badgePrinted: true, badgePrintedAt: new Date().toISOString() } }));
-      notify('Visitor token opened for printing and marked as printed.');
+      await markBadgePrinted(tokenData.visit.id);
+      if (updateScreen) setResult(current => ({ ...current, visit: { ...current.visit, badgePrinted: true, badgePrintedAt: new Date().toISOString() } }));
+      notify('Visitor token opened automatically and marked as printed.');
     } catch (err) { notify(err.message, 'error'); }
   }
 

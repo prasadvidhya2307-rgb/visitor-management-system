@@ -61,17 +61,17 @@ export default function ExpectedVisitors() {
       {todayVisitors.length > 0 && (
         <div className="card" style={{ marginBottom: 16 }}>
           <div className="card-h"><h3>Today</h3></div>
-          <div className="card-b">
+          <div className="card-b expected-list">
             {todayVisitors.map(v => {
               const emp = employees.find(e => e.id === v.employeeId);
               return (
-                <div key={v.id} className="act-item" style={{ alignItems: 'center' }}>
+                <div key={v.id} className="act-item expected-row" style={{ alignItems: 'center' }}>
                   <div className="act-dot" style={{ background: v.status === 'arrived' ? 'var(--success)' : 'var(--warning)' }} />
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 600, fontSize: 13 }}>{v.visitorName} <span style={{ fontWeight: 400, color: 'var(--text2)' }}>from {v.company}</span></div>
                     <div style={{ fontSize: 12, color: 'var(--text2)' }}>Host: {emp?.name || 'N/A'} · {v.purpose} · {v.expectedTime}</div>
                   </div>
-                  <div style={{ display: 'flex', gap: 6 }}>
+                  <div className="expected-actions" style={{ display: 'flex', gap: 6 }}>
                     {v.status !== 'arrived' && <button className="btn-s btn-sm" onClick={() => handleArrived(v.id)}><CheckCircle size={14} /> Arrived</button>}
                     <button className="btn-o btn-sm" onClick={() => handleDelete(v.id)}><Trash2 size={14} /></button>
                   </div>
@@ -85,17 +85,17 @@ export default function ExpectedVisitors() {
       {upcoming.length > 0 && (
         <div className="card" style={{ marginBottom: 16 }}>
           <div className="card-h"><h3>Upcoming</h3></div>
-          <div className="card-b">
+          <div className="card-b expected-list">
             {upcoming.map(v => {
               const emp = employees.find(e => e.id === v.employeeId);
               return (
-                <div key={v.id} className="act-item" style={{ alignItems: 'center' }}>
+                <div key={v.id} className="act-item expected-row" style={{ alignItems: 'center' }}>
                   <div className="act-dot" style={{ background: 'var(--info)' }} />
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 600, fontSize: 13 }}>{v.visitorName} <span style={{ fontWeight: 400, color: 'var(--text2)' }}>from {v.company}</span></div>
                     <div style={{ fontSize: 12, color: 'var(--text2)' }}>Host: {emp?.name || 'N/A'} · {v.purpose} · {v.expectedDate} at {v.expectedTime}</div>
                   </div>
-                  <div style={{ display: 'flex', gap: 6 }}>
+                  <div className="expected-actions" style={{ display: 'flex', gap: 6 }}>
                     {v.status !== 'arrived' && <button className="btn-s btn-sm" onClick={() => handleArrived(v.id)}><CheckCircle size={14} /> Arrived</button>}
                     <button className="btn-o btn-sm" onClick={() => handleDelete(v.id)}><Trash2 size={14} /></button>
                   </div>

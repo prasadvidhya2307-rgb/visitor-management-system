@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ClipboardCheck, Plus, Trash2, Edit2, X, Search } from 'lucide-react';
-import store from '../store';
+import { cancelPreRegistration, createPreRegistration, getEmployees, getPreRegistrations, notify, updatePreRegistration } from '../api';
 
 const FREQUENCIES = ['daily', 'weekly', 'monthly'];
 
@@ -15,9 +15,8 @@ export default function PreRegisteredGuests() {
 
   useEffect(() => { refresh(); }, []);
 
-  function refresh() {
-    setGuests(store.getPreRegistered());
-    setEmployees(store.getEmployees());
+  async function refresh() {
+    try { const [registered, staff] = await Promise.all([getPreRegistrations(), getEmployees()]); setGuests(registered); setEmployees(staff); } catch (err) { notify(err.message, 'error'); }
   }
 
   const filtered = guests.filter(g =>
@@ -40,17 +39,14 @@ export default function PreRegisteredGuests() {
     setShowModal(true);
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    if (editId) store.updatePreRegistered(editId, form);
-    else store.addPreRegistered(form);
-    setShowModal(false);
-    refresh();
+    try { if (editId) await updatePreRegistration(editId, form); else await createPreRegistration(form); setShowModal(false); await refresh(); notify(`Pre-registration ${editId ? 'updated' : 'created'} successfully.`); } catch (err) { notify(err.message, 'error'); }
   }
 
-  function handleDelete(id) { store.deletePreRegistered(id); refresh(); }
+  async function handleDelete(id) { try { await cancelPreRegistration(id); await refresh(); notify('Pre-registration cancelled.'); } catch (err) { notify(err.message, 'error'); } }
 
-  function handleRevoke(id) { store.updatePreRegistered(id, { status: 'revoked' }); refresh(); }
+  function handleRevoke(id) { handleDelete(id); }
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
@@ -84,7 +80,7 @@ export default function PreRegisteredGuests() {
                   <tr><td colSpan={8} style={{ textAlign: 'center', padding: 32, color: 'var(--text2)' }}>No guests match "{search}"</td></tr>
                 )}
                 {filtered.map(g => {
-                  const emp = employees.find(e => e.id === g.employeeId);
+                  const emp = g.employee || employees.find(e => e.id === g.employeeId);
                   return (
                     <tr key={g.id}>
                       <td>

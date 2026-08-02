@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { BarChart3, TrendingUp, Download } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
-import store from '../store';
+import { getEmployees, getVisits, notify } from '../api';
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#6366F1', '#EC4899', '#8B5CF6', '#14B8A6'];
 
@@ -12,12 +12,12 @@ export default function Reports() {
   const [deptStats, setDeptStats] = useState([]);
   const [visits, setVisits] = useState([]);
 
-  useEffect(() => {
-    setDailyStats(store.getDailyStats());
-    setMonthlyStats(store.getMonthlyStats());
-    setDeptStats(store.getDepartmentStats());
-    setVisits(store.getVisits());
-  }, []);
+  useEffect(() => { Promise.all([getVisits(), getEmployees()]).then(([rows, employees]) => {
+    setVisits(rows);
+    setDailyStats(Array.from({ length: 7 }, (_, i) => { const d = new Date(); d.setDate(d.getDate() - 6 + i); const key = d.toISOString().slice(0, 10); const day = rows.filter(v => String(v.checkInTime).slice(0, 10) === key); return { day: d.toLocaleDateString('en-US', { weekday: 'short' }), checkIns: day.length, checkOuts: day.filter(v => v.status === 'checked_out').length }; }));
+    setMonthlyStats(Array.from({ length: 6 }, (_, i) => { const d = new Date(); d.setMonth(d.getMonth() - 5 + i); const key = d.toISOString().slice(0, 7); return { month: d.toLocaleDateString('en-US', { month: 'short' }), visitors: rows.filter(v => String(v.checkInTime).startsWith(key)).length }; }));
+    setDeptStats(employees.map(e => ({ name: e.department, value: rows.filter(v => v.employeeId === e.id).length })).reduce((a, x) => { const e = a.find(y => y.name === x.name); if (e) e.value += x.value; else a.push(x); return a; }, []));
+  }).catch(err => notify(err.message, 'error')); }, []);
 
   const totalVisits = visits.length;
   const avgDuration = visits.filter(v => v.checkOutTime).reduce((acc, v) => acc + (new Date(v.checkOutTime) - new Date(v.checkInTime)) / 3600000, 0) / (visits.filter(v => v.checkOutTime).length || 1);
@@ -30,7 +30,7 @@ export default function Reports() {
   }).filter(h => h.visits > 0 || h.hour === '9:00' || h.hour === '14:00');
 
   function exportReport() {
-    const rows = [['Metric', 'Value'], ['Total Visits', totalVisits], ['Active Visitors', store.getActiveVisits().length], ['Avg Duration', avgDuration.toFixed(1) + 'h'], ['Success Rate', successRate + '%']];
+    const rows = [['Metric', 'Value'], ['Total Visits', totalVisits], ['Active Visitors', visits.filter(v => v.status === 'checked_in').length], ['Avg Duration', avgDuration.toFixed(1) + 'h'], ['Success Rate', successRate + '%']];
     deptStats.forEach(d => rows.push([d.name + ' Visits', d.value]));
     const csv = rows.map(r => r.join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });

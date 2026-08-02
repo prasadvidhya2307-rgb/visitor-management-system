@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, CheckCircle, ArrowRightLeft, UserMinus, AlertCircle, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import store from '../store';
+import { checkOut, getEmployees, getVisits, getVisitors, notify, presentVisit } from '../api';
 import FaceRecognition from './FaceRecognition';
 
 export default function CheckOut() {
@@ -15,23 +15,27 @@ export default function CheckOut() {
   const [faceMatched, setFaceMatched] = useState(false);
   const [faceResult, setFaceResult] = useState(null);
   const [result, setResult] = useState(null);
+  const [visitors, setVisitors] = useState([]);
+  const [employees, setEmployees] = useState([]);
 
   useEffect(() => { refresh(); }, []);
 
-  function refresh() {
-    const acts = store.getActiveVisits();
-    setActiveVisits(acts);
-    setFiltered(acts);
+  async function refresh() {
+    try {
+      const [visits, people, staff] = await Promise.all([getVisits(), getVisitors(), getEmployees()]);
+      const acts = visits.filter(visit => visit.status === 'checked_in');
+      setVisitors(people); setEmployees(staff); setActiveVisits(acts); setFiltered(acts);
+    } catch (err) { notify(err.message, 'error'); }
   }
 
   useEffect(() => {
     if (!search.trim()) { setFiltered(activeVisits); return; }
     const q = search.toLowerCase();
     setFiltered(activeVisits.filter(v => {
-      const vis = store.getVisitorById(v.visitorId);
+      const vis = visitors.find(visitor => visitor.id === v.visitorId);
       return v.token.toLowerCase().includes(q) || vis?.name?.toLowerCase().includes(q);
     }));
-  }, [search, activeVisits]);
+  }, [search, activeVisits, visitors]);
 
   function selectVisit(visit) {
     setSelectedVisit(visit);
@@ -40,10 +44,12 @@ export default function CheckOut() {
     setFaceResult(null);
   }
 
-  function handleFaceMatch(data) {
-    setFaceMatched(true);
-    setFaceResult(data);
-    setStep('confirm');
+  async function handleFaceMatch(data) {
+    try {
+      const response = await checkOut(data.image);
+      if (!response.matched) throw new Error('Face could not be matched to an active visitor.');
+      setFaceMatched(true); setFaceResult(response); setResult(presentVisit(response.visit)); setStep('done'); refresh(); notify('Visitor checked out successfully.');
+    } catch (err) { setFaceMatched(false); setFaceResult({ score: 0 }); notify(err.message, 'error'); }
   }
 
   function handleFaceFail(data) {
@@ -51,13 +57,6 @@ export default function CheckOut() {
     setFaceResult(data);
   }
 
-  function handleCheckOut() {
-    if (!selectedVisit) return;
-    const visit = store.checkOut(selectedVisit.id);
-    setResult(visit);
-    setStep('done');
-    refresh();
-  }
 
   function goBack() {
     setStep('list');
@@ -66,8 +65,8 @@ export default function CheckOut() {
     setFaceResult(null);
   }
 
-  const visitorName = selectedVisit ? (store.getVisitorById(selectedVisit.visitorId)?.name || 'Unknown') : '';
-  const empName = selectedVisit ? (store.getEmployees().find(e => e.id === selectedVisit.employeeId)?.name || 'N/A') : '';
+  const visitorName = selectedVisit ? (visitors.find(visitor => visitor.id === selectedVisit.visitorId)?.name || 'Unknown') : '';
+  const empName = selectedVisit ? (selectedVisit.host?.name || employees.find(e => e.id === selectedVisit.employeeId)?.name || 'N/A') : '';
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
@@ -80,7 +79,7 @@ export default function CheckOut() {
                 <h2>Visitor Checked Out!</h2>
                 <p style={{ color: 'var(--text2)', marginBottom: 8 }}>Face verified & check-out complete</p>
                 <div className="detail-grid">
-                  <div className="detail-item"><div className="lbl">Visitor</div><div className="val">{store.getVisitorById(result.visitorId)?.name}</div></div>
+                  <div className="detail-item"><div className="lbl">Visitor</div><div className="val">{visitors.find(visitor => visitor.id === result.visitorId)?.name || visitorName}</div></div>
                   <div className="detail-item"><div className="lbl">Token</div><div className="val">{result.token}</div></div>
                   <div className="detail-item"><div className="lbl">Check-In</div><div className="val">{new Date(result.checkInTime).toLocaleTimeString()}</div></div>
                   <div className="detail-item"><div className="lbl">Check-Out</div><div className="val">{new Date(result.checkOutTime).toLocaleTimeString()}</div></div>
@@ -130,11 +129,9 @@ export default function CheckOut() {
                 <div className="card-h"><h3 style={{ fontSize: 13 }}>Face Recognition</h3></div>
                 <div className="card-b" style={{ padding: 16 }}>
                   <FaceRecognition
-                    mode="verify"
-                    storedFace={store.getVisitFaceData(selectedVisit.id)?.faceData}
+                    mode="capture"
                     label="Scan your face to verify identity"
-                    onMatch={(data) => handleFaceMatch(data)}
-                    onFail={(data) => handleFaceFail(data)}
+                    onCapture={handleFaceMatch}
                   />
                 </div>
               </div>
@@ -199,8 +196,8 @@ export default function CheckOut() {
             ) : (
               <div style={{ display: 'grid', gap: 12 }}>
                 {filtered.map(v => {
-                  const vis = store.getVisitorById(v.visitorId);
-                  const emp = store.getEmployees().find(e => e.id === v.employeeId);
+                  const vis = visitors.find(visitor => visitor.id === v.visitorId);
+                  const emp = v.host || employees.find(e => e.id === v.employeeId);
                   const dur = Math.round((new Date() - new Date(v.checkInTime)) / 3600000 * 10) / 10;
                   const isOvertime = dur > 8;
                   return (

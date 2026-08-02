@@ -2,23 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Mail, Phone, Building, CreditCard, Trash2 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import store from '../store';
+import { deleteVisitor, getEmployees, getVisitor, getVisitorVisits, notify } from '../api';
 
 export default function VisitorProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [visitor, setVisitor] = useState(null);
-  const [visits, setVisits] = useState([]);
+  const [visits, setVisits] = useState([]); const [employees, setEmployees] = useState([]);
 
   useEffect(() => {
-    setVisitor(store.getVisitorById(id));
-    setVisits(store.getVisitorVisits(id));
+    Promise.all([getVisitor(id), getVisitorVisits(id), getEmployees()]).then(([person, history, staff]) => { setVisitor(person); setVisits(history); setEmployees(staff); }).catch(err => notify(err.message, 'error'));
   }, [id]);
 
-  function handleDelete() {
+  async function handleDelete() {
     if (window.confirm(`Delete visitor "${visitor.name}"? They will be moved to Deleted Visitors and can be restored later.`)) {
-      store.softDeleteVisitor(visitor.id);
-      navigate(-1);
+      try { await deleteVisitor(visitor.id); notify('Visitor deleted successfully.'); navigate(-1); } catch (err) { notify(err.message, 'error'); }
     }
   }
 
@@ -66,7 +64,7 @@ export default function VisitorProfile() {
             </thead>
             <tbody>
               {visits.map(v => {
-                const emp = store.getEmployees().find(e => e.id === v.employeeId);
+                const emp = v.host || employees.find(e => e.id === v.employeeId);
                 return (
                   <tr key={v.id}>
                     <td><span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{v.token}</span></td>

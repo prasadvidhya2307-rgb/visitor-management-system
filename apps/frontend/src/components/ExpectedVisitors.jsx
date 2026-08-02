@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CalendarClock, Plus, Trash2, CheckCircle, X } from 'lucide-react';
-import store from '../store';
+import { getEmployees, notify } from '../api';
 
 export default function ExpectedVisitors() {
   const [visitors, setVisitors] = useState([]);
@@ -11,27 +11,22 @@ export default function ExpectedVisitors() {
 
   useEffect(() => { refresh(); }, []);
 
-  function refresh() {
-    setVisitors(store.getExpected());
-    setEmployees(store.getEmployees());
-  }
+  async function refresh() { try { setEmployees(await getEmployees()); setVisitors([]); } catch (err) { notify(err.message, 'error'); } }
 
   function handleSubmit(e) {
     e.preventDefault();
-    store.addExpected(form);
+    notify('Expected-visitor management is not available because the backend does not provide this endpoint.', 'error');
     setForm({ visitorName: '', company: '', email: '', phone: '', employeeId: '', purpose: '', expectedDate: new Date().toISOString().slice(0, 10), expectedTime: '' });
     setShowModal(false);
     refresh();
   }
 
   function handleDelete(id) {
-    store.deleteExpected(id);
-    refresh();
+    notify('Expected-visitor management is not available because the backend does not provide this endpoint.', 'error');
   }
 
   function handleArrived(id) {
-    store.updateExpected(id, { status: 'arrived' });
-    refresh();
+    notify('Expected-visitor management is not available because the backend does not provide this endpoint.', 'error');
   }
 
   const today = new Date().toISOString().slice(0, 10);

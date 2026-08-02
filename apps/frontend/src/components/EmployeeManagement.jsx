@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserCog, Plus, Edit2, Trash2, X } from 'lucide-react';
-import store from '../store';
+import { createEmployee, deleteEmployee, getEmployees, notify, updateEmployee } from '../api';
 
 const DEPARTMENTS = ['Engineering', 'HR', 'Finance', 'Marketing', 'Operations', 'Legal', 'Sales', 'IT', 'Admin'];
 
@@ -11,23 +11,20 @@ export default function EmployeeManagement() {
   const [editId, setEditId] = useState(null);
   const [form, setForm] = useState({ name: '', email: '', phone: '', department: '', designation: '' });
 
-  useEffect(() => { setEmployees(store.getEmployees()); }, []);
+  useEffect(() => { refresh(); }, []);
+  async function refresh() { try { setEmployees(await getEmployees()); } catch (err) { notify(err.message, 'error'); } }
 
   function openAdd() { setEditId(null); setForm({ name: '', email: '', phone: '', department: '', designation: '' }); setShowModal(true); }
   function openEdit(emp) { setEditId(emp.id); setForm({ name: emp.name, email: emp.email, phone: emp.phone, department: emp.department, designation: emp.designation }); setShowModal(true); }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    if (editId) store.updateEmployee(editId, form);
-    else store.addEmployee(form);
-    setShowModal(false);
-    setEmployees(store.getEmployees());
+    try { if (editId) await updateEmployee(editId, form); else await createEmployee(form); setShowModal(false); await refresh(); notify(`Employee ${editId ? 'updated' : 'added'} successfully.`); } catch (err) { notify(err.message, 'error'); }
   }
 
-  function handleDelete(id) {
+  async function handleDelete(id) {
     if (window.confirm('Delete this employee?')) {
-      store.deleteEmployee(id);
-      setEmployees(store.getEmployees());
+      try { await deleteEmployee(id); await refresh(); notify('Employee deleted successfully.'); } catch (err) { notify(err.message, 'error'); }
     }
   }
 

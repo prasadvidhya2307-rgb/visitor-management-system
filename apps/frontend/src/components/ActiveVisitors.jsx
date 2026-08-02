@@ -2,26 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Users, ArrowRightLeft, Clock, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import store from '../store';
+import { getEmployees, getVisits, getVisitors, notify } from '../api';
 
 export default function ActiveVisitors() {
   const navigate = useNavigate();
   const [visits, setVisits] = useState([]);
   const [search, setSearch] = useState('');
+  const [visitors, setVisitors] = useState([]); const [employees, setEmployees] = useState([]);
 
-  useEffect(() => { setVisits(store.getActiveVisits()); }, []);
+  useEffect(() => { Promise.all([getVisits(), getVisitors(), getEmployees()]).then(([rows, people, staff]) => { setVisits(rows.filter(v => v.status === 'checked_in')); setVisitors(people); setEmployees(staff); }).catch(err => notify(err.message, 'error')); }, []);
 
   const filtered = visits.filter(v => {
     if (!search.trim()) return true;
     const q = search.toLowerCase();
-    const vis = store.getVisitorById(v.visitorId);
+    const vis = visitors.find(visitor => visitor.id === v.visitorId);
     return vis?.name?.toLowerCase().includes(q) || v.token.toLowerCase().includes(q) || vis?.company?.toLowerCase().includes(q) || v.purpose?.toLowerCase().includes(q);
   });
 
-  function handleCheckOut(id) {
-    store.checkOut(id);
-    setVisits(store.getActiveVisits());
-  }
+  function handleCheckOut() { navigate('/check-out'); }
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
@@ -45,8 +43,8 @@ export default function ActiveVisitors() {
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
           {filtered.map((v, i) => {
-            const vis = store.getVisitorById(v.visitorId);
-            const emp = store.getEmployees().find(e => e.id === v.employeeId);
+            const vis = visitors.find(visitor => visitor.id === v.visitorId);
+            const emp = v.host || employees.find(e => e.id === v.employeeId);
             const dur = Math.round((new Date() - new Date(v.checkInTime)) / 3600000 * 10) / 10;
             const isOvertime = dur > 8;
             return (

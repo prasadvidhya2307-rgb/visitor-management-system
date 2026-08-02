@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Save, RotateCcw } from 'lucide-react';
 import store from '../store';
+import { notify } from '../api';
 
 export default function Settings() {
   const [form, setForm] = useState({ company: '', maxVisitHours: 8, requirePhoto: false, autoCheckoutHours: 12 });
@@ -13,19 +14,18 @@ export default function Settings() {
 
   function handleSave() {
     Object.entries(form).forEach(([k, v]) => store.saveSetting(k, v));
-    alert('Settings saved!');
+    notify('Display preferences saved on this device.');
   }
 
   function handleReset() {
     if (window.confirm('Reset all data to defaults? This will clear all visitors, visits, and activity.')) {
-      store.reset();
-      window.location.reload();
+      notify('Resetting server data is not supported by the backend.', 'error');
     }
   }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-      <div style={{ maxWidth: 600 }}>
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="settings-center">
+      <div style={{ maxWidth: 600, width: '100%' }}>
         <div className="card" style={{ marginBottom: 16 }}>
           <div className="card-h"><h3>General Settings</h3></div>
           <div className="card-b">

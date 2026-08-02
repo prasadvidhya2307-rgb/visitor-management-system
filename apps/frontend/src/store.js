@@ -7,6 +7,7 @@ const KEYS = {
   activity: 'vms_activity',
   settings: 'vms_settings',
   deletedVisitors: 'vms_deleted_visitors',
+  failedRegisters: 'vms_failed_registers',
 };
 
 function get(key) {
@@ -89,6 +90,12 @@ function initStore() {
     set(KEYS.activity, acts);
   }
   if (!localStorage.getItem(KEYS.settings)) set(KEYS.settings, defaultSettings);
+  if (!localStorage.getItem(KEYS.failedRegisters)) {
+    set(KEYS.failedRegisters, [
+      { id: genId(), name: null, attempt: 'face_recognition', reason: 'Recognition failed', detail: 'Face could not be matched to any registered visitor', timestamp: hoursAgo(6) },
+      { id: genId(), name: 'Amit Sharma', attempt: 'check_in', reason: 'API Error', detail: 'Check-in submission failed — server unavailable', timestamp: hoursAgo(3) },
+    ]);
+  }
 }
 
 initStore();
@@ -146,6 +153,15 @@ const store = {
     return null;
   },
   getDeletedVisitors: () => get(KEYS.visitors).filter(v => v.deleted),
+
+  // Failed Registers
+  getFailedRegisters: () => get(KEYS.failedRegisters),
+  addFailedRegister: ({ name = null, attempt = 'check_in', reason = 'Check-in failed', detail = '' }) => {
+    const all = get(KEYS.failedRegisters);
+    all.unshift({ id: genId(), name, attempt, reason, detail, timestamp: new Date().toISOString() });
+    set(KEYS.failedRegisters, all);
+    return all[0];
+  },
 
   // Visits (Check-in/Check-out)
   getVisits: () => get(KEYS.visits),
@@ -302,6 +318,34 @@ const store = {
       if (emp && depts[emp.department] !== undefined) depts[emp.department]++;
     });
     return Object.entries(depts).map(([name, value]) => ({ name, value }));
+  },
+
+  getPurposes: () => {
+    const counts = {};
+    get(KEYS.visits).forEach(v => { const p = v.purpose || 'Other'; counts[p] = (counts[p] || 0) + 1; });
+    return Object.entries(counts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+  },
+
+  getPeakHours: () => {
+    const counts = {};
+    get(KEYS.visits).forEach(v => {
+      if (v.checkInTime) {
+        const h = new Date(v.checkInTime).getHours();
+        counts[h] = (counts[h] || 0) + 1;
+      }
+    });
+    return Object.keys(counts).sort((a, b) => a - b).map(h => ({ hour: `${h}:00`, visits: counts[h] }));
+  },
+
+  getTopHosts: () => {
+    const emps = get(KEYS.employees);
+    const counts = {};
+    get(KEYS.visits).forEach(v => { counts[v.employeeId] = (counts[v.employeeId] || 0) + 1; });
+    return emps
+      .map(e => ({ name: e.name, department: e.department, visits: counts[e.id] || 0 }))
+      .filter(h => h.visits > 0)
+      .sort((a, b) => b.visits - a.visits)
+      .slice(0, 5);
   },
 
   // Settings

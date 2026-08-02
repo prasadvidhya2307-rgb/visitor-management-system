@@ -89,6 +89,7 @@ export default function CheckIn() {
         setRecognizing(false);
         if (!data.success) {
           setRecognitionError(data.message || 'Recognition failed');
+          store.addFailedRegister({ attempt: 'face_recognition', reason: data.message || 'Recognition failed', detail: 'Face recognition API returned an error' });
           setVisitorMode(null);
         } else if (data.data?.code === 'MATCH_FOUND' && data.data?.visitor) {
           setRecognizedVisitor(data.data.visitor);
@@ -102,6 +103,7 @@ export default function CheckIn() {
       .catch(err => {
         setRecognizing(false);
         setRecognitionError(err.message || 'Recognition failed');
+        store.addFailedRegister({ attempt: 'face_recognition', reason: err.message || 'Recognition failed', detail: 'Face recognition API request failed' });
         setVisitorMode(null);
         setStep(3);
       });
@@ -198,6 +200,7 @@ export default function CheckIn() {
       setStep(8);
     } catch (err) {
       setApiError(err.message);
+      store.addFailedRegister({ name: visitorName || null, attempt: 'check_in', reason: err.message || 'Check-in failed', detail: 'Check-in submission failed' });
       setStep(8);
     } finally {
       setProcessing(false);

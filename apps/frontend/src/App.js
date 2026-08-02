@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import {
-  LayoutDashboard, UserPlus, UserMinus, History, Users,
-  CalendarClock, ClipboardCheck, BarChart3, Settings, UserCog,
-  Sun, Moon, Menu, X, ShieldCheck, UserX
+  LayoutDashboard, UserPlus, UserMinus, History,
+  ClipboardCheck, BarChart3, Settings, UserCog,
+  Sun, Moon, Menu, X, ShieldCheck, Bell
 } from 'lucide-react';
 import './App.css';
 import store from './store';
@@ -13,14 +13,11 @@ import Dashboard from './components/Dashboard';
 import CheckIn from './components/CheckIn';
 import CheckOut from './components/CheckOut';
 import VisitorHistory from './components/VisitorHistory';
-import ActiveVisitors from './components/ActiveVisitors';
-import ExpectedVisitors from './components/ExpectedVisitors';
 import PreRegisteredGuests from './components/PreRegisteredGuests';
 import Reports from './components/Reports';
 import SettingsPage from './components/Settings';
 import VisitorProfile from './components/VisitorProfile';
 import EmployeeManagement from './components/EmployeeManagement';
-import DeletedVisitors from './components/DeletedVisitors';
 
 const navItems = [
   { section: 'Overview' },
@@ -30,10 +27,7 @@ const navItems = [
   { path: '/check-out', icon: UserMinus, label: 'Check Out' },
   { path: '/history', icon: History, label: 'Visitor History' },
   { section: 'Management' },
-  { path: '/active', icon: Users, label: 'Active Visitors' },
-  { path: '/expected', icon: CalendarClock, label: 'Expected Visitors' },
   { path: '/pre-registered', icon: ClipboardCheck, label: 'Pre-Registered' },
-  { path: '/deleted', icon: UserX, label: 'Deleted Visitors' },
   { section: 'Insights' },
   { path: '/reports', icon: BarChart3, label: 'Reports' },
   { path: '/employees', icon: UserCog, label: 'Employees' },
@@ -46,10 +40,7 @@ const pageTitles = {
   '/check-in': 'Visitor Check-In',
   '/check-out': 'Visitor Check-Out',
   '/history': 'Visitor History',
-  '/active': 'Active Visitors',
-  '/expected': 'Expected Visitors',
   '/pre-registered': 'Pre-Registered Guests',
-  '/deleted': 'Deleted Visitors',
   '/reports': 'Reports & Analytics',
   '/employees': 'Employee Management',
   '/settings': 'Settings',
@@ -112,11 +103,11 @@ function Topbar({ theme, toggleTheme, onMenu }) {
         <p className="topbar-date">{dateStr}</p>
       </div>
       <div className="topbar-right">
+        <button className="icon-btn" aria-label="Notifications"><Bell size={16} /><span className="dot" /></button>
         <button className="theme-toggle" onClick={toggleTheme}>
           {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
           {theme === 'dark' ? 'Light' : 'Dark'}
         </button>
-        <div className="avatar-circle">AD</div>
       </div>
     </header>
   );
@@ -145,10 +136,7 @@ function AppLayout() {
               <Route path="/check-in" element={<CheckIn />} />
               <Route path="/check-out" element={<CheckOut />} />
               <Route path="/history" element={<VisitorHistory />} />
-              <Route path="/active" element={<ActiveVisitors />} />
-              <Route path="/expected" element={<ExpectedVisitors />} />
               <Route path="/pre-registered" element={<PreRegisteredGuests />} />
-              <Route path="/deleted" element={<DeletedVisitors />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/employees" element={<EmployeeManagement />} />
               <Route path="/settings" element={<SettingsPage />} />

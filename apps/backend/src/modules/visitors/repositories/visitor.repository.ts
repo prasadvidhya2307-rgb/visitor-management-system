@@ -1,5 +1,4 @@
 import { PrismaClient, Visitor, Prisma, RegistrationStatus } from "@prisma/client";
-import { VisitorResponseDto } from "../visitor.types";
 
 export class VisitorRepository {
     constructor(

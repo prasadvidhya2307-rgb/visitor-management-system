@@ -103,6 +103,24 @@ model Visit {
   @@map("visits")
 }
 
+model Admin {
+  id            String   @id @default(cuid())
+
+  fullName String?
+  designation String?
+  mobile String?
+
+  email      String   @unique
+  passwordHash  String
+
+  profileImageId String? @unique
+  profileImage   Media? @relation("AdminProfileImage", fields: [profileImageId], references: [id])
+
+  lastLoginAt    DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
 model PreRegistration {
   id String @id @default(uuid())
 
@@ -164,9 +182,8 @@ model Media {
   updatedAt DateTime    @updatedAt
 
   visitors  Visitor[]
-
+  adminProfile Admin? @relation("AdminProfileImage")
   @@index([status])
-
   @@map("media")
 }
 

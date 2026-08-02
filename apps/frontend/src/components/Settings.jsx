@@ -24,8 +24,8 @@ export default function Settings() {
   }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-      <div style={{ maxWidth: 600 }}>
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="settings-center">
+      <div style={{ maxWidth: 600, width: '100%' }}>
         <div className="card" style={{ marginBottom: 16 }}>
           <div className="card-h"><h3>General Settings</h3></div>
           <div className="card-b">

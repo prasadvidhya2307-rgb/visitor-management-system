@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, NavLink, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, UserPlus, UserMinus, History,
-  ClipboardCheck, BarChart3, Settings, UserCog,
-  Sun, Moon, Menu, X, ShieldCheck, Bell
+  ClipboardCheck, BarChart3, Settings, UserCog, User,
+  Sun, Moon, Menu, X, ShieldCheck, LogOut
 } from 'lucide-react';
 import './App.css';
 import store from './store';
@@ -18,6 +18,8 @@ import Reports from './components/Reports';
 import SettingsPage from './components/Settings';
 import VisitorProfile from './components/VisitorProfile';
 import EmployeeManagement from './components/EmployeeManagement';
+import Login from './components/Login';
+import Profile from './components/Profile';
 
 const navItems = [
   { section: 'Overview' },
@@ -32,6 +34,7 @@ const navItems = [
   { path: '/reports', icon: BarChart3, label: 'Reports' },
   { path: '/employees', icon: UserCog, label: 'Employees' },
   { section: 'System' },
+  { path: '/profile', icon: User, label: 'My Profile' },
   { path: '/settings', icon: Settings, label: 'Settings' },
 ];
 
@@ -43,6 +46,7 @@ const pageTitles = {
   '/pre-registered': 'Pre-Registered Guests',
   '/reports': 'Reports & Analytics',
   '/employees': 'Employee Management',
+  '/profile': 'My Profile',
   '/settings': 'Settings',
 };
 
@@ -90,11 +94,13 @@ function Sidebar({ open, onClose }) {
   );
 }
 
-function Topbar({ theme, toggleTheme, onMenu }) {
+function Topbar({ theme, toggleTheme, onMenu, user, onLogout, onOpenProfile }) {
   const location = useLocation();
   const title = pageTitles[location.pathname] || 'VMS';
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const profile = store.getProfile();
+  const initials = (user?.name || 'U').split(' ').map(w => w[0]).slice(0, 2).join('');
   return (
     <header className="topbar">
       <button className="menu-btn" onClick={onMenu}><Menu size={22} /></button>
@@ -103,19 +109,30 @@ function Topbar({ theme, toggleTheme, onMenu }) {
         <p className="topbar-date">{dateStr}</p>
       </div>
       <div className="topbar-right">
-        <button className="icon-btn" aria-label="Notifications"><Bell size={16} /><span className="dot" /></button>
         <button className="theme-toggle" onClick={toggleTheme}>
           {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
           {theme === 'dark' ? 'Light' : 'Dark'}
         </button>
+        <button className="user-chip" title="My Profile" onClick={onOpenProfile}>
+          {profile.avatar ? (
+            <span className="user-avatar" style={{ overflow: 'hidden', padding: 0 }}><img src={profile.avatar} alt="" style={{ width: 30, height: 30, objectFit: 'cover' }} /></span>
+          ) : (
+            <span className="user-avatar">{initials}</span>
+          )}
+          <span className="user-name">{user?.name}</span>
+        </button>
+        <button className="icon-btn" aria-label="Log out" title="Log out" onClick={onLogout}><LogOut size={16} /></button>
       </div>
     </header>
   );
 }
 
-function AppLayout() {
+function AppLayout({ onLogout }) {
   const [theme, setTheme] = useState(() => store.getSettings().theme || 'light');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showLogout, setShowLogout] = useState(false);
+  const user = store.getAuthUser();
+  const navigate = useNavigate();
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -128,7 +145,14 @@ function AppLayout() {
     <div className="app-layout">
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="main-wrapper">
-        <Topbar theme={theme} toggleTheme={toggleTheme} onMenu={() => setSidebarOpen(true)} />
+        <Topbar
+          theme={theme}
+          toggleTheme={toggleTheme}
+          onMenu={() => setSidebarOpen(true)}
+          user={user}
+          onLogout={() => setShowLogout(true)}
+          onOpenProfile={() => navigate('/profile')}
+        />
         <main className="main-content">
           <AnimatePresence mode="wait">
             <Routes>
@@ -139,20 +163,52 @@ function AppLayout() {
               <Route path="/pre-registered" element={<PreRegisteredGuests />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/employees" element={<EmployeeManagement />} />
+              <Route path="/profile" element={<Profile />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/visitor/:id" element={<VisitorProfile />} />
             </Routes>
           </AnimatePresence>
         </main>
       </div>
+
+      {showLogout && (
+        <div className="modal-overlay" onClick={() => setShowLogout(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-icon"><LogOut size={22} /></div>
+            <h3>Log out of VMS?</h3>
+            <p>Do you want to log out and continue to the sign-in page? Any unsaved changes will be lost.</p>
+            <div className="modal-actions">
+              <button className="btn-o" onClick={() => setShowLogout(false)}>Cancel</button>
+              <button className="btn-p btn-danger" onClick={() => { setShowLogout(false); onLogout(); }}>
+                <LogOut size={15} /> Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 export default function App() {
+  const [authUser, setAuthUser] = useState(() => store.getAuthUser());
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', store.getSettings().theme || 'light');
+  }, []);
+
+  const handleLogout = () => {
+    store.logout();
+    setAuthUser(null);
+  };
+
   return (
     <Router>
-      <AppLayout />
+      {authUser ? (
+        <AppLayout onLogout={handleLogout} />
+      ) : (
+        <Login onLogin={() => setAuthUser(store.getAuthUser())} />
+      )}
     </Router>
   );
 }

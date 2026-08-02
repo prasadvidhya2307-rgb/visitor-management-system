@@ -8,6 +8,9 @@ const KEYS = {
   settings: 'vms_settings',
   deletedVisitors: 'vms_deleted_visitors',
   failedRegisters: 'vms_failed_registers',
+  auth: 'vms_auth',
+  profile: 'vms_profile',
+  passwords: 'vms_passwords',
 };
 
 function get(key) {
@@ -71,6 +74,10 @@ const defaultSettings = {
   autoCheckoutHours: 12,
   theme: 'light',
 };
+
+const authUsers = [
+  { email: 'admin@vms.com', password: 'admin123', name: 'System Administrator', role: 'Admin' },
+];
 
 function initStore() {
   set(KEYS.employees, defaultEmployees);
@@ -354,6 +361,62 @@ const store = {
     const s = get(KEYS.settings); s[key] = val; set(KEYS.settings, s);
   },
   saveSettings: (data) => { set(KEYS.settings, data); },
+
+  // Authentication
+  getAuthUser: () => {
+    try { return JSON.parse(localStorage.getItem(KEYS.auth)); } catch { return null; }
+  },
+  login: (email, password) => {
+    const u = authUsers.find(x => x.email.toLowerCase() === String(email || '').trim().toLowerCase());
+    const overrides = get(KEYS.passwords);
+    const map = overrides && typeof overrides === 'object' ? overrides : {};
+    const stored = u ? (map[u.email] || u.password) : null;
+    if (!u || stored !== password) return { ok: false, error: 'Invalid email or password' };
+    const session = { name: u.name, email: u.email, role: u.role, token: genToken(), loginTime: new Date().toISOString() };
+    set(KEYS.auth, session);
+    return { ok: true, user: session };
+  },
+  logout: () => { localStorage.removeItem(KEYS.auth); },
+
+  changePassword: (email, current, next) => {
+    const overrides = get(KEYS.passwords);
+    const map = overrides && typeof overrides === 'object' ? overrides : {};
+    const stored = map[email] || authUsers.find(u => u.email.toLowerCase() === String(email || '').toLowerCase())?.password || null;
+    if (!stored) return { ok: false, error: 'Account not found' };
+    if (stored !== current) return { ok: false, error: 'Current password is incorrect' };
+    if (!next || String(next).length < 6) return { ok: false, error: 'New password must be at least 6 characters' };
+    if (next === current) return { ok: false, error: 'New password must be different from current password' };
+    map[email] = next;
+    set(KEYS.passwords, map);
+    return { ok: true };
+  },
+
+  // Profile
+  getProfile: () => {
+    const auth = get(KEYS.auth);
+    const saved = get(KEYS.profile);
+    const base = {
+      name: auth?.name || 'System Administrator',
+      email: auth?.email || 'admin@vms.com',
+      role: auth?.role || 'Admin',
+      phone: '',
+      designation: 'VMS Administrator',
+      avatar: null,
+    };
+    return { ...base, ...(saved && typeof saved === 'object' ? saved : {}) };
+  },
+  saveProfile: (data) => {
+    const current = get(KEYS.profile);
+    const merged = { ...(current && typeof current === 'object' ? current : {}), ...data };
+    set(KEYS.profile, merged);
+    const auth = get(KEYS.auth);
+    if (auth) {
+      if (data.name) auth.name = data.name;
+      if (data.email) auth.email = data.email;
+      set(KEYS.auth, auth);
+    }
+    return merged;
+  },
 };
 
 export default store;

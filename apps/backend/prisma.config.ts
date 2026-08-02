@@ -1,15 +1,15 @@
-import "dotenv/config";
-
 import { defineConfig, env } from "prisma/config";
+import dotenv from "dotenv";
+import path from "path";
+
+if (!process.env.DATABASE_URL) {
+    const rootDir = path.resolve(import.meta.dirname, "../../");
+    const envFile = process.env.NODE_ENV === "production" ? ".env.production" : ".env.development";
+    dotenv.config({ path: path.join(rootDir, envFile) });
+}
 
 export default defineConfig({
     schema: "prisma/schema.prisma",
-
-    migrations: {
-        path: "prisma/migrations",
-    },
-
-    datasource: {
-        url: "postgresql://postgres:12345@postgres:5432/visitor_management",
-    },
+    migrations: { path: "prisma/migrations" },
+    datasource: { url: env("DATABASE_URL") },
 });

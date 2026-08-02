@@ -34,7 +34,7 @@ export class VisitorController {
             return ApiResponse.success(
                 res,
                 "visitor fetched successfully",
-                visitor
+                { visitor }
             )
         }
     )
@@ -51,6 +51,18 @@ export class VisitorController {
                 "visitors fetched successfully",
                 visitors,
             );
+        }
+    )
+
+    public getAllActiveVisitor = asyncHandler(
+        async (_req: Request, res: Response) => {
+            const visitors = await this.visitorService.getAllActiveVisitor();
+
+            return ApiResponse.success(
+                res,
+                "visitor fetched successfully",
+                { visitors }
+            )
         }
     )
 

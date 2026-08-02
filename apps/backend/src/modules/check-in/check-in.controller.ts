@@ -17,15 +17,10 @@ export class CheckInController {
             throw new AppError("image is required", 400);
         }
 
-        console.log("1");
-
         const result = await this.workflowService.start(
             req.body,
             req.file
         );
-
-        console.log("2");
-        console.log(result);
 
         return ApiResponse.success(
             res,

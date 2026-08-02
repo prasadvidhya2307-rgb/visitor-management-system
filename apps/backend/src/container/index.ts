@@ -110,7 +110,8 @@ export const visitorRegistrationService =
 export const visitService = new VisitService(
     prisma,
     visitRepository,
-    employeeRepository
+    employeeRepository,
+    visitorService
 );
 
 

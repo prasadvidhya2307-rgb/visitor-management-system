@@ -38,6 +38,11 @@ router.get(
     visitorController.getVisitor,
 );
 
+router.get(
+    '/active',
+    visitorController.getAllActiveVisitor
+)
+
 // Update a visitor
 router.put(
     "/:id",

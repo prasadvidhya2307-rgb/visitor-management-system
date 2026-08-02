@@ -9,6 +9,8 @@ import {
 import { VisitService } from "../visit/visit.service.js";
 import { VisitorService } from "../visitors/visitor.service.js";
 import { VisitorResponseDto } from "../visitors/visitor.types.js";
+import { CheckOutResponse } from "./check-out.types.js";
+import { AppError } from "../../utils/app-error.js";
 
 export class CheckOutService {
     constructor(
@@ -19,25 +21,29 @@ export class CheckOutService {
 
     public async checkOut(
         image: Express.Multer.File,
-    ): Promise<
-        FaceRecognitionResponseToNode | {
-            visitor: VisitorResponseDto;
-            visit: Visit;
-        }
-    > {
+    ): Promise<CheckOutResponse> {
+
+
         const recognition =
             await this.faceRecognitionService.recognize(image);
 
-        if (
-            recognition.code !== FaceRecognitionCode.MATCH_FOUND ||
-            !recognition.data?.personId
-        ) {
-            return recognition;
+        const { code, data, message } = recognition;
+
+        if (!recognition.data?.matched) {
+            return {
+                message: message,
+                matched: data.matched,
+                score: data.score,
+                code,
+                visitor: null,
+                visit: null
+            }
         }
+
 
         const visitor =
             await this.visitorService.getVisitor(
-                recognition.data.personId,
+                recognition.data.personId!,
             );
 
         const activeVisit =
@@ -45,10 +51,19 @@ export class CheckOutService {
                 visitor.id,
             );
 
+        if (!activeVisit) {
+            throw new AppError(
+                "no visit found for this visitor",
+                404
+            )
+        }
+
         const visit =
             await this.visitService.checkoutVisit(
                 activeVisit.id,
-            );
+                visitor.id
+            )
+
 
         const visitorData: VisitorResponseDto = {
             ...visitor,
@@ -57,8 +72,12 @@ export class CheckOutService {
         }
 
         return {
+            message: message,
+            matched: data.matched,
+            score: data.score,
+            code,
             visitor: visitorData,
-            visit,
-        };
+            visit: visit
+        }
     }
 }

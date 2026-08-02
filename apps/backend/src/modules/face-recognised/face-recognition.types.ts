@@ -26,20 +26,20 @@ export enum FaceRecognitionCode {
 export interface FaceApiResponseBody<T> {
   success: Boolean;
   message: string;
-  data: T | null
+  data: T 
   code: FaceRecognitionCode;
 }
 
 export interface FaceBackendResponseToNodeRecognizeData {
   matched: boolean;
   personId: string | null;
-  score: number | null;
+  score: number
 }
 
 export interface NodeResponseToFrontendRecognizeData {
   matched: boolean;
   visitor: VisitorResponseDto | null;
-  score: number | null
+  score: number
 }
 
 export interface RegisterData {

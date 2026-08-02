@@ -11,12 +11,15 @@ import {
     UpdateVisitDto,
     VisitResponseDto,
 } from "./visit.types";
+import { visitorService } from "../../container/index.js";
+import { VisitorService } from "../visitors/visitor.service.js";
 
 export class VisitService {
     constructor(
         private readonly prisma: PrismaClient,
         private readonly visitRepository: VisitRepository,
         private readonly employeeRepository: EmployeeRepository,
+        private readonly visitorService: VisitorService
     ) { }
 
     /**
@@ -214,14 +217,20 @@ export class VisitService {
  */
     public async checkoutVisit(
         visitId: string,
+        visitorId: string
     ): Promise<Visit> {
-        await this.getVisit(visitId);
-
         return this.prisma.$transaction(async (tx) => {
-            return this.visitRepository.checkout(
+            const visit = await this.visitRepository.checkout(
                 tx,
                 visitId,
             );
+
+            await this.visitorService.deactivateVisitor(
+                visitorId,
+                tx,
+            );
+
+            return visit;
         });
     }
 }

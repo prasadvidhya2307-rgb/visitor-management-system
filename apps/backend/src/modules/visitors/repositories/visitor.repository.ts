@@ -1,4 +1,5 @@
 import { PrismaClient, Visitor, Prisma, RegistrationStatus } from "@prisma/client";
+import { VisitorResponseDto } from "../visitor.types";
 
 export class VisitorRepository {
     constructor(
@@ -44,7 +45,7 @@ export class VisitorRepository {
                     select: {
                         filePath: true
                     }
-                },   
+                },
             }
         });
     }
@@ -84,6 +85,20 @@ export class VisitorRepository {
                 createdAt: "desc",
             },
         });
+    }
+
+    /**
+     * get all active vistors
+    */
+    public async getAllActiveVisitor(
+        tx?: Prisma.TransactionClient
+    ): Promise<Visitor[]> {
+        const client = tx ?? this.prisma
+        return await client.visitor.findMany({
+            where: {
+                isActive: true
+            }
+        })
     }
 
     /**

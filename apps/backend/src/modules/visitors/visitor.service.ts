@@ -110,7 +110,7 @@ export class VisitorService {
     }
 
     /**
-     * Update visitor
+     * Update a visitor
      */
     public async updateVisitor(
         id: string,
@@ -196,6 +196,13 @@ export class VisitorService {
             );
         }
 
+        if (visitor.isActive) {
+            throw new AppError(
+                "action denied visitor is checked in",
+                403
+            )
+        }
+
         await this.prisma.$transaction(async (tx) => {
             await this.visitorRepository.softDeleteById(
                 tx,
@@ -204,11 +211,38 @@ export class VisitorService {
         });
     }
 
+    // get all deleted visitor
     public async getAllDeletedVisitor() {
         return await this.visitorRepository.getAllDeleted()
     }
 
-    // public async 
+    // get all active vistor
+    public async getAllActiveVisitor() {
+        return await this.visitorRepository.getAllActiveVisitor()
+    }
+
+    /**
+     * deactive a visitor = > means the visitor is not longet inside the office
+     * it is checked out
+    */
+    public async deactivateVisitor(
+        visitorId: string,
+        tx: Prisma.TransactionClient
+    ) {
+
+        const visitorExist = await this.visitorRepository.findById(visitorId)
+
+        if (!visitorExist) {
+            return new AppError(
+                "visitor does not found",
+                404
+            )
+        }
+
+        return await this.visitorRepository.updateById(tx, visitorId, {
+            isActive: false
+        })
+    }
 
     public async rollbackRegistration(id: string) {
         await this.visitorRepository.rollbackRegistration(id)

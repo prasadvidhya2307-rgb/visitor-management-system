@@ -9,9 +9,16 @@ const __dirname = path.dirname(__filename);
 
 const rootDirectory = path.resolve(__dirname, "..", "..", "..", "..");
 
-dotenv.config({
-    path: path.join(rootDirectory, ".env"),
-});
+// Only load a local .env file if vars aren't already provided by the
+// environment (e.g. injected by Docker's env_file / environment:).
+if (!process.env.DATABASE_URL) {
+    const envFile =
+        process.env.NODE_ENV === "production" ? ".env.production" : ".env.development";
+
+    dotenv.config({
+        path: path.join(rootDirectory, envFile),
+    });
+}
 
 const envSchema = z.object({
     NODE_ENV: z.enum(["development", "production"]),

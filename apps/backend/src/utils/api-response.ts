@@ -3,6 +3,12 @@ import { FaceRecognitionCode } from "../modules/face-recognised/face-recognition
 
 export class ApiResponse {
 
+    private static serialize<T>(data: T): T {
+        return JSON.parse(JSON.stringify(data, (_key, value) =>
+            typeof value === "bigint" ? value.toString() : value,
+        ));
+    }
+
     static success<T>(
         res: Response,
         message: string,
@@ -12,7 +18,7 @@ export class ApiResponse {
         return res.status(statusCode).json({
             success: true,
             message: message,
-            data: data ?? null
+            data: data == null ? null : this.serialize(data)
         })
     }
 
@@ -33,7 +39,7 @@ export class ApiResponse {
         return res.status(statusCode).json({
             success: false,
             message,
-            data: data ?? null,
+            data: data == null ? null : this.serialize(data),
         });
     }
 }
@@ -42,7 +48,7 @@ export class FaceApiResponse {
 
     static success<T>(
         res: Response,
-        messaage: string,
+        message: string,
         code: FaceRecognitionCode,
         data?: T,
         statusCode = 200
@@ -50,9 +56,9 @@ export class FaceApiResponse {
 
         return res.status(statusCode).json({
             success: true,
-            messaage,
+            message,
             code,
-            data: data ?? null,
+            data: data == null ? null : JSON.parse(JSON.stringify(data, (_key, value) => typeof value === "bigint" ? value.toString() : value)),
         })
 
     }
@@ -68,7 +74,7 @@ export class FaceApiResponse {
             success: false,
             code,
             message,
-            data: data ?? null,
+            data: data == null ? null : JSON.parse(JSON.stringify(data, (_key, value) => typeof value === "bigint" ? value.toString() : value)),
         });
     }
 

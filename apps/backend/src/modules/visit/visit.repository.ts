@@ -25,7 +25,10 @@ export class VisitRepository {
             },
 
             include: {
-                hostEmployee: true
+                hostEmployee: true,
+                visitor: { include: { emails: true, mobiles: true, registrationImage: true } },
+                checkInImage: true,
+                checkOutImage: true,
             }
         });
     }
@@ -40,7 +43,10 @@ export class VisitRepository {
             },
 
             include: {
-                hostEmployee: true
+                hostEmployee: true,
+                visitor: { include: { registrationImage: true } },
+                checkInImage: true,
+                checkOutImage: true,
             }
         });
     }
@@ -87,7 +93,9 @@ export class VisitRepository {
             },
 
             include: {
-                hostEmployee: true
+                hostEmployee: true,
+                checkInImage: true,
+                checkOutImage: true,
             }
         });
     }
@@ -115,6 +123,7 @@ export class VisitRepository {
     public async checkout(
         tx: Prisma.TransactionClient,
         visitId: string,
+        checkOutImageId?: string,
     ): Promise<Visit> {
         return tx.visit.update({
             where: {
@@ -122,8 +131,14 @@ export class VisitRepository {
             },
             data: {
                 checkOutAt: new Date(),
+                status: "CHECKED_OUT",
+                ...(checkOutImageId ? { checkOutImage: { connect: { id: checkOutImageId } } } : {}),
             },
         });
+    }
+
+    public async markBadgePrinted(visitId: string): Promise<Visit> {
+        return this.prisma.visit.update({ where: { id: visitId }, data: { badgePrinted: true, badgePrintedAt: new Date() } });
     }
 
 }

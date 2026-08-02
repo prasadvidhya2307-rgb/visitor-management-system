@@ -11,12 +11,14 @@ import { VisitorService } from "../visitors/visitor.service.js";
 import { VisitorResponseDto } from "../visitors/visitor.types.js";
 import { CheckOutResponse } from "./check-out.types.js";
 import { AppError } from "../../utils/app-error.js";
+import { MediaService } from "../media/media.service.js";
 
 export class CheckOutService {
     constructor(
         private readonly faceRecognitionService: FaceRecognitionService,
         private readonly visitorService: VisitorService,
         private readonly visitService: VisitService,
+        private readonly mediaService: MediaService,
     ) { }
 
     public async checkOut(
@@ -58,11 +60,9 @@ export class CheckOutService {
             )
         }
 
-        const visit =
-            await this.visitService.checkoutVisit(
-                activeVisit.id,
-                visitor.id
-            )
+        const checkoutImage = await this.mediaService.createTemporary(image);
+        const visit = await this.visitService.checkoutVisit(activeVisit.id, visitor.id, checkoutImage.id);
+        await this.mediaService.markActive(checkoutImage.id);
 
 
         const visitorData: VisitorResponseDto = {

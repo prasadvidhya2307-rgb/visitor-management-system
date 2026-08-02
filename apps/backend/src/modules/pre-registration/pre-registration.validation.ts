@@ -23,6 +23,8 @@ const preRegistrationSchema = z.object({
         .trim()
         .max(150)
         .optional(),
+    identityType: z.enum(["AADHAAR", "PASSPORT", "DRIVING_LICENSE", "PAN", "OTHER"]).optional(),
+    identityNumber: z.string().trim().min(3).max(100).optional(),
 
     email: z
         .email()

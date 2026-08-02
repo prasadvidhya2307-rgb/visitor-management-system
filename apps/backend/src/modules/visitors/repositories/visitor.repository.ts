@@ -73,6 +73,8 @@ export class VisitorRepository {
             },
 
             include: {
+                emails: { select: { email: true } },
+                mobiles: { select: { mobile: true } },
                 registrationImage: {
                     select: {
                         filePath: true,
@@ -156,6 +158,17 @@ export class VisitorRepository {
             }
         })
 
+    }
+
+    public async findDeletedById(id: string) {
+        return this.prisma.visitor.findFirst({ where: { id, isDeleted: true } })
+    }
+
+    public async restoreById(tx: Prisma.TransactionClient, id: string): Promise<Visitor> {
+        return tx.visitor.update({
+            where: { id },
+            data: { isDeleted: false, deletedAt: null, isActive: false },
+        })
     }
 
     public async rollbackRegistration(

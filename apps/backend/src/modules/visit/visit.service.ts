@@ -28,6 +28,7 @@ export class VisitService {
     public async createVisit(
         visitorId: string,
         dto: CreateVisitDto,
+        checkInImageId?: string,
     ): Promise<Visit> {
         const activeVisit =
             await this.visitRepository.findActiveVisit(
@@ -54,7 +55,7 @@ export class VisitService {
         }
 
         return this.prisma.$transaction(async (tx) => {
-            return this.visitRepository.create(tx, {
+            const visit = await this.visitRepository.create(tx, {
                 visitor: {
                     connect: {
                         id: visitorId,
@@ -70,7 +71,10 @@ export class VisitService {
                 purpose: dto.purpose,
                 floor: dto.floor,
                 notes: dto.notes,
+                ...(checkInImageId ? { checkInImage: { connect: { id: checkInImageId } } } : {}),
             });
+            await this.visitorService.activateVisitor(visitorId, tx);
+            return visit;
         });
     }
 
@@ -92,17 +96,7 @@ export class VisitService {
             );
         }
 
-        return {
-            id: visit.id,
-            purpose: visit.purpose,
-            floor: visit.floor,
-            notes: visit.notes,
-            status: visit.status,
-            checkInAt: visit.checkInAt,
-            checkOutAt: visit.checkOutAt,
-            createdAt: visit.createdAt,
-            updatedAt: visit.updatedAt
-        }
+        return visit;
     }
 
     /**
@@ -217,12 +211,14 @@ export class VisitService {
  */
     public async checkoutVisit(
         visitId: string,
-        visitorId: string
+        visitorId: string,
+        checkOutImageId?: string,
     ): Promise<Visit> {
         return this.prisma.$transaction(async (tx) => {
             const visit = await this.visitRepository.checkout(
                 tx,
                 visitId,
+                checkOutImageId,
             );
 
             await this.visitorService.deactivateVisitor(
@@ -232,5 +228,10 @@ export class VisitService {
 
             return visit;
         });
+    }
+
+    public async markBadgePrinted(visitId: string) {
+        await this.getVisit(visitId);
+        return this.visitRepository.markBadgePrinted(visitId);
     }
 }

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Save, Camera, X, Mail, Phone, Briefcase, ShieldCheck, CheckCircle2, Lock, AlertCircle, AlertTriangle } from 'lucide-react';
 import store from '../store';
-import { changePassword, getMe, notify } from '../api';
+import { changePassword, getMe, getMediaObjectUrl, notify, updateMe, updateProfileImage } from '../api';
 
 export default function Profile() {
   const [profile, setProfile] = useState(null);
@@ -13,7 +13,7 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
   const fileRef = useRef(null);
 
-  useEffect(() => { getMe().then(admin => setProfile({ ...store.getProfile(), email: admin.email, id: admin.id, name: store.getProfile().name || admin.email.split('@')[0], role: 'Administrator', designation: '' })).catch(err => { setPwError(err.message); setProfile(store.getProfile()); }); }, []);
+  useEffect(() => { getMe().then(async admin => { const avatar = admin.profileImageId ? await getMediaObjectUrl(admin.profileImageId) : null; setProfile({ ...store.getProfile(), email: admin.email, id: admin.id, name: admin.fullName || store.getProfile().name || admin.email.split('@')[0], phone: admin.mobile || '', role: 'Administrator', designation: admin.designation || '', avatar }); }).catch(err => { setPwError(err.message); setProfile(store.getProfile()); }); }, []);
 
   if (!profile) return <div className="spinner" />;
 
@@ -23,7 +23,7 @@ export default function Profile() {
     const f = e.target.files[0];
     if (!f) return;
     const reader = new FileReader();
-    reader.onload = () => setProfile({ ...profile, avatar: reader.result });
+    reader.onload = () => setProfile({ ...profile, avatar: reader.result, avatarFile: f });
     reader.readAsDataURL(f);
   };
 
@@ -39,7 +39,7 @@ export default function Profile() {
 
   const confirmSave = () => {
     setSaving(true);
-    (async () => { try { if (pw.next) await changePassword(pw.current, pw.next); store.saveProfile(profile); setPw({ current: '', next: '', confirm: '' }); setPwError(''); setSaved(true); notify(pw.next ? 'Password changed successfully.' : 'Profile saved locally.'); setTimeout(() => setSaved(false), 2500); } catch (err) { setPwError(err.message); } finally { setSaving(false); setConfirmOpen(false); } })();
+    (async () => { try { const admin = await updateMe(profile); if (profile.avatarFile) await updateProfileImage(profile.avatarFile); if (pw.next) await changePassword(pw.current, pw.next); const savedProfile = { ...profile, avatarFile: undefined, name: admin.fullName || profile.name, phone: admin.mobile || '', designation: admin.designation || '' }; store.saveProfile(savedProfile); setProfile(savedProfile); setPw({ current: '', next: '', confirm: '' }); setPwError(''); setSaved(true); notify(pw.next ? 'Profile, image and password updated successfully.' : 'Profile updated successfully.'); setTimeout(() => setSaved(false), 2500); } catch (err) { setPwError(err.message); notify(err.message, 'error'); } finally { setSaving(false); setConfirmOpen(false); } })();
   };
 
   return (

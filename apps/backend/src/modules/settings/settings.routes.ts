@@ -1,0 +1,10 @@
+import { Router } from "express";
+import { authenticate } from "../../middlewares/auth.middleware.js";
+import { validate } from "../../middlewares/validate.middleware.js";
+import { settingsController } from "../../container/index.js";
+import { updateSettingsSchema } from "./settings.validation.js";
+const router = Router();
+router.use(authenticate);
+router.get("/", settingsController.get);
+router.put("/", validate(updateSettingsSchema), settingsController.update);
+export default router;

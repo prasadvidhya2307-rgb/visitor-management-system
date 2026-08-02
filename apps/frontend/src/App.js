@@ -4,7 +4,7 @@ import { AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, UserPlus, UserMinus, History,
   ClipboardCheck, BarChart3, Settings, UserCog, User,
-  Sun, Moon, Menu, X, ShieldCheck, LogOut
+  Sun, Moon, Menu, X, LogOut, Image as ImageIcon, ChevronRight, Database
 } from 'lucide-react';
 import './App.css';
 import store from './store';
@@ -29,6 +29,8 @@ import VisitorProfile from './components/VisitorProfile';
 import EmployeeManagement from './components/EmployeeManagement';
 import Login from './components/Login';
 import Profile from './components/Profile';
+import VisitDetails from './components/VisitDetails';
+import MediaLibrary from './components/MediaLibrary';
 
 const navItems = [
   { section: 'Overview' },
@@ -42,6 +44,7 @@ const navItems = [
   { section: 'Insights' },
   { path: '/reports', icon: BarChart3, label: 'Reports' },
   { path: '/employees', icon: UserCog, label: 'Employees' },
+  { path: '/media', icon: ImageIcon, label: 'Media Library' },
   { section: 'System' },
   { path: '/profile', icon: User, label: 'My Profile' },
   { path: '/settings', icon: Settings, label: 'Settings' },
@@ -55,21 +58,24 @@ const pageTitles = {
   '/pre-registered': 'Pre-Registered Guests',
   '/reports': 'Reports & Analytics',
   '/employees': 'Employee Management',
+  '/media': 'Media Library',
   '/profile': 'My Profile',
   '/settings': 'Settings',
 };
 
 function Sidebar({ open, onClose }) {
+  const profile = store.getProfile();
+  const initials = (profile?.name || 'Admin').split(' ').map(word => word[0]).slice(0, 2).join('');
   return (
     <>
       <div className={`sidebar-overlay ${open ? 'show' : ''}`} onClick={onClose} />
       <aside className={`sidebar ${open ? 'open' : ''}`}>
         <div className="sidebar-header">
           <div className="logo-section">
-            <div className="logo-icon"><ShieldCheck size={20} /></div>
+            <div className="logo-icon"><Database size={20} /></div>
             <div>
-              <p className="logo-text">VMS</p>
-              <p className="logo-sub">Visitor Management</p>
+              <p className="logo-text">VMS <span>Control</span></p>
+              <p className="logo-sub">Visitor Management System</p>
             </div>
           </div>
           <button className="sidebar-close" onClick={onClose}><X size={18} /></button>
@@ -87,16 +93,19 @@ function Sidebar({ open, onClose }) {
                 onClick={onClose}
               >
                 <span className="nav-icon"><Icon size={18} /></span>
-                {item.label}
+                <span className="nav-label">{item.label}</span>
+                <ChevronRight className="nav-chevron" size={15} />
               </NavLink>
             );
           })}
         </nav>
         <div className="sidebar-footer">
-          <div className="footer-badge">
-            <span className="status-dot" />
-            System Online v2.0
-          </div>
+          <NavLink to="/profile" className="sidebar-profile" onClick={onClose}>
+            {profile?.avatar ? <span className="sidebar-profile-avatar"><img src={profile.avatar} alt="" /></span> : <span className="sidebar-profile-avatar">{initials}</span>}
+            <span className="sidebar-profile-copy"><strong>{profile?.name || 'Administrator'}</strong><small>{profile?.role || 'Administrator'}</small></span>
+            <span className="sidebar-online" title="System online" />
+            <ChevronRight size={15} />
+          </NavLink>
         </div>
       </aside>
     </>
@@ -172,9 +181,11 @@ function AppLayout({ onLogout }) {
               <Route path="/pre-registered" element={<PreRegisteredGuests />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/employees" element={<EmployeeManagement />} />
+              <Route path="/media" element={<MediaLibrary />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/visitor/:id" element={<VisitorProfile />} />
+              <Route path="/visit/:visitId" element={<VisitDetails />} />
             </Routes>
           </AnimatePresence>
         </main>

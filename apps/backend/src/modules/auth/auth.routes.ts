@@ -5,7 +5,9 @@ import { authenticate } from "../../middlewares/auth.middleware.js";
 import {
     loginSchema,
     changePasswordSchema,
+    updateProfileSchema,
 } from "./auth.validation.js";
+import { upload } from "../../middlewares/upload.middleware.js";
 
 const router = Router();
 
@@ -22,6 +24,13 @@ router.get(
     authenticate,
     authController.me,
 );
+
+router.patch(
+    "/me",
+    validate(updateProfileSchema),
+    authController.updateProfile,
+);
+router.put("/me/image", upload.single("image"), authController.updateProfileImage);
 
 router.put(
     "/change-password",

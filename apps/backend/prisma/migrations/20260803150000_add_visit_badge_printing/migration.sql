@@ -1,0 +1,2 @@
+ALTER TABLE "visits" ADD COLUMN "badgePrinted" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "visits" ADD COLUMN "badgePrintedAt" TIMESTAMP(3);

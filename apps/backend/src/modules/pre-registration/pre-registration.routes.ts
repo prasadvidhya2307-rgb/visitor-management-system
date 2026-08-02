@@ -40,5 +40,6 @@ router.delete(
     "/:id",
     preRegistrationController.cancelPreRegistration,
 );
+router.post("/:id/complete", preRegistrationController.completePreRegistration);
 
 export default router;

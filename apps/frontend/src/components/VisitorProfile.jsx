@@ -2,17 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Mail, Phone, Building, CreditCard, Trash2 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { deleteVisitor, getEmployees, getVisitor, getVisitorVisits, notify } from '../api';
+import { deleteVisitor, getEmployees, getMediaObjectUrl, getVisitor, getVisitorVisits, notify } from '../api';
 
 export default function VisitorProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [visitor, setVisitor] = useState(null);
+  const [photo, setPhoto] = useState(null);
   const [visits, setVisits] = useState([]); const [employees, setEmployees] = useState([]);
 
   useEffect(() => {
     Promise.all([getVisitor(id), getVisitorVisits(id), getEmployees()]).then(([person, history, staff]) => { setVisitor(person); setVisits(history); setEmployees(staff); }).catch(err => notify(err.message, 'error'));
   }, [id]);
+  useEffect(() => { let url; if (visitor?.registrationImageId) getMediaObjectUrl(visitor.registrationImageId).then(value => { url = value; setPhoto(value); }).catch(() => {}); return () => { if (url) URL.revokeObjectURL(url); }; }, [visitor?.registrationImageId]);
 
   async function handleDelete() {
     if (window.confirm(`Delete visitor "${visitor.name}"? They will be moved to Deleted Visitors and can be restored later.`)) {
@@ -35,9 +37,10 @@ export default function VisitorProfile() {
       <div className="card" style={{ marginBottom: 16 }}>
         <div className="card-b">
           <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
-            <div className="vis-avatar" style={{ width: 80, height: 80, fontSize: 28, flexShrink: 0 }}>{visitor.name?.charAt(0)}</div>
+            <div className="vis-avatar" style={{ width: 80, height: 80, fontSize: 28, flexShrink: 0, overflow: 'hidden' }}>{photo ? <img src={photo} alt={visitor.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : visitor.name?.charAt(0)}</div>
             <div style={{ flex: 1 }}>
               <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>{visitor.name}</h2>
+              <p style={{ fontFamily: 'monospace', fontWeight: 700 }}>{visitor.visitorCode}</p>
               <p style={{ fontSize: 13, color: 'var(--text2)' }}>{visitor.company || 'Unknown Company'}</p>
               <div style={{ display: 'flex', gap: 20, marginTop: 12, flexWrap: 'wrap' }}>
                 {visitor.email && <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--text2)' }}><Mail size={14} /> {visitor.email}</span>}
@@ -66,7 +69,7 @@ export default function VisitorProfile() {
               {visits.map(v => {
                 const emp = v.host || employees.find(e => e.id === v.employeeId);
                 return (
-                  <tr key={v.id}>
+                  <tr key={v.id} style={{ cursor: 'pointer' }} onClick={() => navigate(`/visit/${v.id}`)}>
                     <td><span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{v.token}</span></td>
                     <td>{v.purpose}</td>
                     <td>{emp?.name || 'N/A'}</td>

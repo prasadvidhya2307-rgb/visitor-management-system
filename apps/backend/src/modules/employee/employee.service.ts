@@ -132,4 +132,8 @@ export class EmployeeService {
             );
         });
     }
+    public async updateProfileImage(employeeId: string, profileImageId: string) {
+        await this.employeeRepository.findByIdOrThrow(employeeId);
+        return this.employeeRepository.updateProfileImage(employeeId, profileImageId);
+    }
 }

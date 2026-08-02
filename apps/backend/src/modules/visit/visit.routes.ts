@@ -7,6 +7,7 @@ import { authenticate } from "../../middlewares/auth.middleware.js";
 
 const router = Router();
 
+router.get("/public/:visitId", visitController.getVisit);
 router.use(authenticate)
 
 /**
@@ -50,6 +51,7 @@ router.patch(
     validate(updateVisitSchema),
     visitController.updateVisit,
 );
+router.post("/:visitId/mark-printed", visitController.markBadgePrinted);
 
 /**
  * Delete visit

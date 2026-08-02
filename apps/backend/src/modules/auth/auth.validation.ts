@@ -28,3 +28,9 @@ export const changePasswordSchema = z
             path: ["newPassword"],
         },
     );
+
+export const updateProfileSchema = z.object({
+    fullName: z.string().trim().min(2).max(100),
+    designation: z.string().trim().max(100).optional().nullable(),
+    mobile: z.string().trim().min(10).max(20).optional().nullable(),
+});

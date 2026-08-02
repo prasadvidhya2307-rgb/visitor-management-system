@@ -30,4 +30,17 @@ export class CheckInService {
             visit,
         };
     }
+
+    public async existingCheckInWithImage(visitorId: string, dto: CreateVisitDto, image: Express.Multer.File) {
+        const visitor = await this.visitorService.getVisitor(visitorId);
+        const media = await this.mediaService.createTemporary(image);
+        try {
+            const visit = await this.visitService.createVisit(visitor.id, dto, media.id);
+            await this.mediaService.markActive(media.id);
+            return { visitor, visit };
+        } catch (error) {
+            await this.mediaService.deleteTemporary(media.id);
+            throw error;
+        }
+    }
 }

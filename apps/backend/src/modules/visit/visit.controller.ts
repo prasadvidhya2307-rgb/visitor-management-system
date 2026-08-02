@@ -78,6 +78,10 @@ export class VisitController {
         },
     );
 
+    public markBadgePrinted = asyncHandler(async (req: Request<{ visitId: string }>, res: Response) =>
+        ApiResponse.success(res, "Visitor token marked as printed.", await this.visitService.markBadgePrinted(req.params.visitId)),
+    );
+
     /**
      * Get all visits of a visitor
      */

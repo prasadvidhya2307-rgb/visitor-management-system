@@ -40,6 +40,7 @@ export class EmployeeRepository {
                 id,
                 isDeleted: false,
             },
+            include: { profileImage: true },
         });
     }
 
@@ -85,6 +86,7 @@ export class EmployeeRepository {
             where: {
                 isDeleted: false,
             },
+            include: { profileImage: true },
             orderBy: [
                 {
                     firstName: "asc",
@@ -94,6 +96,10 @@ export class EmployeeRepository {
                 },
             ],
         });
+    }
+
+    public async updateProfileImage(id: string, profileImageId: string): Promise<Employee> {
+        return this.prisma.employee.update({ where: { id }, data: { profileImageId } });
     }
 
     public async softDelete(

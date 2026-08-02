@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserCog, Plus, Edit2, Trash2, X } from 'lucide-react';
-import { createEmployee, deleteEmployee, getEmployees, notify, updateEmployee } from '../api';
+import { createEmployee, deleteEmployee, getEmployees, notify, updateEmployee, updateEmployeeImage } from '../api';
+import EmployeeAvatar from './EmployeeAvatar';
 
 const DEPARTMENTS = ['Engineering', 'HR', 'Finance', 'Marketing', 'Operations', 'Legal', 'Sales', 'IT', 'Admin'];
 
@@ -9,17 +10,17 @@ export default function EmployeeManagement() {
   const [employees, setEmployees] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editId, setEditId] = useState(null);
-  const [form, setForm] = useState({ name: '', email: '', phone: '', department: '', designation: '' });
+  const [form, setForm] = useState({ name: '', email: '', phone: '', department: '', designation: '', image: null });
 
   useEffect(() => { refresh(); }, []);
   async function refresh() { try { setEmployees(await getEmployees()); } catch (err) { notify(err.message, 'error'); } }
 
-  function openAdd() { setEditId(null); setForm({ name: '', email: '', phone: '', department: '', designation: '' }); setShowModal(true); }
-  function openEdit(emp) { setEditId(emp.id); setForm({ name: emp.name, email: emp.email, phone: emp.phone, department: emp.department, designation: emp.designation }); setShowModal(true); }
+  function openAdd() { setEditId(null); setForm({ name: '', email: '', phone: '', department: '', designation: '', image: null }); setShowModal(true); }
+  function openEdit(emp) { setEditId(emp.id); setForm({ name: emp.name, email: emp.email, phone: emp.phone, department: emp.department, designation: emp.designation, image: null }); setShowModal(true); }
 
   async function handleSubmit(e) {
     e.preventDefault();
-    try { if (editId) await updateEmployee(editId, form); else await createEmployee(form); setShowModal(false); await refresh(); notify(`Employee ${editId ? 'updated' : 'added'} successfully.`); } catch (err) { notify(err.message, 'error'); }
+    try { const employee = editId ? await updateEmployee(editId, form) : await createEmployee(form); if (form.image) await updateEmployeeImage(employee.id || editId, form.image); setShowModal(false); await refresh(); notify(`Employee ${editId ? 'updated' : 'added'} successfully${form.image ? ' with profile image' : ''}.`); } catch (err) { notify(err.message, 'error'); }
   }
 
   async function handleDelete(id) {
@@ -46,7 +47,7 @@ export default function EmployeeManagement() {
                 <tr key={emp.id}>
                   <td>
                     <div className="vis-row">
-                      <div className="vis-av" style={{ background: 'var(--success-bg)', color: 'var(--success)' }}>{emp.name?.charAt(0)}</div>
+                      <EmployeeAvatar employee={emp} />
                       <div className="vis-info"><h4>{emp.name}</h4></div>
                     </div>
                   </td>
@@ -76,6 +77,7 @@ export default function EmployeeManagement() {
               <form onSubmit={handleSubmit}>
                 <div className="modal-b">
                   <div className="form-g"><label className="form-l">Full Name *</label><input className="form-i" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
+                  <div className="form-g"><label className="form-l">Profile Image (optional)</label><input className="form-i" type="file" accept="image/jpeg,image/png" onChange={e => setForm({ ...form, image: e.target.files[0] || null })} /></div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                     <div className="form-g"><label className="form-l">Department *</label><select className="form-s" required value={form.department} onChange={e => setForm({ ...form, department: e.target.value })}><option value="">Select...</option>{DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}</select></div>
                     <div className="form-g"><label className="form-l">Designation</label><input className="form-i" value={form.designation} onChange={e => setForm({ ...form, designation: e.target.value })} /></div>

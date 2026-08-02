@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Users, ArrowRightLeft, Clock, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getEmployees, getVisits, getVisitors, notify } from '../api';
+import VisitorAvatar from './VisitorAvatar';
 
 export default function ActiveVisitors() {
   const navigate = useNavigate();
@@ -50,7 +51,7 @@ export default function ActiveVisitors() {
             return (
               <motion.div key={v.id} className={`vis-card ${isOvertime ? 'overtime' : ''}`} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
                 <div className="vis-header">
-                  <div className="vis-avatar" style={{ width: 48, height: 48, fontSize: 18 }}>{vis?.name?.charAt(0) || '?'}</div>
+                  <VisitorAvatar visitor={vis} className="vis-avatar" style={{ width: 48, height: 48, fontSize: 18 }} />
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <h4 style={{ fontSize: 15, fontWeight: 600 }}>{vis?.name || 'Unknown'}</h4>

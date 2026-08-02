@@ -98,4 +98,8 @@ export class PreRegistrationController {
             preRegistration,
         );
     };
+    public completePreRegistration = async (req: Request<{ id: string }, {}, { visitorId: string }>, res: Response): Promise<void> => {
+        const result = await this.preRegistrationService.completePreRegistration(req.params.id, req.body.visitorId);
+        ApiResponse.success(res, "Pre-registration marked as checked in.", result);
+    };
 }

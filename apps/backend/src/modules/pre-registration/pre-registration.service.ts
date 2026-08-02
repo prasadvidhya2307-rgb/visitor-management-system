@@ -119,4 +119,10 @@ export class PreRegistrationService {
 
         return this.getPreRegistration(id);
     }
+
+    public async completePreRegistration(id: string, visitorId: string) {
+        const item = await this.getPreRegistration(id);
+        if (item.status !== PreRegistrationStatus.PENDING) throw new AppError("Only pending pre-registrations can be checked in.", 409);
+        return this.preRegistrationRepository.complete(this.prisma, id, visitorId);
+    }
 }

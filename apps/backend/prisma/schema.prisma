@@ -12,6 +12,7 @@ model Visitor {
 
   firstName           String
   lastName            String?
+  company             String?
 
   identityType        IdentityType
   identityNumber      String               @unique
@@ -55,6 +56,8 @@ model Employee {
 
   email               String       @unique
   mobile              String       @unique
+  profileImageId      String?      @unique
+  profileImage        Media?       @relation("EmployeeProfileImage", fields: [profileImageId], references: [id])
 
   createdAt           DateTime     @default(now())
   updatedAt           DateTime     @updatedAt
@@ -87,6 +90,12 @@ model Visit {
 
   checkInAt           DateTime       @default(now())
   checkOutAt          DateTime?
+  checkInImageId      String?        @unique
+  checkInImage        Media?          @relation("VisitCheckInImage", fields: [checkInImageId], references: [id])
+  checkOutImageId     String?        @unique
+  checkOutImage       Media?          @relation("VisitCheckOutImage", fields: [checkOutImageId], references: [id])
+  badgePrinted        Boolean         @default(false)
+  badgePrintedAt      DateTime?
 
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
@@ -128,6 +137,8 @@ model PreRegistration {
   lastName String
 
   company String?
+  identityType IdentityType?
+  identityNumber String?
 
   email String?
   phone String?
@@ -156,6 +167,8 @@ model PreRegistration {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([identityNumber])
 }
 
 model VisitorCounter {
@@ -183,6 +196,9 @@ model Media {
 
   visitors  Visitor[]
   adminProfile Admin? @relation("AdminProfileImage")
+  employeeProfile Employee? @relation("EmployeeProfileImage")
+  checkInVisit Visit? @relation("VisitCheckInImage")
+  checkOutVisit Visit? @relation("VisitCheckOutImage")
   @@index([status])
   @@map("media")
 }
@@ -329,4 +345,16 @@ enum RecurrenceType {
   DAILY
   WEEKLY
   MONTHLY
+}
+
+model SystemSetting {
+  id                String   @id @default("default")
+  companyName       String   @default("")
+  maxVisitHours     Int      @default(8)
+  requirePhoto      Boolean  @default(true)
+  autoCheckoutHours Int      @default(12)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("system_settings")
 }

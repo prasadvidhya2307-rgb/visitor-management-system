@@ -4,10 +4,12 @@ import { AuthService } from "./auth.service.js";
 import {
     ChangePasswordDto,
     LoginDto,
+    UpdateProfileDto,
 } from "./auth.types.js";
 
 import { ApiResponse } from "../../utils/api-response.js";
 import { asyncHandler } from "../../utils/async-handler.js";
+import { AppError } from "../../utils/app-error.js";
 
 export class AuthController {
     constructor(
@@ -62,4 +64,14 @@ export class AuthController {
             );
         },
     );
+
+    public updateProfile = asyncHandler(async (req: Request, res: Response) => {
+        const result = await this.authService.updateProfile(req.admin.id, req.body as UpdateProfileDto);
+        return ApiResponse.success(res, "Profile updated successfully.", result);
+    });
+
+    public updateProfileImage = asyncHandler(async (req: Request, res: Response) => {
+        if (!req.file) throw new AppError("Profile image is required.", 400);
+        return ApiResponse.success(res, "Profile image updated successfully.", await this.authService.updateProfileImage(req.admin.id, req.file));
+    });
 }

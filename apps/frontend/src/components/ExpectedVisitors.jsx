@@ -1,32 +1,50 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CalendarClock, Plus, Trash2, CheckCircle, X } from 'lucide-react';
-import { getEmployees, notify } from '../api';
+import { useNavigate } from 'react-router-dom';
+import { cancelPreRegistration, createPreRegistration, getEmployees, getPreRegistrations, notify } from '../api';
 
 export default function ExpectedVisitors() {
+  const navigate = useNavigate();
   const [visitors, setVisitors] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState({ visitorName: '', company: '', email: '', phone: '', employeeId: '', purpose: '', expectedDate: new Date().toISOString().slice(0, 10), expectedTime: '' });
+  const [form, setForm] = useState({ visitorName: '', company: '', identityNumber: '', email: '', phone: '', employeeId: '', purpose: '', expectedDate: new Date().toISOString().slice(0, 10), expectedTime: '' });
 
   useEffect(() => { refresh(); }, []);
 
-  async function refresh() { try { setEmployees(await getEmployees()); setVisitors([]); } catch (err) { notify(err.message, 'error'); } }
-
-  function handleSubmit(e) {
-    e.preventDefault();
-    notify('Expected-visitor management is not available because the backend does not provide this endpoint.', 'error');
-    setForm({ visitorName: '', company: '', email: '', phone: '', employeeId: '', purpose: '', expectedDate: new Date().toISOString().slice(0, 10), expectedTime: '' });
-    setShowModal(false);
-    refresh();
+  async function refresh() {
+    try {
+      const [staff, registrations] = await Promise.all([getEmployees(), getPreRegistrations()]);
+      setEmployees(staff);
+      setVisitors(registrations.filter(item => !['cancelled', 'expired'].includes(item.status)).map(item => {
+        const expected = new Date(item.validFrom);
+        return { ...item, visitorName: item.name, expectedDate: String(item.validFrom).slice(0, 10), expectedTime: expected.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), status: item.status === 'checked_in' ? 'arrived' : 'expected' };
+      }));
+    } catch (err) { notify(err.message, 'error'); }
   }
 
-  function handleDelete(id) {
-    notify('Expected-visitor management is not available because the backend does not provide this endpoint.', 'error');
+  async function handleSubmit(e) {
+    e.preventDefault();
+    try {
+      const validFrom = new Date(`${form.expectedDate}T${form.expectedTime}`);
+      const validTo = new Date(validFrom.getTime() + 60 * 60 * 1000);
+      await createPreRegistration({ name: form.visitorName, company: form.company, identityType: 'AADHAAR', identityNumber: form.identityNumber, email: form.email, phone: form.phone, employeeId: form.employeeId, purpose: form.purpose || 'Other', validFrom: validFrom.toISOString(), validTo: validTo.toISOString(), recurring: false });
+      setForm({ visitorName: '', company: '', identityNumber: '', email: '', phone: '', employeeId: '', purpose: '', expectedDate: new Date().toISOString().slice(0, 10), expectedTime: '' });
+      setShowModal(false);
+      await refresh();
+      notify('Expected visitor added successfully.');
+    } catch (err) { notify(err.message, 'error'); }
+  }
+
+  async function handleDelete(id) {
+    try { await cancelPreRegistration(id); await refresh(); notify('Expected visit cancelled.'); }
+    catch (err) { notify(err.message, 'error'); }
   }
 
   function handleArrived(id) {
-    notify('Expected-visitor management is not available because the backend does not provide this endpoint.', 'error');
+    notify('Capture the visitor face to complete check-in.');
+    navigate('/check-in', { state: { preRegistrationId: id } });
   }
 
   const today = new Date().toISOString().slice(0, 10);
@@ -107,6 +125,7 @@ export default function ExpectedVisitors() {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                     <div className="form-g"><label className="form-l">Name *</label><input className="form-i" required value={form.visitorName} onChange={e => setForm({ ...form, visitorName: e.target.value })} /></div>
                     <div className="form-g"><label className="form-l">Company</label><input className="form-i" value={form.company} onChange={e => setForm({ ...form, company: e.target.value })} /></div>
+                    <div className="form-g"><label className="form-l">Aadhaar Number *</label><input className="form-i" required value={form.identityNumber} onChange={e => setForm({ ...form, identityNumber: e.target.value })} /></div>
                     <div className="form-g"><label className="form-l">Email</label><input className="form-i" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></div>
                     <div className="form-g"><label className="form-l">Phone</label><input className="form-i" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
                     <div className="form-g"><label className="form-l">Host Employee *</label><select className="form-s" required value={form.employeeId} onChange={e => setForm({ ...form, employeeId: e.target.value })}><option value="">Select...</option>{employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}</select></div>

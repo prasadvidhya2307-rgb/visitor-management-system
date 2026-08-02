@@ -28,6 +28,7 @@ export class VisitorService {
                 visitorCode,
                 firstName: dto.firstName,
                 lastName: dto.lastName,
+                company: dto.company,
                 identityType: dto.identityType,
                 identityNumber: dto.identityNumber,
                 registrationStatus: RegistrationStatus.PENDING,
@@ -216,6 +217,12 @@ export class VisitorService {
         return await this.visitorRepository.getAllDeleted()
     }
 
+    public async restoreVisitor(id: string) {
+        const visitor = await this.visitorRepository.findDeletedById(id)
+        if (!visitor) throw new AppError("deleted visitor not found", 404)
+        return this.prisma.$transaction((tx) => this.visitorRepository.restoreById(tx, id))
+    }
+
     // get all active vistor
     public async getAllActiveVisitor() {
         return await this.visitorRepository.getAllActiveVisitor()
@@ -241,6 +248,13 @@ export class VisitorService {
 
         return await this.visitorRepository.updateById(tx, visitorId, {
             isActive: false
+        })
+    }
+
+    public async activateVisitor(visitorId: string, tx: Prisma.TransactionClient) {
+        return this.visitorRepository.updateById(tx, visitorId, {
+            isActive: true,
+            lastVisitedAt: new Date(),
         })
     }
 

@@ -4,6 +4,7 @@ import { ClipboardCheck, Plus, Trash2, Edit2, X, Search } from 'lucide-react';
 import { cancelPreRegistration, createPreRegistration, getEmployees, getPreRegistrations, notify, updatePreRegistration } from '../api';
 
 const FREQUENCIES = ['daily', 'weekly', 'monthly'];
+const PURPOSES = ['Technical Discussion', 'Interview', 'Business Meeting', 'Contract Negotiation', 'Design Review', 'Training', 'Audit', 'Delivery', 'Maintenance', 'Other'];
 
 export default function PreRegisteredGuests() {
   const [guests, setGuests] = useState([]);
@@ -11,7 +12,7 @@ export default function PreRegisteredGuests() {
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editId, setEditId] = useState(null);
-  const [form, setForm] = useState({ name: '', company: '', email: '', phone: '', employeeId: '', purpose: '', validFrom: new Date().toISOString().slice(0, 10), validTo: '', recurring: false, frequency: 'weekly' });
+  const [form, setForm] = useState({ firstName: '', lastName: '', company: '', identityType: 'AADHAAR', identityNumber: '', email: '', phone: '', employeeId: '', purpose: '', validFrom: new Date().toISOString().slice(0, 10), validTo: '', recurring: false, frequency: 'weekly' });
 
   useEffect(() => { refresh(); }, []);
 
@@ -29,19 +30,19 @@ export default function PreRegisteredGuests() {
 
   function openAdd() {
     setEditId(null);
-    setForm({ name: '', company: '', email: '', phone: '', employeeId: '', purpose: '', validFrom: new Date().toISOString().slice(0, 10), validTo: '', recurring: false, frequency: 'weekly' });
+    setForm({ firstName: '', lastName: '', company: '', identityType: 'AADHAAR', identityNumber: '', email: '', phone: '', employeeId: '', purpose: '', validFrom: new Date().toISOString().slice(0, 10), validTo: '', recurring: false, frequency: 'weekly' });
     setShowModal(true);
   }
 
   function openEdit(g) {
     setEditId(g.id);
-    setForm({ name: g.name, company: g.company, email: g.email, phone: g.phone, employeeId: g.employeeId, purpose: g.purpose, validFrom: g.validFrom, validTo: g.validTo, recurring: g.recurring, frequency: g.frequency });
+    setForm({ firstName: g.firstName || '', lastName: g.lastName || '', company: g.company || '', identityType: g.identityType || 'AADHAAR', identityNumber: g.identityNumber || '', email: g.email || '', phone: g.phone || '', employeeId: g.employeeId, purpose: g.purpose, validFrom: g.validFrom, validTo: g.validTo, recurring: g.recurring, frequency: g.frequency });
     setShowModal(true);
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
-    try { if (editId) await updatePreRegistration(editId, form); else await createPreRegistration(form); setShowModal(false); await refresh(); notify(`Pre-registration ${editId ? 'updated' : 'created'} successfully.`); } catch (err) { notify(err.message, 'error'); }
+    try { const payload = { ...form, name: `${form.firstName} ${form.lastName}`.trim() }; if (editId) await updatePreRegistration(editId, payload); else await createPreRegistration(payload); setShowModal(false); await refresh(); notify(`Pre-registration ${editId ? 'updated' : 'created'} successfully.`); } catch (err) { notify(err.message, 'error'); }
   }
 
   async function handleDelete(id) { try { await cancelPreRegistration(id); await refresh(); notify('Pre-registration cancelled.'); } catch (err) { notify(err.message, 'error'); } }
@@ -119,12 +120,15 @@ export default function PreRegisteredGuests() {
               <form onSubmit={handleSubmit}>
                 <div className="modal-b">
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <div className="form-g"><label className="form-l">Name *</label><input className="form-i" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
+                    <div className="form-g"><label className="form-l">First Name *</label><input className="form-i" required value={form.firstName} onChange={e => setForm({ ...form, firstName: e.target.value })} /></div>
+                    <div className="form-g"><label className="form-l">Last Name *</label><input className="form-i" required value={form.lastName} onChange={e => setForm({ ...form, lastName: e.target.value })} /></div>
                     <div className="form-g"><label className="form-l">Company *</label><input className="form-i" required value={form.company} onChange={e => setForm({ ...form, company: e.target.value })} /></div>
+                    <div className="form-g"><label className="form-l">Identity Type</label><select className="form-s" value={form.identityType} onChange={e => setForm({ ...form, identityType: e.target.value })}><option value="AADHAAR">Aadhaar</option><option value="PASSPORT">Passport</option><option value="DRIVING_LICENSE">Driving License</option><option value="PAN">PAN</option><option value="OTHER">Other</option></select></div>
+                    <div className="form-g"><label className="form-l">Identity Number</label><input className="form-i" value={form.identityNumber} onChange={e => setForm({ ...form, identityNumber: e.target.value })} /></div>
                     <div className="form-g"><label className="form-l">Email</label><input className="form-i" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></div>
                     <div className="form-g"><label className="form-l">Phone</label><input className="form-i" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
                     <div className="form-g"><label className="form-l">Host Employee *</label><select className="form-s" required value={form.employeeId} onChange={e => setForm({ ...form, employeeId: e.target.value })}><option value="">Select...</option>{employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}</select></div>
-                    <div className="form-g"><label className="form-l">Purpose</label><input className="form-i" value={form.purpose} onChange={e => setForm({ ...form, purpose: e.target.value })} /></div>
+                    <div className="form-g"><label className="form-l">Purpose *</label><select className="form-s" required value={form.purpose} onChange={e => setForm({ ...form, purpose: e.target.value })}><option value="">Select purpose...</option>{PURPOSES.map(purpose => <option key={purpose} value={purpose}>{purpose}</option>)}</select></div>
                     <div className="form-g"><label className="form-l">Valid From *</label><input className="form-i" type="date" required value={form.validFrom} onChange={e => setForm({ ...form, validFrom: e.target.value })} /></div>
                     <div className="form-g"><label className="form-l">Valid To *</label><input className="form-i" type="date" required value={form.validTo} onChange={e => setForm({ ...form, validTo: e.target.value })} /></div>
                   </div>

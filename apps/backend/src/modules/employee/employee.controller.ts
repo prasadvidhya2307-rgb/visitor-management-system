@@ -6,10 +6,13 @@ import {
     UpdateEmployeeDto,
 } from "./employee.types.js";
 import { asyncHandler } from "../../utils/async-handler.js";
+import { MediaService } from "../media/media.service.js";
+import { AppError } from "../../utils/app-error.js";
 
 export class EmployeeController {
     constructor(
         private readonly employeeService: EmployeeService,
+        private readonly mediaService: MediaService,
     ) { }
 
     public createEmployee = asyncHandler(
@@ -90,4 +93,11 @@ export class EmployeeController {
             );
         },
     );
+    public updateProfileImage = asyncHandler(async (req: Request<{ employeeId: string }>, res: Response) => {
+        if (!req.file) throw new AppError("Employee image is required.", 400);
+        const media = await this.mediaService.createTemporary(req.file);
+        const employee = await this.employeeService.updateProfileImage(req.params.employeeId, media.id);
+        await this.mediaService.markActive(media.id);
+        return ApiResponse.success(res, "Employee image updated successfully.", employee);
+    });
 }

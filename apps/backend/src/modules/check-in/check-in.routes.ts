@@ -21,6 +21,15 @@ router.post(
 )
 
 router.post(
+    '/with-image/:visitorId',
+    upload.single("image"),
+    parseJson("visit"),
+    (req, _res, next) => { req.body = req.body.visit; next(); },
+    validate(createVisitSchema),
+    checkInController.existingCheckInWithImage,
+)
+
+router.post(
     '/:visitorId',
     validate(createVisitSchema),
     checkInController.existingCheckIn

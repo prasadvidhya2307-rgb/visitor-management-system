@@ -110,4 +110,11 @@ export class VisitorController {
             )
         }
     )
+
+    public restoreVisitor = asyncHandler(
+        async (req: Request<{ id: string }>, res: Response) => {
+            const visitor = await this.visitorService.restoreVisitor(req.params.id)
+            return ApiResponse.success(res, "visitor restored successfully", visitor)
+        }
+    )
 }

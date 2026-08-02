@@ -12,6 +12,7 @@ import { FaceRecognitionService } from "../modules/face-recognised/face-recognit
 
 import { MediaRepository } from "../modules/media/media.repository.js";
 import { MediaService } from "../modules/media/media.service.js";
+import { MediaController } from "../modules/media/media.controller.js";
 import { VisitController } from "../modules/visit/visit.controller.js";
 
 import { VisitRepository } from "../modules/visit/visit.repository.js";
@@ -44,6 +45,9 @@ import { DashboardController } from '../modules/dashboard/dashboard.controller.j
 import { AuthRepository } from "../modules/auth/auth.repository.js";
 import { AuthController } from "../modules/auth/auth.controller.js";
 import { AuthService } from "../modules/auth/auth.service.js";
+import { SettingsRepository } from "../modules/settings/settings.repository.js";
+import { SettingsService } from "../modules/settings/settings.service.js";
+import { SettingsController } from "../modules/settings/settings.controller.js";
 
 
 // -----------------------------------------------------------------------------
@@ -81,6 +85,7 @@ export const dashboardRepository =
 
 export const authRepository =
     new AuthRepository(prisma)
+export const settingsRepository = new SettingsRepository(prisma);
 
 // -----------------------------------------------------------------------------
 // Services
@@ -140,6 +145,7 @@ export const checkOutService = new CheckOutService(
     faceRecognitionService,
     visitorService,
     visitService,
+    mediaService,
 );
 
 export const preRegistrationService =
@@ -156,8 +162,10 @@ export const dashboardService =
 
 export const authService =
     new AuthService(
-        authRepository
+        authRepository,
+        mediaService,
     )
+export const settingsService = new SettingsService(settingsRepository);
 
 // -----------------------------------------------------------------------------
 // Controllers
@@ -167,7 +175,7 @@ export const visitorController =
     new VisitorController(visitorService);
 
 export const employeeController =
-    new EmployeeController(employeeService);
+    new EmployeeController(employeeService, mediaService);
 
 export const faceRecognitionConstroller =
     new FaceRecognitionController(
@@ -208,4 +216,7 @@ export const dashboardController =
 export const authController =
     new AuthController(
         authService
-    )    
+    )
+
+export const mediaController = new MediaController(mediaService);
+export const settingsController = new SettingsController(settingsService);

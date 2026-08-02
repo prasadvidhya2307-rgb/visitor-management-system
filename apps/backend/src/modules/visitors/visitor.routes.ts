@@ -35,16 +35,15 @@ router.get(
     visitorController.getAllVisitors,
 );
 
+router.get('/active', visitorController.getAllActiveVisitor)
+router.post("/:id/restore", visitorController.restoreVisitor);
+
 // Get a visitor by ID
 router.get(
     "/:id",
     visitorController.getVisitor,
 );
 
-router.get(
-    '/active',
-    visitorController.getAllActiveVisitor
-)
 
 // Update a visitor
 router.put(

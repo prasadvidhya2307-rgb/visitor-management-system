@@ -299,7 +299,7 @@ export class WorkflowService {
         dto: CheckInDto,
     ) {
         const visit =
-            await this.visitService.createVisit(workflow.visitorId!, dto.visit);
+            await this.visitService.createVisit(workflow.visitorId!, dto.visit, workflow.mediaId!);
 
         await this.workflowRepository.update(
             workflow.id,

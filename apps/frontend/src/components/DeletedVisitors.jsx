@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Trash2, RotateCcw, Search, UserX } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getDeletedVisitors, notify } from '../api';
+import { getDeletedVisitors, notify, restoreVisitor } from '../api';
 
 export default function DeletedVisitors() {
   const navigate = useNavigate();
@@ -18,7 +18,13 @@ export default function DeletedVisitors() {
     v.company?.toLowerCase().includes(search.toLowerCase())
   );
 
-  function handleRestore() { notify('Restoring deleted visitors is not supported by the backend yet.', 'error'); }
+  async function handleRestore(id) {
+    try {
+      await restoreVisitor(id);
+      setVisitors(current => current.filter(visitor => visitor.id !== id));
+      notify('Visitor restored successfully.');
+    } catch (err) { notify(err.message, 'error'); }
+  }
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>

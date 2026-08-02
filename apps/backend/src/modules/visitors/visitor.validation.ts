@@ -32,6 +32,8 @@ export const createVisitorSchema = z.object({
         .max(100)
         .optional(),
 
+    company: z.string().trim().max(150).optional(),
+
     identityType: z
         .enum(IdentityType),
 
@@ -63,6 +65,8 @@ export const updateVisitorSchema = z.object({
         .trim()
         .max(100)
         .optional(),
+
+    company: z.string().trim().max(150).optional(),
 
     identityType: z
         .enum(IdentityType)

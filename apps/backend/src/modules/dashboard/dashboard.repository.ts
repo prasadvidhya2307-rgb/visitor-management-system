@@ -43,29 +43,20 @@ export class DashboardRepository {
         });
     }
 
-    // public async getRecentActivities(limit = 10) {
-    //     return this.prisma.visit.findMany({
-    //         take: limit,
-    //         orderBy: {
-    //             updatedAt: "desc",
-    //         },
-    //         include: {
-    //             visitor: {
-    //                 select: {
-    //                     id: true,
-    //                     visitorCode: true,
-    //                     firstName: true,
-    //                     lastName: true,
-    //                 },
-    //             },
-    //             hostEmployee: {
-    //                 select: {
-    //                     id: true,
-    //                     firstName: true,
-    //                     lastName: true,
-    //                 },
-    //             },
-    //         },
-    //     });
-    // }
+    public getExpectedToday(start: Date, end: Date) {
+        return this.prisma.preRegistration.count({ where: { status: "PENDING", validFrom: { lt: end }, validTo: { gte: start } } });
+    }
+
+    public getRecentActivities(limit = 10) {
+        return this.prisma.visit.findMany({
+            take: limit,
+            orderBy: { updatedAt: "desc" },
+            include: { visitor: { select: { id: true, visitorCode: true, firstName: true, lastName: true } }, hostEmployee: { select: { firstName: true, lastName: true } } },
+        });
+    }
+
+    public getVisitsSince(since: Date) {
+        return this.prisma.visit.findMany({ where: { checkInAt: { gte: since } }, include: { hostEmployee: true } });
+    }
+
 }

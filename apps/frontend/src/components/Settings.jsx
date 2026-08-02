@@ -1,20 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Save, RotateCcw } from 'lucide-react';
-import store from '../store';
-import { notify } from '../api';
+import { getSettings, notify, updateSettings } from '../api';
 
 export default function Settings() {
   const [form, setForm] = useState({ company: '', maxVisitHours: 8, requirePhoto: false, autoCheckoutHours: 12 });
 
-  useEffect(() => {
-    const s = store.getSettings();
-    setForm({ company: s.company || '', maxVisitHours: s.maxVisitHours || 8, requirePhoto: s.requirePhoto || false, autoCheckoutHours: s.autoCheckoutHours || 12 });
-  }, []);
+  useEffect(() => { getSettings().then(s => setForm({ company: s.companyName, maxVisitHours: s.maxVisitHours, requirePhoto: s.requirePhoto, autoCheckoutHours: s.autoCheckoutHours })).catch(err => notify(err.message, 'error')); }, []);
 
-  function handleSave() {
-    Object.entries(form).forEach(([k, v]) => store.saveSetting(k, v));
-    notify('Display preferences saved on this device.');
+  async function handleSave() {
+    try { await updateSettings({ companyName: form.company, maxVisitHours: form.maxVisitHours, requirePhoto: form.requirePhoto, autoCheckoutHours: form.autoCheckoutHours }); notify('System settings saved successfully.'); }
+    catch (err) { notify(err.message, 'error'); }
   }
 
   function handleReset() {

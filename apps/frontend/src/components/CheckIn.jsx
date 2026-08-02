@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, ArrowRight, ArrowLeft, Loader2, Camera, User, Shield, ClipboardCheck, Activity, AlertCircle, UserPlus, UserCheck as UserCheckIcon, Search } from 'lucide-react';
-import { recognizeFace, checkIn, existingVisitorCheckIn, getEmployees, getPreRegistrations, notify } from '../api';
+import { recognizeFace, checkIn, existingVisitorCheckInWithImage, getEmployees, getPreRegistrations, notify } from '../api';
 import FaceRecognition from './FaceRecognition';
+import QRCode from 'qrcode';
+import { getPublicVisitUrl, markBadgePrinted } from '../api';
+import { completePreRegistration } from '../api';
 
 const ID_TYPES = ['aadhaar', 'pan', 'driving_license', 'passport', 'other'];
 const PURPOSES = ['Technical Discussion', 'Interview', 'Business Meeting', 'Contract Negotiation', 'Design Review', 'Training', 'Audit', 'Delivery', 'Maintenance', 'Other'];
@@ -127,7 +130,7 @@ export default function CheckIn() {
     let preregGuests;
     try { preregGuests = await getPreRegistrations(); } catch (err) { setPreregSearchError(err.message); return; }
     let match = preregGuests.find(g =>
-      g.identityType === 'aadhaar' && g.identityNumber === preregAadhar.trim()
+      g.identityType?.toUpperCase() === 'AADHAAR' && g.identityNumber === preregAadhar.trim()
     );
     if (match) {
       setFoundPreregGuest(match);
@@ -159,6 +162,7 @@ export default function CheckIn() {
       vData = {
         firstName: foundPreregGuest.name?.split(' ')[0] || '',
         lastName: foundPreregGuest.name?.split(' ').slice(1).join(' ') || '',
+        company: foundPreregGuest.company || undefined,
         identityType: foundPreregGuest.identityType || 'AADHAAR',
         identityNumber: foundPreregGuest.identityNumber || preregAadhar,
         emails: [{ email: foundPreregGuest.email || '', isPrimary: true }],
@@ -169,6 +173,7 @@ export default function CheckIn() {
       vData = {
         firstName: visitorData.firstName,
         lastName: visitorData.lastName,
+        company: visitorData.company || undefined,
         identityType: ID_TYPE_MAP[identityType] || 'OTHER',
         identityNumber: visitorData.identityNumber || '',
         emails: [{ email: visitorData.email, isPrimary: true }],
@@ -185,10 +190,11 @@ export default function CheckIn() {
     try {
       let data;
       if (visitorId) {
-        data = await existingVisitorCheckIn(visitorId, visitPayload);
+        data = await existingVisitorCheckInWithImage(visitorId, visitPayload, faceResult.image);
       } else {
         data = await checkIn(vData, visitPayload, faceResult.image);
       }
+      if (visitorMode === 'preregistered' && foundPreregGuest?.id) await completePreRegistration(foundPreregGuest.id, data.visitor.id);
       setResult(data);
       setStep(8);
     } catch (err) {
@@ -198,6 +204,19 @@ export default function CheckIn() {
     } finally {
       setProcessing(false);
     }
+  }
+
+  async function printToken() {
+    try {
+      const qr = await QRCode.toDataURL(getPublicVisitUrl(result.visit.id), { width: 220, margin: 1 });
+      const popup = window.open('', '_blank', 'width=760,height=900');
+      if (!popup) throw new Error('Allow pop-ups to print the visitor token.');
+      popup.document.write(`<html><head><title>Visitor Token ${result.visitor.visitorCode}</title><style>body{font-family:Arial;padding:24px}.token{border:2px solid #111;border-radius:16px;padding:24px;max-width:620px}.head{display:flex;gap:20px;align-items:center}.photo{width:140px;height:140px;object-fit:cover;border-radius:12px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}.code{font-size:28px;font-weight:800}.qr{width:180px}.muted{color:#555}@media print{button{display:none}}</style></head><body><div class="token"><div class="head"><img class="photo" src="${faceResult.image}"/><div><div class="muted">VISITOR TOKEN</div><div class="code">${result.visitor.visitorCode}</div><h2>${visitorName}</h2><div>${result.visitor.company || ''}</div></div><img class="qr" src="${qr}"/></div><div class="grid"><div><b>Visit ID</b><br/>${result.visit.id}</div><div><b>Status</b><br/>${result.visit.status.replace('_', ' ')}</div><div><b>Host</b><br/>${empName}</div><div><b>Purpose</b><br/>${form.purpose || preregPurpose}</div><div><b>Check-in</b><br/>${new Date(result.visit.checkInAt).toLocaleString()}</div><div><b>Identity</b><br/>${result.visitor.identityType}: ${result.visitor.identityNumber}</div></div></div><button onclick="window.print()">Print</button></body></html>`);
+      popup.document.close();
+      await markBadgePrinted(result.visit.id);
+      setResult(current => ({ ...current, visit: { ...current.visit, badgePrinted: true, badgePrintedAt: new Date().toISOString() } }));
+      notify('Visitor token opened for printing and marked as printed.');
+    } catch (err) { notify(err.message, 'error'); }
   }
 
   function resetAll() {
@@ -293,14 +312,15 @@ export default function CheckIn() {
                   </div>
                   <div style={{ background: 'var(--bg)', borderRadius: 'var(--r-sm)', padding: 16, border: '1px solid var(--border)', textAlign: 'left', fontSize: 12 }}>
                     <div style={{ display: 'grid', gap: 8 }}>
-                      <div><span style={{ color: 'var(--text2)' }}>ID: </span><strong>{result.id || result.workflow?.id || '—'}</strong></div>
-                      <div><span style={{ color: 'var(--text2)' }}>Status: </span><strong>{result.status || result.workflow?.status || '—'}</strong></div>
+                      <div><span style={{ color: 'var(--text2)' }}>Visit ID: </span><strong>{result.visit?.id || '—'}</strong></div>
+                      <div><span style={{ color: 'var(--text2)' }}>Visitor Code: </span><strong>{result.visitor?.visitorCode || '—'}</strong></div>
+                      <div><span style={{ color: 'var(--text2)' }}>Status: </span><strong>{result.visit?.status?.replace('_', ' ') || '—'}</strong></div>
                       <div><span style={{ color: 'var(--text2)' }}>Visitor: </span><strong>{visitorName}</strong></div>
                       <div><span style={{ color: 'var(--text2)' }}>Host: </span><strong>{empName}</strong></div>
                       <div><span style={{ color: 'var(--text2)' }}>Purpose: </span><strong>{form.purpose || preregPurpose}</strong></div>
                     </div>
                   </div>
-                  <button className="btn-s" style={{ marginTop: 16 }} onClick={() => setStep(9)}>Continue <ArrowRight size={16} /></button>
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 16 }}><button className="btn-p" onClick={printToken}>{result.visit?.badgePrinted ? 'Print Again' : 'Print Visitor Token'}</button><button className="btn-s" onClick={() => setStep(9)}>Continue <ArrowRight size={16} /></button></div>
                 </>
               ) : (
                 <p style={{ color: 'var(--text2)', fontSize: 13 }}>No response from server.</p>
@@ -323,7 +343,7 @@ export default function CheckIn() {
               )}
               <div className="form-g"><label className="form-l">Notes</label><textarea className="form-i" rows={3} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Additional notes..." /></div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, fontSize: 12, color: 'var(--text2)' }}>
-                <CheckCircle size={14} style={{ color: 'var(--success)' }} /> Badge will be printed automatically
+                <CheckCircle size={14} style={{ color: 'var(--success)' }} /> Visitor token can be reviewed and printed after successful check-in
               </div>
               <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', marginTop: 16 }}>
                 <button className="btn-o" onClick={() => {

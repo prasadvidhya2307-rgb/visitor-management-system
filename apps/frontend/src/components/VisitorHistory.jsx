@@ -6,6 +6,7 @@ import { getEmployees, getVisits, getVisitors, notify } from '../api';
 import ActiveVisitors from './ActiveVisitors';
 import ExpectedVisitors from './ExpectedVisitors';
 import DeletedVisitors from './DeletedVisitors';
+import VisitorAvatar from './VisitorAvatar';
 
 const PURPOSES = ['', 'Technical Discussion', 'Interview', 'Business Meeting', 'Contract Negotiation', 'Design Review', 'Training', 'Audit', 'Delivery', 'Maintenance', 'Other'];
 
@@ -35,14 +36,14 @@ export default function VisitorHistory() {
   const [visitors, setVisitors] = useState([]); const [employees, setEmployees] = useState([]);
   const perPage = 10;
 
-  useEffect(() => { Promise.all([getVisits(), getVisitors(), getEmployees()]).then(([rows, people, staff]) => { setVisits(rows.filter(v => v.status === 'checked_out')); setVisitors(people); setEmployees(staff); setFailed([]); }).catch(err => notify(err.message, 'error')); }, []);
+  useEffect(() => { Promise.all([getVisits(), getVisitors(), getEmployees()]).then(([rows, people, staff]) => { setVisits(rows); setVisitors(people); setEmployees(staff); setFailed([]); }).catch(err => notify(err.message, 'error')); }, [tab]);
 
   function toggleSort(field) {
     if (sortField === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
     else { setSortField(field); setSortDir('desc'); }
   }
 
-  let filtered = visits;
+  let filtered = Array.from(new Map(visits.map(visit => [visit.visitorId, visit])).values());
   if (search) {
     const q = search.toLowerCase();
     filtered = filtered.filter(v => {
@@ -77,12 +78,12 @@ export default function VisitorHistory() {
   const paged = filtered.slice((page - 1) * perPage, page * perPage);
 
   function exportCSV() {
-    const rows = [['Token', 'Visitor', 'Company', 'Host', 'Purpose', 'Check-In', 'Check-Out', 'Duration', 'Badge']];
+    const rows = [['Visitor Code', 'Visitor', 'Company', 'Total Visits', 'Last Host', 'Last Purpose', 'Last Visit']];
     filtered.forEach(v => {
       const vis = visitors.find(visitor => visitor.id === v.visitorId);
       const emp = v.host || employees.find(e => e.id === v.employeeId);
       const dur = v.checkOutTime ? Math.round((new Date(v.checkOutTime) - new Date(v.checkInTime)) / 3600000 * 10) / 10 + 'h' : 'N/A';
-      rows.push([v.token, vis?.name || '', vis?.company || '', emp?.name || '', v.purpose, new Date(v.checkInTime).toLocaleString(), v.checkOutTime ? new Date(v.checkOutTime).toLocaleString() : '', dur, v.badgePrinted ? 'Yes' : 'No']);
+      rows.push([vis?.visitorCode || v.token, vis?.name || '', vis?.company || '', visits.filter(row => row.visitorId === v.visitorId).length, emp?.name || '', v.purpose, new Date(v.checkInTime).toLocaleString()]);
     });
     const csv = rows.map(r => r.join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -134,14 +135,12 @@ export default function VisitorHistory() {
                 <thead>
                   <tr>
                     {[
-                      { key: 'token', label: 'Token' },
+                      { key: 'token', label: 'Visitor Code' },
                       { key: 'visitorName', label: 'Visitor' },
-                      { key: 'purpose', label: 'Purpose' },
-                      { key: 'employeeName', label: 'Host' },
-                      { key: 'checkInTime', label: 'Check-In' },
-                      { key: 'checkOutTime', label: 'Check-Out' },
-                      { key: 'duration', label: 'Duration' },
-                      { key: 'badgePrinted', label: 'Badge' },
+                      { key: 'totalVisits', label: 'Total Visits' },
+                      { key: 'purpose', label: 'Last Purpose' },
+                      { key: 'employeeName', label: 'Last Host' },
+                      { key: 'checkInTime', label: 'Last Visit' },
                     ].map(col => (
                       <th key={col.key} style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => toggleSort(col.key)}>
                         {col.label} <ArrowUpDown size={12} style={{ opacity: sortField === col.key ? 1 : 0.3 }} />
@@ -156,19 +155,17 @@ export default function VisitorHistory() {
                     const dur = v.checkOutTime ? Math.round((new Date(v.checkOutTime) - new Date(v.checkInTime)) / 3600000 * 10) / 10 : 'N/A';
                     return (
                       <tr key={v.id} style={{ cursor: 'pointer' }} onClick={() => navigate(`/visitor/${v.visitorId}`)}>
-                        <td><span style={{ fontFamily: 'monospace', fontWeight: 600, fontSize: 12 }}>{v.token}</span></td>
+                        <td><span style={{ fontFamily: 'monospace', fontWeight: 600, fontSize: 12 }}>{vis?.visitorCode || v.token}</span></td>
                         <td>
                           <div className="vis-row">
-                            <div className="vis-av">{vis?.name?.charAt(0) || '?'}</div>
+                            <VisitorAvatar visitor={vis} />
                             <div className="vis-info"><h4>{vis?.name || 'Unknown'}</h4><p>{vis?.company || ''}</p></div>
                           </div>
                         </td>
+                        <td>{visits.filter(row => row.visitorId === v.visitorId).length}</td>
                         <td>{v.purpose}</td>
                         <td>{emp?.name || 'N/A'}</td>
                         <td style={{ fontSize: 12 }}>{new Date(v.checkInTime).toLocaleString()}</td>
-                        <td style={{ fontSize: 12 }}>{v.checkOutTime ? new Date(v.checkOutTime).toLocaleString() : '—'}</td>
-                        <td><span className="badge checked_out">{dur}h</span></td>
-                        <td>{v.badgePrinted ? '✓' : '—'}</td>
                       </tr>
                     );
                   })}

@@ -6,6 +6,7 @@ import {
     ChangePasswordDto,
     LoginDto,
     LoginResponseDto,
+    UpdateProfileDto,
 } from "./auth.types.js";
 
 import {
@@ -14,6 +15,7 @@ import {
 } from "../../utils/password.js";
 
 import { AppError } from "../../utils/app-error.js";
+import { MediaService } from "../media/media.service.js";
 
 import {
     generateAccessToken,
@@ -22,6 +24,7 @@ import {
 export class AuthService {
     constructor(
         private readonly authRepository: AuthRepository,
+        private readonly mediaService: MediaService,
     ) {}
 
     public async login(
@@ -109,6 +112,19 @@ export class AuthService {
         );
     }
 
+    public async updateProfile(adminId: string, dto: UpdateProfileDto): Promise<AdminResponseDto> {
+        await this.findAdminById(adminId);
+        return this.toResponseDto(await this.authRepository.updateProfile(adminId, dto));
+    }
+
+    public async updateProfileImage(adminId: string, image: Express.Multer.File): Promise<AdminResponseDto> {
+        await this.findAdminById(adminId);
+        const media = await this.mediaService.createTemporary(image);
+        const admin = await this.authRepository.updateProfileImage(adminId, media.id);
+        await this.mediaService.markActive(media.id);
+        return this.toResponseDto(admin);
+    }
+
     private async findAdminById(
         adminId: string,
     ): Promise<Admin> {
@@ -135,6 +151,9 @@ export class AuthService {
             email: admin.email,
             profileImageId:
                 admin.profileImageId,
+            fullName: admin.fullName,
+            designation: admin.designation,
+            mobile: admin.mobile,
         };
     }
 }

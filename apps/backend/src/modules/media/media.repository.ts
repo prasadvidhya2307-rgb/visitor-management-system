@@ -30,6 +30,19 @@ export class MediaRepository {
         });
     }
 
+    public async findAll() {
+        return this.prisma.media.findMany({
+            orderBy: { createdAt: "desc" },
+            include: {
+                visitors: { select: { id: true, visitorCode: true, firstName: true, lastName: true } },
+                adminProfile: { select: { id: true, email: true, fullName: true } },
+                employeeProfile: { select: { id: true, firstName: true, lastName: true, department: true } },
+                checkInVisit: { select: { id: true, visitorId: true, checkInAt: true } },
+                checkOutVisit: { select: { id: true, visitorId: true, checkOutAt: true } },
+            },
+        });
+    }
+
     /**
      * Update media status
      */

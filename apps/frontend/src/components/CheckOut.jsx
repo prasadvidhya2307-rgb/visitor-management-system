@@ -4,6 +4,7 @@ import { Search, CheckCircle, ArrowRightLeft, UserMinus, AlertCircle, ShieldChec
 import { useNavigate } from 'react-router-dom';
 import { checkOut, getEmployees, getVisits, getVisitors, notify, presentVisit } from '../api';
 import FaceRecognition from './FaceRecognition';
+import VisitorAvatar from './VisitorAvatar';
 
 export default function CheckOut() {
   const navigate = useNavigate();
@@ -110,7 +111,7 @@ export default function CheckOut() {
                 <div className="card-h"><h3 style={{ fontSize: 13 }}>Visit Info</h3></div>
                 <div className="card-b" style={{ padding: 16 }}>
                   <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 12 }}>
-                    <div className="vis-avatar" style={{ width: 40, height: 40 }}>{visitorName.charAt(0)}</div>
+                    <VisitorAvatar visitor={visitors.find(visitor => visitor.id === selectedVisit?.visitorId)} className="vis-avatar" style={{ width: 40, height: 40 }} />
                     <div>
                       <div style={{ fontWeight: 600, fontSize: 14 }}>{visitorName}</div>
                       <div style={{ fontSize: 11, color: 'var(--text2)' }}>{selectedVisit.token}</div>
@@ -203,7 +204,7 @@ export default function CheckOut() {
                   return (
                     <motion.div key={v.id} className={`vis-card ${isOvertime ? 'overtime' : ''}`} layout>
                       <div className="vis-header">
-                        <div className="vis-avatar">{vis?.name?.charAt(0) || '?'}</div>
+                        <VisitorAvatar visitor={vis} className="vis-avatar" />
                         <div style={{ flex: 1 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                             <h4 style={{ fontSize: 15, fontWeight: 600 }}>{vis?.name || 'Unknown'}</h4>

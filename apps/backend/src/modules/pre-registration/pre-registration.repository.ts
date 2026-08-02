@@ -88,6 +88,10 @@ export class PreRegistrationRepository {
         });
     }
 
+    public async complete(tx: Prisma.TransactionClient, id: string, visitorId: string): Promise<PreRegistration> {
+        return tx.preRegistration.update({ where: { id }, data: { status: PreRegistrationStatus.CHECKED_IN, checkedInAt: new Date(), visitorId } });
+    }
+
     public async delete(
         tx: Prisma.TransactionClient,
         id: string,

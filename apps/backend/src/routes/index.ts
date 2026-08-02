@@ -9,11 +9,15 @@ import { checkOutRoutes } from '../modules/check-out/index.js';
 import { preRegistrationRoutes } from '../modules/pre-registration/index.js';
 import { dashboardRoutes } from '../modules/dashboard/index.js';
 import { authRoutes } from '../modules/auth/index.js';
+import { mediaRoutes } from '../modules/media/index.js';
+import { settingsRoutes } from '../modules/settings/index.js';
 
 
 const router = Router();
 
 router.use('/auth', authRoutes)
+router.use('/media', mediaRoutes)
+router.use('/settings', settingsRoutes)
 router.use('/health', healthRoutes);
 router.use('/visitor', visitorRoutes);
 router.use('/face', faceRecognitionRoutes)

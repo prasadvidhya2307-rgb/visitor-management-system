@@ -49,4 +49,10 @@ export class CheckInController {
             );
         },
     );
+
+    public existingCheckInWithImage = asyncHandler(async (req: Request<{ visitorId: string }>, res: Response) => {
+        if (!req.file) throw new AppError("Check-in image is required.", 400);
+        const result = await this.checkInService.existingCheckInWithImage(req.params.visitorId, req.body as CreateVisitDto, req.file);
+        return ApiResponse.created(res, "Visitor checked in successfully.", result);
+    });
 }

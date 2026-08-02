@@ -10,7 +10,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
 } from 'recharts';
-import { getEmployees, getPreRegistrations, getVisits, getVisitors, notify } from '../api';
+import { getDashboard, getEmployees, getPreRegistrations, getVisits, getVisitors, notify } from '../api';
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#6366F1', '#EC4899', '#8B5CF6', '#14B8A6', '#F97316'];
 
@@ -21,14 +21,14 @@ export default function Dashboard() {
   useEffect(() => { load(); }, []);
   async function load() {
     try {
-      const [visits, visitors, employees, preRegistered] = await Promise.all([getVisits(), getVisitors(), getEmployees(), getPreRegistrations()]);
+      const [visits, visitors, employees, preRegistered, dashboard] = await Promise.all([getVisits(), getVisitors(), getEmployees(), getPreRegistrations(), getDashboard()]);
       const today = new Date().toISOString().slice(0, 10);
       const daily = Array.from({ length: 7 }, (_, index) => { const date = new Date(); date.setDate(date.getDate() - 6 + index); const key = date.toISOString().slice(0, 10); const rows = visits.filter(v => String(v.checkInTime).slice(0, 10) === key); return { day: date.toLocaleDateString('en-US', { weekday: 'short' }), date: key, checkIns: rows.length, checkOuts: rows.filter(v => v.status === 'checked_out').length }; });
       const monthly = Array.from({ length: 6 }, (_, index) => { const date = new Date(); date.setMonth(date.getMonth() - 5 + index); const key = date.toISOString().slice(0, 7); return { month: date.toLocaleDateString('en-US', { month: 'short' }), visitors: visits.filter(v => String(v.checkInTime).startsWith(key)).length }; });
       const dept = employees.map(employee => ({ name: employee.department, value: visits.filter(v => v.employeeId === employee.id).length })).reduce((all, item) => { const existing = all.find(x => x.name === item.name); if (existing) existing.value += item.value; else all.push(item); return all; }, []);
       const purposes = Object.entries(visits.reduce((all, v) => ({ ...all, [v.purpose || 'Other']: (all[v.purpose || 'Other'] || 0) + 1 }), {})).map(([name, value]) => ({ name, value }));
       const peakHours = Object.entries(visits.reduce((all, v) => { const hour = new Date(v.checkInTime).getHours(); all[hour] = (all[hour] || 0) + 1; return all; }, {})).map(([hour, value]) => ({ hour: `${hour}:00`, visits: value }));
-      setData({ stats: { totalVisitors: visitors.length, activeVisitors: visits.filter(v => v.status === 'checked_in').length, todayCheckIns: visits.filter(v => String(v.checkInTime).slice(0, 10) === today).length, checkedOutToday: visits.filter(v => v.status === 'checked_out' && String(v.checkOutTime).slice(0, 10) === today).length, expectedToday: 0 }, daily, monthly, dept, purposes, peakHours, activity: [], preRegistered: preRegistered.length });
+      setData({ stats: dashboard.stats, daily: dashboard.daily, monthly, dept, purposes, peakHours, activity: dashboard.activity, preRegistered: preRegistered.length });
     } catch (err) { notify(err.message, 'error'); setData({ stats: { totalVisitors: 0, activeVisitors: 0, todayCheckIns: 0, checkedOutToday: 0, expectedToday: 0 }, daily: [], monthly: [], dept: [], purposes: [], peakHours: [], activity: [], preRegistered: 0 }); }
   }
 

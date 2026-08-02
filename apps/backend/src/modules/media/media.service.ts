@@ -9,6 +9,7 @@ import {
 } from "@prisma/client";
 
 import { MediaRepository } from "./media.repository.js";
+import { AppError } from "../../utils/app-error.js";
 
 export class MediaService {
     private readonly registrationDirectory = path.join(
@@ -48,6 +49,17 @@ export class MediaService {
             });
         });
     }
+
+    public async getMedia(id: string): Promise<{ media: Media; absolutePath: string }> {
+        const media = await this.mediaRepository.findById(id);
+        if (!media) throw new AppError("Media not found.", 404);
+        return {
+            media,
+            absolutePath: path.join(process.cwd(), "storage", "media", media.filePath),
+        };
+    }
+
+    public async getAllMedia() { return this.mediaRepository.findAll(); }
 
     public async markActive(mediaId: string): Promise<void> {
         await this.prisma.$transaction(async (tx) => {

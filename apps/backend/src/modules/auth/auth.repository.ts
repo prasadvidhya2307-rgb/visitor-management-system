@@ -66,4 +66,8 @@ export class AuthRepository {
             },
         });
     }
+
+    public async updateProfile(adminId: string, data: Pick<Prisma.AdminUpdateInput, "fullName" | "designation" | "mobile">): Promise<Admin> {
+        return this.prisma.admin.update({ where: { id: adminId }, data });
+    }
 }

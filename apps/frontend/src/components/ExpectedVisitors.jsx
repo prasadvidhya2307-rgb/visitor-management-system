@@ -1,38 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CalendarClock, Plus, Trash2, CheckCircle, X } from 'lucide-react';
-import store from '../store';
+import { loadEmployees, loadPreRegistrations } from '../services/data';
+import { cancelPreRegistration, createPreRegistration } from '../services/api';
+import { purposeToCode, splitName } from '../services/mappers';
+import { useToast } from './Toast';
 
 export default function ExpectedVisitors() {
   const [visitors, setVisitors] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ visitorName: '', company: '', email: '', phone: '', employeeId: '', purpose: '', expectedDate: new Date().toISOString().slice(0, 10), expectedTime: '' });
+  const toast = useToast();
 
   useEffect(() => { refresh(); }, []);
 
-  function refresh() {
-    setVisitors(store.getExpected());
-    setEmployees(store.getEmployees());
+  async function refresh() {
+    try { const [preRegistrations, employees] = await Promise.all([loadPreRegistrations(), loadEmployees()]);
+      setVisitors(preRegistrations.filter((p) => p.status === 'active').map((p) => ({ ...p, visitorName: p.name, expectedDate: p.validFrom, expectedTime: '?', status: 'expected' }))); setEmployees(employees);
+    } catch (err) { toast.error(err.message || 'Unable to load expected visitors.'); }
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    store.addExpected(form);
-    setForm({ visitorName: '', company: '', email: '', phone: '', employeeId: '', purpose: '', expectedDate: new Date().toISOString().slice(0, 10), expectedTime: '' });
-    setShowModal(false);
-    refresh();
+    const { firstName, lastName, single } = splitName(form.visitorName);
+    if (single) { toast.error('Please enter both a first and last name.'); return; }
+    if (!form.employeeId || !form.purpose.trim()) { toast.error('Please select a host and enter the visit purpose.'); return; }
+    try {
+      const purpose = purposeToCode(form.purpose);
+      await createPreRegistration({ firstName, lastName, company: form.company.trim() || undefined, email: form.email.trim() || undefined, phone: form.phone.trim() || undefined, hostEmployeeId: form.employeeId, purpose, floor: 1, notes: purpose === 'OTHER' ? form.purpose.trim() : undefined, validFrom: form.expectedDate, validTo: form.expectedDate, isRecurring: false, recurrenceType: 'NONE' });
+      setShowModal(false); toast.success('Expected visitor added successfully.'); refresh();
+    } catch (err) { toast.error(err.message || 'Unable to add the expected visitor.'); }
   }
 
-  function handleDelete(id) {
-    store.deleteExpected(id);
-    refresh();
+  async function handleDelete(id) {
+    try { await cancelPreRegistration(id); toast.success('Expected visitor cancelled successfully.'); refresh(); }
+    catch (err) { toast.error(err.message || 'Unable to cancel the expected visitor.'); }
   }
 
-  function handleArrived(id) {
-    store.updateExpected(id, { status: 'arrived' });
-    refresh();
-  }
+  function handleArrived() { toast.error('Arrival status is recorded through check-in; the backend has no manual arrival endpoint.'); }
 
   const today = new Date().toISOString().slice(0, 10);
   const todayVisitors = visitors.filter(v => v.expectedDate === today);

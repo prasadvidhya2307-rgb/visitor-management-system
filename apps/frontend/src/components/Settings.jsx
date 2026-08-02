@@ -1,26 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Save, RotateCcw } from 'lucide-react';
-import store from '../store';
+import { useToast } from './Toast';
 
 export default function Settings() {
   const [form, setForm] = useState({ company: '', maxVisitHours: 8, requirePhoto: false, autoCheckoutHours: 12 });
-
-  useEffect(() => {
-    const s = store.getSettings();
-    setForm({ company: s.company || '', maxVisitHours: s.maxVisitHours || 8, requirePhoto: s.requirePhoto || false, autoCheckoutHours: s.autoCheckoutHours || 12 });
-  }, []);
+  const toast = useToast();
 
   function handleSave() {
-    Object.entries(form).forEach(([k, v]) => store.saveSetting(k, v));
-    alert('Settings saved!');
+    toast.error('Settings cannot be saved yet because the backend does not provide a settings endpoint.');
   }
 
   function handleReset() {
-    if (window.confirm('Reset all data to defaults? This will clear all visitors, visits, and activity.')) {
-      store.reset();
-      window.location.reload();
-    }
+    toast.error('Reset is unavailable because the backend does not provide a safe reset endpoint.');
   }
 
   return (
@@ -42,7 +34,7 @@ export default function Settings() {
         <div className="card" style={{ borderColor: 'var(--danger)' }}>
           <div className="card-h"><h3 style={{ color: 'var(--danger)' }}>Danger Zone</h3></div>
           <div className="card-b">
-            <p style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 12 }}>Reset all application data including visitors, visits, employees, and activity logs to default sample data.</p>
+            <p style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 12 }}>Resetting application data requires a dedicated backend operation.</p>
             <button className="btn-d" onClick={handleReset}><RotateCcw size={16} /> Reset All Data</button>
           </div>
         </div>

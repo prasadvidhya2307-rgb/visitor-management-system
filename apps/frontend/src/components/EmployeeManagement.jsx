@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserCog, Plus, Edit2, Trash2, X } from 'lucide-react';
-import store from '../store';
+import { createEmployee, deleteEmployee, updateEmployee } from '../services/api';
+import { employeePayload, mapEmployee, splitName } from '../services/mappers';
+import { loadEmployees } from '../services/data';
+import { useToast } from './Toast';
 
 const DEPARTMENTS = ['Engineering', 'HR', 'Finance', 'Marketing', 'Operations', 'Legal', 'Sales', 'IT', 'Admin'];
 
@@ -10,25 +13,37 @@ export default function EmployeeManagement() {
   const [showModal, setShowModal] = useState(false);
   const [editId, setEditId] = useState(null);
   const [form, setForm] = useState({ name: '', email: '', phone: '', department: '', designation: '' });
+  const [saving, setSaving] = useState(false);
+  const toast = useToast();
 
-  useEffect(() => { setEmployees(store.getEmployees()); }, []);
+  useEffect(() => { refresh(); }, []);
+
+  async function refresh() {
+    try { setEmployees(await loadEmployees()); }
+    catch (err) { toast.error(err.message || 'Unable to load employees.'); }
+  }
 
   function openAdd() { setEditId(null); setForm({ name: '', email: '', phone: '', department: '', designation: '' }); setShowModal(true); }
   function openEdit(emp) { setEditId(emp.id); setForm({ name: emp.name, email: emp.email, phone: emp.phone, department: emp.department, designation: emp.designation }); setShowModal(true); }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    if (editId) store.updateEmployee(editId, form);
-    else store.addEmployee(form);
-    setShowModal(false);
-    setEmployees(store.getEmployees());
+    const { firstName, lastName, single } = splitName(form.name);
+    if (single) { toast.error('Please enter both first and last name.'); return; }
+    setSaving(true);
+    try {
+      const payload = employeePayload({ ...form, firstName, lastName });
+      if (editId) await updateEmployee(editId, payload); else await createEmployee(payload);
+      toast.success(editId ? 'Employee updated successfully.' : 'Employee added successfully.');
+      setShowModal(false); await refresh();
+    } catch (err) { toast.error(err.message || 'Unable to save employee.'); }
+    finally { setSaving(false); }
   }
 
-  function handleDelete(id) {
-    if (window.confirm('Delete this employee?')) {
-      store.deleteEmployee(id);
-      setEmployees(store.getEmployees());
-    }
+  async function handleDelete(id) {
+    if (!window.confirm('Delete this employee?')) return;
+    try { await deleteEmployee(id); toast.success('Employee deleted successfully.'); await refresh(); }
+    catch (err) { toast.error(err.message || 'Unable to delete employee.'); }
   }
 
   return (
@@ -88,7 +103,7 @@ export default function EmployeeManagement() {
                 </div>
                 <div className="modal-f">
                   <button type="button" className="btn-o" onClick={() => setShowModal(false)}>Cancel</button>
-                  <button type="submit" className="btn-p">{editId ? 'Update' : 'Add'}</button>
+                  <button type="submit" className="btn-p" disabled={saving}>{saving ? 'Saving...' : editId ? 'Update' : 'Add'}</button>
                 </div>
               </form>
             </motion.div>

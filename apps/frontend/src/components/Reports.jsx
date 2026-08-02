@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { BarChart3, TrendingUp, Download } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
-import store from '../store';
+import { loadVisitData } from '../services/data';
+import { useToast } from './Toast';
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#6366F1', '#EC4899', '#8B5CF6', '#14B8A6'];
 
@@ -11,13 +12,10 @@ export default function Reports() {
   const [monthlyStats, setMonthlyStats] = useState([]);
   const [deptStats, setDeptStats] = useState([]);
   const [visits, setVisits] = useState([]);
+  const [employees, setEmployees] = useState([]);
+  const toast = useToast();
 
-  useEffect(() => {
-    setDailyStats(store.getDailyStats());
-    setMonthlyStats(store.getMonthlyStats());
-    setDeptStats(store.getDepartmentStats());
-    setVisits(store.getVisits());
-  }, []);
+  useEffect(() => { loadVisitData().then(({ visits, employees }) => { setVisits(visits); setEmployees(employees); const days = Array.from({ length: 7 }, (_, i) => { const d = new Date(); d.setDate(d.getDate() - (6 - i)); const date = d.toISOString().slice(0, 10); const records = visits.filter((v) => String(v.checkInTime).slice(0, 10) === date); return { day: d.toLocaleDateString('en-US', { weekday: 'short' }), checkIns: records.length, checkOuts: records.filter((v) => v.status === 'checked_out').length }; }); setDailyStats(days); const months = Array.from({ length: 6 }, (_, i) => { const d = new Date(); d.setMonth(d.getMonth() - (5 - i)); const month = d.toISOString().slice(0, 7); return { month: d.toLocaleDateString('en-US', { month: 'short' }), visitors: visits.filter((v) => String(v.checkInTime).startsWith(month)).length }; }); setMonthlyStats(months); setDeptStats(Object.entries(visits.reduce((all, visit) => { const department = employees.find((e) => e.id === visit.employeeId)?.department || 'Unassigned'; all[department] = (all[department] || 0) + 1; return all; }, {})).map(([name, value]) => ({ name, value }))); }).catch((err) => toast.error(err.message || 'Unable to load report data.')); }, [toast]);
 
   const totalVisits = visits.length;
   const avgDuration = visits.filter(v => v.checkOutTime).reduce((acc, v) => acc + (new Date(v.checkOutTime) - new Date(v.checkInTime)) / 3600000, 0) / (visits.filter(v => v.checkOutTime).length || 1);
@@ -30,7 +28,7 @@ export default function Reports() {
   }).filter(h => h.visits > 0 || h.hour === '9:00' || h.hour === '14:00');
 
   function exportReport() {
-    const rows = [['Metric', 'Value'], ['Total Visits', totalVisits], ['Active Visitors', store.getActiveVisits().length], ['Avg Duration', avgDuration.toFixed(1) + 'h'], ['Success Rate', successRate + '%']];
+    const rows = [['Metric', 'Value'], ['Total Visits', totalVisits], ['Active Visitors', visits.filter((v) => v.status === 'checked_in').length], ['Avg Duration', avgDuration.toFixed(1) + 'h'], ['Success Rate', successRate + '%']];
     deptStats.forEach(d => rows.push([d.name + ' Visits', d.value]));
     const csv = rows.map(r => r.join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });

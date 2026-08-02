@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, ArrowRight, ArrowLeft, Loader2, Camera, User, Shield, ClipboardCheck, Activity, AlertCircle } from 'lucide-react';
-import store from '../store';
-import { checkIn } from '../api';
+import { checkIn, checkInExisting, recognizeFace } from '../services/api';
+import { loadEmployees } from '../services/data';
+import { visitPayload, visitorPayload, mapVisitor } from '../services/mappers';
+import { useToast } from './Toast';
 import FaceRecognition from './FaceRecognition';
 
 const ID_TYPES = ['aadhaar', 'pan', 'driving_license', 'passport', 'other'];
@@ -25,6 +27,8 @@ const PURPOSE_MAP = {
 export default function CheckIn() {
   const [step, setStep] = useState(1);
   const [employees, setEmployees] = useState([]);
+  const [existingVisitor, setExistingVisitor] = useState(null);
+  const toast = useToast();
 
   const [faceResult, setFaceResult] = useState(null);
   const [visitorData, setVisitorData] = useState({ firstName: '', lastName: '', email: '', phone: '', company: '', identityNumber: '' });
@@ -34,7 +38,7 @@ export default function CheckIn() {
   const [processing, setProcessing] = useState(false);
   const [apiError, setApiError] = useState('');
 
-  useEffect(() => { setEmployees(store.getEmployees()); }, []);
+  useEffect(() => { loadEmployees().then(setEmployees).catch((err) => toast.error(err.message || 'Unable to load employees.')); }, [toast]);
 
   const stepLabels = ['Capture', 'Details', 'Face', 'Confirm', 'Visit', 'Activate', 'Done'];
   const currentStepNum = step;
@@ -69,50 +73,19 @@ export default function CheckIn() {
   }
 
   async function handleCreateVisit() {
-    setProcessing(true);
-    setApiError('');
+    setProcessing(true); setApiError('');
     try {
-      const purposeMap = {
-        'Technical Discussion': 'TECHNICAL_DISCUSSION',
-        'Interview': 'INTERVIEW',
-        'Business Meeting': 'BUSINESS_MEETING',
-        'Contract Negotiation': 'CONTRACT_NEGOTIATION',
-        'Design Review': 'DESIGN_REVIEW',
-        'Training': 'TRAINING',
-        'Audit': 'AUDIT',
-        'Delivery': 'DELIVERY',
-        'Maintenance': 'MAINTENANCE',
-        'Other': 'OTHER',
-      };
-      const idTypeMap = {
-        aadhaar: 'AADHAAR',
-        pan: 'PAN',
-        driving_license: 'DRIVING_LICENSE',
-        passport: 'PASSPORT',
-        other: 'OTHER',
-      };
-      const visitorPayload = {
-        firstName: visitorData.firstName,
-        lastName: visitorData.lastName,
-        identityType: idTypeMap[identityType] || 'OTHER',
-        identityNumber: visitorData.identityNumber || '',
-        emails: [{ email: visitorData.email, isPrimary: true }],
-        mobiles: [{ mobile: visitorData.phone || '', isPrimary: true }],
-      };
-      const visitPayload = {
-        hostEmployeeId: form.employeeId,
-        purpose: purposeMap[form.purpose] || form.purpose.toUpperCase().replace(/ /g, '_'),
-        floor: 0,
-      };
-      const data = await checkIn(visitorPayload, visitPayload, faceResult.image);
-      setResult(data);
-      setStep(6);
+      const payload = visitPayload(form);
+      const data = existingVisitor
+        ? await checkInExisting(existingVisitor.id, payload)
+        : await checkIn(visitorPayload(visitorData, identityType), payload, faceResult.image);
+      setResult(data); setStep(7);
+      toast.success(existingVisitor ? 'Returning visitor checked in successfully.' : 'Visitor checked in successfully.');
     } catch (err) {
-      setApiError(err.message);
+      setApiError(err.message || 'Unable to check in the visitor.');
+      toast.error(err.message || 'Unable to check in the visitor.');
       setStep(6);
-    } finally {
-      setProcessing(false);
-    }
+    } finally { setProcessing(false); }
   }
 
   function handleActivateMedia() {
@@ -130,6 +103,7 @@ export default function CheckIn() {
     setIdentityType('aadhaar');
     setForm({ employeeId: '', purpose: '', notes: '' });
     setFaceResult(null);
+    setExistingVisitor(null);
     setApiError('');
   }
 
@@ -329,7 +303,7 @@ export default function CheckIn() {
                   </div>
                   <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', marginTop: 16 }}>
                     <button className="btn-o" onClick={() => setStep(1)}><ArrowLeft size={14} /> Back</button>
-                    <button className="btn-p" disabled={!visitorData.firstName || !visitorData.lastName || !visitorData.email || !visitorData.phone} onClick={handleCreateVisitor}>Create Visitor <ArrowRight size={14} /></button>
+                    <button className="btn-p" disabled={!visitorData.firstName || !visitorData.lastName || !visitorData.phone} onClick={handleCreateVisitor}>{existingVisitor ? 'Use Existing Visitor' : 'Create Visitor'} <ArrowRight size={14} /></button>
                   </div>
                 </>
               )}
@@ -342,7 +316,20 @@ export default function CheckIn() {
             <div className="card-h"><h3><Camera size={16} style={{ marginRight: 8, verticalAlign: 'middle' }} />CREATE_MEDIA — Capture Face</h3></div>
             <div className="card-b">
               {!faceResult ? (
-                <FaceRecognition mode="capture" label="Position your face and capture for visitor registration" onCapture={(data) => setFaceResult(data)} />
+                <FaceRecognition mode="capture" label="Position your face and capture for visitor registration" onCapture={async (data) => {
+                  setFaceResult(data); setProcessing(true);
+                  try {
+                    const recognition = await recognizeFace(data.image);
+                    if (recognition?.matched && recognition.visitor) {
+                      const known = mapVisitor(recognition.visitor);
+                      setExistingVisitor(known);
+                      setVisitorData({ firstName: known.firstName, lastName: known.lastName, email: known.email, phone: known.phone, company: known.company || '', identityNumber: known.identityNumber });
+                      setIdentityType(known.identityType);
+                      toast.info(`Recognized ${known.name}. Their existing profile will be used.`);
+                    } else { setExistingVisitor(null); toast.info('New visitor detected. Please complete the profile.'); }
+                  } catch (err) { setApiError(err.message || 'Face recognition is unavailable. You can still register this visitor.'); toast.error(err.message || 'Face recognition failed.'); }
+                  finally { setProcessing(false); }
+                }} />
               ) : (
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 12, color: 'var(--success)' }}>
@@ -350,12 +337,12 @@ export default function CheckIn() {
                   </div>
                   <img src={faceResult.image} alt="captured" style={{ width: 200, height: 150, objectFit: 'cover', borderRadius: 12, border: '2px solid var(--success)' }} />
                   <div style={{ marginTop: 12 }}>
-                    <button className="btn-o" onClick={() => setFaceResult(null)}>Retake</button>
+                    <button className="btn-o" onClick={() => { setFaceResult(null); setExistingVisitor(null); }}>Retake</button>
                   </div>
                 </div>
               )}
               <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 16 }}>
-                <button className="btn-p" disabled={!faceResult} onClick={() => setStep(2)}>Next <ArrowRight size={14} /></button>
+                <button className="btn-p" disabled={!faceResult || processing} onClick={() => setStep(2)}>{processing ? 'Checking...' : 'Next'} <ArrowRight size={14} /></button>
               </div>
             </div>
           </motion.div>

@@ -9,7 +9,11 @@
     "dev": "cross-env NODE_ENV=development tsx watch src/index.ts",
     "generate": "prisma generate",
     "build": "prisma generate && tsc",
-    "start": "cross-env NODE_ENV=production node dist/index.js"
+    "start": "cross-env NODE_ENV=production node dist/index.js",
+    "seed": "tsx prisma/seed.ts"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.9.0",

@@ -8,8 +8,11 @@ import {
 } from "./pre-registration.validation.js";
 
 import { preRegistrationController } from "../../container/index.js";
+import { authenticate } from "../../middlewares/auth.middleware.js";
 
 const router = Router();
+
+router.use(authenticate)
 
 router.post(
     "/",

@@ -27,12 +27,12 @@ export class AuthRepository {
     }
 
     public async getAdminByEmail(
-        username: string,
+        email: string,
         tx?: Prisma.TransactionClient,
     ): Promise<Admin | null> {
         return (tx ?? this.prisma).admin.findUnique({
             where: {
-                username,
+                email,
             },
         });
     }

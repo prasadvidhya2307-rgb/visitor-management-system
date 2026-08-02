@@ -7,7 +7,6 @@ interface JwtPayload {
     adminId: string;
 }
 
-const ACCESS_TOKEN_EXPIRES_IN = "8h";
 
 export const generateAccessToken = (
     adminId: string,
@@ -16,7 +15,7 @@ export const generateAccessToken = (
         { adminId },
         env.JWT_SECRET,
         {
-            expiresIn: ACCESS_TOKEN_EXPIRES_IN,
+            expiresIn: env.JWT_EXPIRES_IN,
         },
     );
 };

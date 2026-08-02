@@ -3,8 +3,11 @@ import { Router } from "express";
 import { visitController } from "../../container/index.js";
 import { validate } from "../../middlewares/validate.middleware.js";
 import { createVisitSchema, updateVisitSchema } from "./visit.validation.js";
+import { authenticate } from "../../middlewares/auth.middleware.js";
 
 const router = Router();
+
+router.use(authenticate)
 
 /**
  * Create a new visit

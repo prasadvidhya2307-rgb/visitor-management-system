@@ -8,10 +8,12 @@ import { visitRoutes } from '../modules/visit/index.js';
 import { checkOutRoutes } from '../modules/check-out/index.js';
 import { preRegistrationRoutes } from '../modules/pre-registration/index.js';
 import { dashboardRoutes } from '../modules/dashboard/index.js';
+import { authRoutes } from '../modules/auth/index.js';
 
 
 const router = Router();
 
+router.use('/auth', authRoutes)
 router.use('/health', healthRoutes);
 router.use('/visitor', visitorRoutes);
 router.use('/face', faceRecognitionRoutes)

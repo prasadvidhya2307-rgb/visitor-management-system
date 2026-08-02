@@ -26,7 +26,14 @@ const envSchema = z.object({
     DATABASE_URL: z.string().min(1),
     FASTAPI_URL: z.url(),
     JWT_SECRET: z.string(),
-    JWT_EXPIRES_IN: z.string(),
+    JWT_EXPIRES_IN: z.enum([
+        "1h",
+        "2h",
+        "8h",
+        "12h",
+        "1d",
+        "7d",
+    ]),
 });
 
 const parsed = envSchema.safeParse(process.env);

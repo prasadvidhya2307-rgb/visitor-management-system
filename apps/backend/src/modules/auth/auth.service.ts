@@ -1,105 +1,140 @@
-// import { Admin } from "@prisma/client";
+import { Admin } from "@prisma/client";
 
-// import { AppError } from "../../utils/app-error.js";
-// import {
-//     comparePassword,
-//     hashPassword,
-// } from "../../utils/password.js";
+import { AuthRepository } from "./auth.repository.js";
+import {
+    AdminResponseDto,
+    ChangePasswordDto,
+    LoginDto,
+    LoginResponseDto,
+} from "./auth.types.js";
 
-// import { AuthRepository } from "./auth.repository.js";
-// import {
-//     ChangePasswordDto,
-//     LoginDto,
-//     LoginResponseDto,
-// } from "./auth.types.js";
-// import { generateAccessToken } from "./jwt.js";
+import {
+    comparePassword,
+    hashPassword,
+} from "../../utils/password.js";
 
-// export class AuthService {
-//     constructor(
-//         private readonly authRepository: AuthRepository,
-//     ) {}
+import { AppError } from "../../utils/app-error.js";
 
-//     public async login(
-//         dto: LoginDto,
-//     ): Promise<LoginResponseDto> {
-//         const admin =
-//             await this.authRepository.getAdminByEmail(
-//                 dto.email,
-//             );
+import {
+    generateAccessToken,
+} from "./jwt.js";
 
-//         if (!admin) {
-//             throw new AppError(
-//                 "Invalid email or password.",
-//                 401,
-//             );
-//         }
+export class AuthService {
+    constructor(
+        private readonly authRepository: AuthRepository,
+    ) {}
 
-//         const isPasswordValid =
-//             await comparePassword(
-//                 dto.password,
-//                 admin.passwordHash,
-//             );
+    public async login(
+        dto: LoginDto,
+    ): Promise<LoginResponseDto> {
+        const admin =
+            await this.authRepository.getAdminByEmail(
+                dto.email,
+            );
 
-//         if (!isPasswordValid) {
-//             throw new AppError(
-//                 "Invalid username or password.",
-//                 401,
-//             );
-//         }
+        if (!admin) {
+            throw new AppError(
+                "Invalid email or password.",
+                401,
+            );
+        }
 
-//         const accessToken =
-//             generateAccessToken(admin.id);
+        const isPasswordValid =
+            await comparePassword(
+                dto.password,
+                admin.passwordHash,
+            );
 
-//         return {
-//             admin,
-//             accessToken,
-//         };
-//     }
+        if (!isPasswordValid) {
+            throw new AppError(
+                "Invalid email or password.",
+                401,
+            );
+        }
 
-//     public async getCurrentAdmin(
-//         adminId: string,
-//     ): Promise<Admin> {
-//         const admin =
-//             await this.authRepository.getAdminById(
-//                 adminId,
-//             );
+        const accessToken =
+            generateAccessToken(
+                admin.id,
+            );
 
-//         if (!admin) {
-//             throw new AppError(
-//                 "Admin not found.",
-//                 404,
-//             );
-//         }
+        return {
+            admin: this.toResponseDto(admin),
+            accessToken,
+        };
+    }
 
-//         return admin;
-//     }
+    public async getCurrentAdmin(
+        adminId: string,
+    ): Promise<AdminResponseDto> {
+        const admin =
+            await this.findAdminById(
+                adminId,
+            );
 
-//     public async changePassword(
-//         adminId: string,
-//         dto: ChangePasswordDto,
-//     ): Promise<void> {
-//         const admin =
-//             await this.getCurrentAdmin(adminId);
+        return this.toResponseDto(
+            admin,
+        );
+    }
 
-//         const isPasswordValid =
-//             await comparePassword(
-//                 dto.oldPassword,
-//                 admin.passwordHash,
-//             );
+    public async changePassword(
+        adminId: string,
+        dto: ChangePasswordDto,
+    ): Promise<void> {
+        const admin =
+            await this.findAdminById(
+                adminId,
+            );
 
-//         if (!isPasswordValid) {
-//             throw new AppError(
-//                 "Old password is incorrect.",
-//                 400,
-//             );
-//         }
+        const isPasswordValid =
+            await comparePassword(
+                dto.oldPassword,
+                admin.passwordHash,
+            );
 
-//         const passwordHash =
-//             await hashPassword(dto.newPassword);
+        if (!isPasswordValid) {
+            throw new AppError(
+                "Old password is incorrect.",
+                400,
+            );
+        }
 
-//         await this.authRepository.updatePassword(
-//             admin.id,
-//             passwordHash,
-//         );
-//     }
-// }
+        const passwordHash =
+            await hashPassword(
+                dto.newPassword,
+            );
+
+        await this.authRepository.updatePassword(
+            admin.id,
+            passwordHash,
+        );
+    }
+
+    private async findAdminById(
+        adminId: string,
+    ): Promise<Admin> {
+        const admin =
+            await this.authRepository.getAdminById(
+                adminId,
+            );
+
+        if (!admin) {
+            throw new AppError(
+                "Admin not found.",
+                404,
+            );
+        }
+
+        return admin;
+    }
+
+    private toResponseDto(
+        admin: Admin,
+    ): AdminResponseDto {
+        return {
+            id: admin.id,
+            email: admin.email,
+            profileImageId:
+                admin.profileImageId,
+        };
+    }
+}

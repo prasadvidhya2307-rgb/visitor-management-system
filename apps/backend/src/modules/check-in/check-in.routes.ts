@@ -5,8 +5,11 @@ import { validate } from "../../middlewares/validate.middleware.js";
 import { checkInSchema } from "./check-in.validation.js";
 import { checkInController } from "../../container/index.js";
 import { createVisitSchema } from "../visit/visit.validation.js";
+import { authenticate } from "../../middlewares/auth.middleware.js";
 
 const router = Router();
+
+router.use(authenticate)
 
 router.post(
     '/',

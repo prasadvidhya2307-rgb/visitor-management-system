@@ -41,6 +41,9 @@ import { PreRegistrationController } from "../modules/pre-registration/pre-regis
 import { DashboardRepository } from "../modules/dashboard/dashboard.repository.js";
 import { DashboardService } from "../modules/dashboard/dashboard.service.js";
 import { DashboardController } from '../modules/dashboard/dashboard.controller.js'
+import { AuthRepository } from "../modules/auth/auth.repository.js";
+import { AuthController } from "../modules/auth/auth.controller.js";
+import { AuthService } from "../modules/auth/auth.service.js";
 
 
 // -----------------------------------------------------------------------------
@@ -75,6 +78,9 @@ export const preRegistrationRepository =
 
 export const dashboardRepository =
     new DashboardRepository(prisma);
+
+export const authRepository =
+    new AuthRepository(prisma)
 
 // -----------------------------------------------------------------------------
 // Services
@@ -148,6 +154,11 @@ export const dashboardService =
         dashboardRepository,
     );
 
+export const authService =
+    new AuthService(
+        authRepository
+    )
+
 // -----------------------------------------------------------------------------
 // Controllers
 // -----------------------------------------------------------------------------
@@ -192,4 +203,9 @@ export const preRegistrationController =
 export const dashboardController =
     new DashboardController(
         dashboardService,
-    );    
+    );
+
+export const authController =
+    new AuthController(
+        authService
+    )    

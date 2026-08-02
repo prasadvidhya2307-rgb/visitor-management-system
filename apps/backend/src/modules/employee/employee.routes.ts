@@ -6,9 +6,11 @@ import {
 } from "./employee.validation.js";
 import { employeeController } from "../../container/index.js";
 import { validate } from "../../middlewares/validate.middleware.js";
+import { authenticate } from "../../middlewares/auth.middleware.js";
 
 const router = Router();
 
+router.use(authenticate)
 
 router.post(
     "/",

@@ -8,8 +8,11 @@ import {
     createVisitorSchema,
     updateVisitorSchema,
 } from "./visitor.validation.js";
+import { authenticate } from "../../middlewares/auth.middleware.js";
 
 const router = Router();
+
+router.use(authenticate)
 
 // Create a visitor
 router.post(

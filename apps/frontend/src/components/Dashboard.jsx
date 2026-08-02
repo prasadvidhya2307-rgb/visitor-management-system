@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Users, UserPlus, UserMinus, Clock, ArrowRight } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { getDashboard, getEmployees } from '../api';
+import { Users, UserPlus, UserMinus, Clock, CalendarClock, TrendingUp, ArrowRight } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import store from '../store';
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#6366F1', '#EC4899'];
@@ -13,30 +12,13 @@ export default function Dashboard() {
   const [daily, setDaily] = useState([]);
   const [activity, setActivity] = useState([]);
   const [employees, setEmployees] = useState([]);
-  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
-    let mounted = true;
-
-    getDashboard()
-      .then(dashboard => {
-        if (mounted) setStats(dashboard);
-      })
-      .catch(err => {
-        if (mounted) {
-          setError(err.message || 'Unable to load dashboard data.');
-          setStats({ totalVisitors: 0, activeVisitors: 0, todayCheckIns: 0, checkedOutToday: 0 });
-        }
-      });
-
-    getEmployees()
-      .then(data => { if (mounted) setEmployees(data); })
-      .catch(() => {});
-
+    setStats(store.getDashboardStats());
     setDaily(store.getDailyStats());
     setActivity(store.getActivity().slice(0, 15));
-    return () => { mounted = false; };
+    setEmployees(store.getEmployees());
   }, []);
 
   if (!stats) return <div className="spinner" />;
@@ -46,20 +28,20 @@ export default function Dashboard() {
     { label: 'Active Now', value: stats.activeVisitors, icon: Clock, color: 'green', colorVar: 'var(--success)' },
     { label: "Today's Check-Ins", value: stats.todayCheckIns, icon: UserPlus, color: 'amber', colorVar: 'var(--warning)' },
     { label: 'Checked Out Today', value: stats.checkedOutToday, icon: UserMinus, color: 'purple', colorVar: 'var(--info)' },
+    { label: 'Expected Today', value: stats.expectedToday, icon: CalendarClock, color: 'red', colorVar: 'var(--danger)' },
+    { label: 'Departments', value: store.getDepartmentStats().length, icon: TrendingUp, color: 'indigo', colorVar: '#8B5CF6' },
   ];
 
-  const deptData = Object.entries(employees.reduce((counts, employee) => { counts[employee.department || 'Unassigned'] = (counts[employee.department || 'Unassigned'] || 0) + 1; return counts; }, {})).map(([name, value]) => ({ name: name.replace(/_/g, ' '), value }));
+  const deptData = store.getDepartmentStats();
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-      {error && <div className="welcome-banner" style={{ marginBottom: 24 }}><p>{error}</p></div>}
-
       {stats.todayCheckIns > 0 && (
         <div className="welcome-banner">
-          <div style={{ fontSize: 36 }}>Hello!</div>
+          <div style={{ fontSize: 36 }}>👋</div>
           <div>
             <h3>Welcome back, Admin!</h3>
-            <p>{stats.activeVisitors} visitor{stats.activeVisitors !== 1 ? 's' : ''} currently in the building.</p>
+            <p>{stats.activeVisitors} visitor{stats.activeVisitors !== 1 ? 's' : ''} currently in the building. {stats.expectedToday} expected today.</p>
           </div>
         </div>
       )}

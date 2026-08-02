@@ -7,8 +7,7 @@ import {
   Sun, Moon, Menu, X, ShieldCheck, UserX
 } from 'lucide-react';
 import './App.css';
-import { getToken, onUnauthorized } from './services/api';
-import LoginModal from './components/LoginModal';
+import store from './store';
 
 import Dashboard from './components/Dashboard';
 import CheckIn from './components/CheckIn';
@@ -124,12 +123,12 @@ function Topbar({ theme, toggleTheme, onMenu }) {
 }
 
 function AppLayout() {
-  const [theme, setTheme] = useState(() => localStorage.getItem('vms_theme') || 'light');
+  const [theme, setTheme] = useState(() => store.getSettings().theme || 'light');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('vms_theme', theme);
+    store.saveSetting('theme', theme);
   }, [theme]);
 
   const toggleTheme = () => setTheme(t => t === 'light' ? 'dark' : 'light');
@@ -163,11 +162,9 @@ function AppLayout() {
 }
 
 export default function App() {
-  const [authenticated, setAuthenticated] = useState(() => Boolean(getToken()));
-  useEffect(() => onUnauthorized(() => setAuthenticated(false)), []);
   return (
     <Router>
-      {authenticated ? <AppLayout /> : <LoginModal onSuccess={() => setAuthenticated(true)} />}
+      <AppLayout />
     </Router>
   );
 }

@@ -2,24 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Mail, Phone, Building, CreditCard, Trash2 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { deleteVisitor, fetchVisitor, fetchVisitorVisits } from '../services/api';
-import { mapVisitor, mapVisit } from '../services/mappers';
-import { loadEmployees } from '../services/data';
-import { useToast } from './Toast';
+import store from '../store';
 
 export default function VisitorProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [visitor, setVisitor] = useState(null);
   const [visits, setVisits] = useState([]);
-  const [employees, setEmployees] = useState([]);
-  const toast = useToast();
 
-  useEffect(() => { Promise.all([fetchVisitor(id), fetchVisitorVisits(id), loadEmployees()]).then(([rawVisitor, rawVisits, employees]) => { const visitor = mapVisitor(rawVisitor); setVisitor(visitor); setVisits(rawVisits.map((visit) => mapVisit(visit, { [visitor.id]: visitor }))); setEmployees(employees); }).catch((err) => toast.error(err.message || 'Unable to load visitor profile.')); }, [id, toast]);
+  useEffect(() => {
+    setVisitor(store.getVisitorById(id));
+    setVisits(store.getVisitorVisits(id));
+  }, [id]);
 
   function handleDelete() {
     if (window.confirm(`Delete visitor "${visitor.name}"? They will be moved to Deleted Visitors and can be restored later.`)) {
-      deleteVisitor(visitor.id).then(() => { toast.success('Visitor deleted successfully.'); navigate(-1); }).catch((err) => toast.error(err.message || 'Unable to delete visitor.'));
+      store.softDeleteVisitor(visitor.id);
+      navigate(-1);
     }
   }
 
@@ -67,7 +66,7 @@ export default function VisitorProfile() {
             </thead>
             <tbody>
               {visits.map(v => {
-                const emp = employees.find(e => e.id === v.employeeId);
+                const emp = store.getEmployees().find(e => e.id === v.employeeId);
                 return (
                   <tr key={v.id}>
                     <td><span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{v.token}</span></td>

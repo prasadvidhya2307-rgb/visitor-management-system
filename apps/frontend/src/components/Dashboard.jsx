@@ -3,9 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Users, UserPlus, UserMinus, Clock, CalendarClock, TrendingUp, ArrowRight } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
-import { fetchDashboard } from '../services/api';
-import { loadVisitData, loadPreRegistrations } from '../services/data';
-import { useToast } from './Toast';
+import store from '../store';
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#6366F1', '#EC4899'];
 
@@ -14,20 +12,14 @@ export default function Dashboard() {
   const [daily, setDaily] = useState([]);
   const [activity, setActivity] = useState([]);
   const [employees, setEmployees] = useState([]);
-  const [visits, setVisits] = useState([]);
-  const [expectedToday, setExpectedToday] = useState(0);
-  const toast = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
-    Promise.all([fetchDashboard(), loadVisitData(), loadPreRegistrations()]).then(([dashboard, data, preRegistrations]) => {
-      const today = new Date().toISOString().slice(0, 10);
-      setStats({ totalVisitors: dashboard.totalVisitors, activeVisitors: dashboard.activeVisitors, todayCheckIns: dashboard.toatalCheckIns, checkedOutToday: dashboard.toatalCheckOut, expectedToday: preRegistrations.filter((p) => p.status === 'active' && p.validFrom === today).length });
-      setEmployees(data.employees); setVisits(data.visits);
-      setActivity(data.visits.slice(0, 15).map((v) => ({ id: v.id, type: v.status === 'checked_out' ? 'check_out' : 'check_in', message: `${v.visitorName || 'Visitor'} ${v.status === 'checked_out' ? 'checked out' : 'checked in'} for ${v.purpose}`, timestamp: v.checkOutTime || v.checkInTime })));
-      const week = Array.from({ length: 7 }, (_, i) => { const d = new Date(); d.setDate(d.getDate() - (6 - i)); const date = d.toISOString().slice(0, 10); const dayVisits = data.visits.filter((v) => String(v.checkInTime).slice(0, 10) === date); return { day: d.toLocaleDateString('en-US', { weekday: 'short' }), checkIns: dayVisits.length, checkOuts: dayVisits.filter((v) => v.status === 'checked_out').length }; }); setDaily(week);
-    }).catch((err) => toast.error(err.message || 'Unable to load dashboard data.'));
-  }, [toast]);
+    setStats(store.getDashboardStats());
+    setDaily(store.getDailyStats());
+    setActivity(store.getActivity().slice(0, 15));
+    setEmployees(store.getEmployees());
+  }, []);
 
   if (!stats) return <div className="spinner" />;
 
@@ -37,10 +29,10 @@ export default function Dashboard() {
     { label: "Today's Check-Ins", value: stats.todayCheckIns, icon: UserPlus, color: 'amber', colorVar: 'var(--warning)' },
     { label: 'Checked Out Today', value: stats.checkedOutToday, icon: UserMinus, color: 'purple', colorVar: 'var(--info)' },
     { label: 'Expected Today', value: stats.expectedToday, icon: CalendarClock, color: 'red', colorVar: 'var(--danger)' },
-    { label: 'Departments', value: new Set(employees.map((e) => e.department)).size, icon: TrendingUp, color: 'indigo', colorVar: '#8B5CF6' },
+    { label: 'Departments', value: store.getDepartmentStats().length, icon: TrendingUp, color: 'indigo', colorVar: '#8B5CF6' },
   ];
 
-  const deptData = Object.entries(visits.reduce((all, visit) => { const employee = employees.find((e) => e.id === visit.employeeId); const department = employee?.department || 'Unassigned'; all[department] = (all[department] || 0) + 1; return all; }, {})).map(([name, value]) => ({ name, value }));
+  const deptData = store.getDepartmentStats();
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>

@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Download, ArrowUpDown, Filter, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { loadVisitData } from '../services/data';
-import { useToast } from './Toast';
+import store from '../store';
 
 const STATUS_LIST = ['all', 'checked_out'];
 const PURPOSES = ['', 'Technical Discussion', 'Interview', 'Business Meeting', 'Contract Negotiation', 'Design Review', 'Training', 'Audit', 'Delivery', 'Maintenance', 'Other'];
@@ -20,11 +19,8 @@ export default function VisitorHistory() {
   const [sortDir, setSortDir] = useState('desc');
   const [page, setPage] = useState(1);
   const perPage = 10;
-  const [visitors, setVisitors] = useState([]);
-  const [employees, setEmployees] = useState([]);
-  const toast = useToast();
 
-  useEffect(() => { loadVisitData().then(({ visits, visitors, employees }) => { setVisits(visits.filter((v) => v.status === 'checked_out')); setVisitors(visitors); setEmployees(employees); }).catch((err) => toast.error(err.message || 'Unable to load visitor history.')); }, [toast]);
+  useEffect(() => { setVisits(store.getVisitHistory()); }, []);
 
   function toggleSort(field) {
     if (sortField === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
@@ -35,7 +31,7 @@ export default function VisitorHistory() {
   if (search) {
     const q = search.toLowerCase();
     filtered = filtered.filter(v => {
-      const vis = visitors.find((visitor) => visitor.id === v.visitorId);
+      const vis = store.getVisitorById(v.visitorId);
       return vis?.name?.toLowerCase().includes(q) || v.token.toLowerCase().includes(q) || vis?.company?.toLowerCase().includes(q);
     });
   }
@@ -46,12 +42,12 @@ export default function VisitorHistory() {
   filtered.sort((a, b) => {
     let va = a[sortField], vb = b[sortField];
     if (sortField === 'visitorName') {
-      va = visitors.find((visitor) => visitor.id === a.visitorId)?.name || '';
-      vb = visitors.find((visitor) => visitor.id === b.visitorId)?.name || '';
+      va = store.getVisitorById(a.visitorId)?.name || '';
+      vb = store.getVisitorById(b.visitorId)?.name || '';
     }
     if (sortField === 'employeeName') {
-      va = employees.find(e => e.id === a.employeeId)?.name || '';
-      vb = employees.find(e => e.id === b.employeeId)?.name || '';
+      va = store.getEmployees().find(e => e.id === a.employeeId)?.name || '';
+      vb = store.getEmployees().find(e => e.id === b.employeeId)?.name || '';
     }
     if (sortField === 'duration') {
       va = a.checkOutTime ? (new Date(a.checkOutTime) - new Date(a.checkInTime)) : 0;
@@ -68,8 +64,8 @@ export default function VisitorHistory() {
   function exportCSV() {
     const rows = [['Token', 'Visitor', 'Company', 'Host', 'Purpose', 'Check-In', 'Check-Out', 'Duration', 'Badge']];
     filtered.forEach(v => {
-      const vis = visitors.find((visitor) => visitor.id === v.visitorId);
-      const emp = employees.find(e => e.id === v.employeeId);
+      const vis = store.getVisitorById(v.visitorId);
+      const emp = store.getEmployees().find(e => e.id === v.employeeId);
       const dur = v.checkOutTime ? Math.round((new Date(v.checkOutTime) - new Date(v.checkInTime)) / 3600000 * 10) / 10 + 'h' : 'N/A';
       rows.push([v.token, vis?.name || '', vis?.company || '', emp?.name || '', v.purpose, new Date(v.checkInTime).toLocaleString(), v.checkOutTime ? new Date(v.checkOutTime).toLocaleString() : '', dur, v.badgePrinted ? 'Yes' : 'No']);
     });
@@ -127,8 +123,8 @@ export default function VisitorHistory() {
             </thead>
             <tbody>
               {paged.map(v => {
-                const vis = visitors.find((visitor) => visitor.id === v.visitorId);
-                const emp = employees.find(e => e.id === v.employeeId);
+                const vis = store.getVisitorById(v.visitorId);
+                const emp = store.getEmployees().find(e => e.id === v.employeeId);
                 const dur = v.checkOutTime ? Math.round((new Date(v.checkOutTime) - new Date(v.checkInTime)) / 3600000 * 10) / 10 : 'N/A';
                 return (
                   <tr key={v.id} style={{ cursor: 'pointer' }} onClick={() => navigate(`/visitor/${v.visitorId}`)}>

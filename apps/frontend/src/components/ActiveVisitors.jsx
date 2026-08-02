@@ -2,27 +2,26 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Users, ArrowRightLeft, Clock, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { loadVisitData } from '../services/data';
-import { useToast } from './Toast';
+import store from '../store';
 
 export default function ActiveVisitors() {
   const navigate = useNavigate();
   const [visits, setVisits] = useState([]);
   const [search, setSearch] = useState('');
-  const [visitors, setVisitors] = useState([]);
-  const [employees, setEmployees] = useState([]);
-  const toast = useToast();
 
-  useEffect(() => { loadVisitData().then(({ visits, visitors, employees }) => { setVisits(visits.filter((v) => v.status === 'checked_in')); setVisitors(visitors); setEmployees(employees); }).catch((err) => toast.error(err.message || 'Unable to load active visitors.')); }, [toast]);
+  useEffect(() => { setVisits(store.getActiveVisits()); }, []);
 
   const filtered = visits.filter(v => {
     if (!search.trim()) return true;
     const q = search.toLowerCase();
-    const vis = visitors.find((visitor) => visitor.id === v.visitorId);
+    const vis = store.getVisitorById(v.visitorId);
     return vis?.name?.toLowerCase().includes(q) || v.token.toLowerCase().includes(q) || vis?.company?.toLowerCase().includes(q) || v.purpose?.toLowerCase().includes(q);
   });
 
-  function handleCheckOut() { navigate('/check-out'); }
+  function handleCheckOut(id) {
+    store.checkOut(id);
+    setVisits(store.getActiveVisits());
+  }
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
@@ -46,8 +45,8 @@ export default function ActiveVisitors() {
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
           {filtered.map((v, i) => {
-            const vis = visitors.find((visitor) => visitor.id === v.visitorId);
-            const emp = employees.find(e => e.id === v.employeeId);
+            const vis = store.getVisitorById(v.visitorId);
+            const emp = store.getEmployees().find(e => e.id === v.employeeId);
             const dur = Math.round((new Date() - new Date(v.checkInTime)) / 3600000 * 10) / 10;
             const isOvertime = dur > 8;
             return (
@@ -72,7 +71,7 @@ export default function ActiveVisitors() {
                 </div>
                 {v.notes && <p style={{ fontSize: 12, color: 'var(--text2)', marginTop: 8, fontStyle: 'italic' }}>"{v.notes}"</p>}
                 <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                  <button className="btn-d btn-sm" onClick={handleCheckOut}><ArrowRightLeft size={14} /> Check Out</button>
+                  <button className="btn-d btn-sm" onClick={() => handleCheckOut(v.id)}><ArrowRightLeft size={14} /> Check Out</button>
                   <button className="btn-o btn-sm" onClick={() => navigate(`/visitor/${v.visitorId}`)}>Profile</button>
                 </div>
               </motion.div>

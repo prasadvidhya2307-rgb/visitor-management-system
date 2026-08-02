@@ -2,17 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Trash2, RotateCcw, Search, UserX } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { fetchDeletedVisitors } from '../services/api';
-import { mapVisitor } from '../services/mappers';
-import { useToast } from './Toast';
+import store from '../store';
 
 export default function DeletedVisitors() {
   const navigate = useNavigate();
   const [visitors, setVisitors] = useState([]);
   const [search, setSearch] = useState('');
-  const toast = useToast();
 
-  useEffect(() => { fetchDeletedVisitors().then((data) => setVisitors(data.map(mapVisitor))).catch((err) => toast.error(err.message || 'Unable to load deleted visitors.')); }, [toast]);
+  useEffect(() => { setVisitors(store.getDeletedVisitors()); }, []);
 
   const filtered = visitors.filter(v =>
     v.name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -21,7 +18,10 @@ export default function DeletedVisitors() {
     v.company?.toLowerCase().includes(search.toLowerCase())
   );
 
-  function handleRestore() { toast.error('Restoring visitors is not available because the backend does not provide a restore endpoint.'); }
+  function handleRestore(id) {
+    store.restoreVisitor(id);
+    setVisitors(store.getDeletedVisitors());
+  }
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>

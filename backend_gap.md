@@ -17,5 +17,6 @@ This list is based on the current frontend screens and the `/api/v1` backend rou
 - **Application settings**: `GET /settings` and `PUT /settings` for company name, maximum visit hours, photo requirement, and automatic check-out hours.
 - **Safe data reset**: an explicitly protected admin-only reset/purge endpoint, if the Settings “Reset All Data” action is intended to be supported.
 - **Restore deleted visitor**: e.g. `POST /visitor/:id/restore`, used by Deleted Visitors.
+- **Pre-registered visitor check-in**: e.g. `POST /pre-registrations/:id/check-in`, which should convert the selected pre-registration into the visitor/visit records, preserve the matched scan/photo as appropriate, and mark the pre-registration as `CHECKED_IN`.
 - **Manual expected-visitor arrival**: e.g. `POST /pre-registrations/:id/arrive` (or an equivalent check-in flow accepting a pre-registration ID). The UI should not mark an arrival locally because the backend remains the source of truth.
 - **Expected visitor time support**: this can be an extension of the pre-registration endpoints rather than a separate endpoint, but it requires a time/datetime field in their request and response.

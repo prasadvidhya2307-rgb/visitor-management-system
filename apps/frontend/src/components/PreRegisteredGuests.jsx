@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ClipboardCheck, Plus, Trash2, Edit2, X, Search } from 'lucide-react';
-import { cancelPreRegistration, createPreRegistration, updatePreRegistration } from '../services/api';
-import { preRegistrationPayload } from '../services/mappers';
-import { loadEmployees, loadPreRegistrations } from '../services/data';
-import { useToast } from './Toast';
+import store from '../store';
 
 const FREQUENCIES = ['daily', 'weekly', 'monthly'];
 
@@ -15,16 +12,12 @@ export default function PreRegisteredGuests() {
   const [showModal, setShowModal] = useState(false);
   const [editId, setEditId] = useState(null);
   const [form, setForm] = useState({ name: '', company: '', email: '', phone: '', employeeId: '', purpose: '', validFrom: new Date().toISOString().slice(0, 10), validTo: '', recurring: false, frequency: 'weekly' });
-  const [saving, setSaving] = useState(false);
-  const toast = useToast();
 
   useEffect(() => { refresh(); }, []);
 
-  async function refresh() {
-    try {
-      const [loadedGuests, loadedEmployees] = await Promise.all([loadPreRegistrations(), loadEmployees()]);
-      setGuests(loadedGuests); setEmployees(loadedEmployees);
-    } catch (err) { toast.error(err.message || 'Unable to load pre-registered guests.'); }
+  function refresh() {
+    setGuests(store.getPreRegistered());
+    setEmployees(store.getEmployees());
   }
 
   const filtered = guests.filter(g =>
@@ -47,24 +40,17 @@ export default function PreRegisteredGuests() {
     setShowModal(true);
   }
 
-  async function handleSubmit(e) {
-    e.preventDefault(); setSaving(true);
-    try {
-      const payload = preRegistrationPayload(form);
-      if (editId) await updatePreRegistration(editId, payload); else await createPreRegistration(payload);
-      toast.success(editId ? 'Pre-registration updated successfully.' : 'Guest pre-registered successfully.');
-      setShowModal(false); await refresh();
-    } catch (err) { toast.error(err.message || 'Unable to save pre-registration.'); }
-    finally { setSaving(false); }
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (editId) store.updatePreRegistered(editId, form);
+    else store.addPreRegistered(form);
+    setShowModal(false);
+    refresh();
   }
 
-  async function handleDelete(id) {
-    if (!window.confirm('Cancel this pre-registration?')) return;
-    try { await cancelPreRegistration(id); toast.success('Pre-registration cancelled.'); await refresh(); }
-    catch (err) { toast.error(err.message || 'Unable to cancel pre-registration.'); }
-  }
+  function handleDelete(id) { store.deletePreRegistered(id); refresh(); }
 
-  function handleRevoke(id) { handleDelete(id); }
+  function handleRevoke(id) { store.updatePreRegistered(id, { status: 'revoked' }); refresh(); }
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
@@ -153,7 +139,7 @@ export default function PreRegisteredGuests() {
                 </div>
                 <div className="modal-f">
                   <button type="button" className="btn-o" onClick={() => setShowModal(false)}>Cancel</button>
-                  <button type="submit" className="btn-p" disabled={saving}>{saving ? 'Saving...' : editId ? 'Update' : 'Add'}</button>
+                  <button type="submit" className="btn-p">{editId ? 'Update' : 'Add'}</button>
                 </div>
               </form>
             </motion.div>

@@ -1,11 +1,10 @@
 # Build stage
 FROM node:18-alpine AS build
 WORKDIR /app
-COPY apps/frontend/package.json ./
-RUN npm install
-COPY apps/frontend/ .
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
 RUN npm run build
-
 # Production stage
 FROM nginx:alpine
 COPY --from=build /app/build /usr/share/nginx/html

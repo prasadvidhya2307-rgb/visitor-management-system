@@ -16,6 +16,7 @@ COPY .env .
 RUN pwd && ls -la
 RUN echo "===== .env =====" && cat .env
 
+ENV DATABASE_URL="postgresql://build:build@localhost:5432/build"
 RUN npm run build
 
 # =========================

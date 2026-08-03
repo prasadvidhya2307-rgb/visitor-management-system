@@ -22,3 +22,6 @@ __pycache__/
 # VS Code
 .vscode/
 apps/backend/storage
+gitignore
+backend_change.md
+backend_gap.md

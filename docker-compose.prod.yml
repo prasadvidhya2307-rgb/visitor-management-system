@@ -55,7 +55,7 @@ services:
       NODE_ENV: production
 
     volumes:
-      - ./.env.production:/app/.env:ro
+      - ./.env.production:/app/.env.production:ro
       - insightface_vms_production:/root/.insightface
 
     expose:
@@ -95,7 +95,7 @@ services:
         condition: service_healthy
 
     volumes:
-      - ./.env.production:/app/.env:ro
+      - ./.env.production:/app/.env.production:ro
       - storage_vms_production:/app/storage
 
     healthcheck:

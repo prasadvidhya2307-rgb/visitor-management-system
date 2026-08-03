@@ -2,14 +2,15 @@ node_modules/
 build/
 *.log
 # Environment variables
+.env
+.env.*
+!.env.production
 
 # Node.js
 node_modules/
 
-docker-compose.db.yml
-docker-compose.deploye.yml
-docker-compose.dev.yml
-
+docker-compose*.yml
+!docker-compose.prod.yml
 # Build output
 dist/
 

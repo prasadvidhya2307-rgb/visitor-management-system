@@ -51,11 +51,13 @@ services:
     container_name: recognition-backend_vms_prod
     restart: unless-stopped
 
+    env_file:
+      - ./.env.production
+
     environment:
       NODE_ENV: production
 
     volumes:
-      - ./.env.production:/app/.env.production:ro
       - insightface_vms_production:/root/.insightface
 
     expose:
@@ -80,6 +82,9 @@ services:
     container_name: backend_vms_prod
     restart: unless-stopped
 
+    env_file:
+      - ./.env.production
+
     environment:
       NODE_ENV: production
 
@@ -95,7 +100,6 @@ services:
         condition: service_healthy
 
     volumes:
-      - ./.env.production:/app/.env.production:ro
       - storage_vms_production:/app/storage
 
     healthcheck:

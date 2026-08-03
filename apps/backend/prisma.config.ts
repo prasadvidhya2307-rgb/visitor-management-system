@@ -22,6 +22,6 @@ if (!process.env.DATABASE_URL) {
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
-  migrations: { path: "prisma/migrations", seed: "tsx prisma/seed.ts" },
+  migrations: { path: "prisma/migrations", seed: "node dist/prisma/seed.js" },
   datasource: { url: env("DATABASE_URL") },
 });

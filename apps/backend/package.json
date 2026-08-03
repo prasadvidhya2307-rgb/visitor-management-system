@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsx watch src/index.ts",
     "generate": "prisma generate",
-    "build": "prisma generate && tsc && tsc -p tsconfig.seed.json",
+    "build": "prisma generate && tsc",
     "start": "node dist/index.js",
     "seed": "tsx prisma/seed.ts"
   },

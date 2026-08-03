@@ -1,6 +1,6 @@
 import "dotenv/config";
-import { hashPassword } from "../src/utils/password.js";
-import { prisma } from '../src/database/prisma.js'
+import { hashPassword } from "../utils/password.js";
+import { prisma } from '../database/prisma.js'
 
 async function main() {
     const existingAdmin =

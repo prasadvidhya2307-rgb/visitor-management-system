@@ -6,6 +6,10 @@ build/
 # Node.js
 node_modules/
 
+docker-compose.db.yml
+docker-compose.deploye.yml
+docker-compose.dev.yml
+
 # Build output
 dist/
 

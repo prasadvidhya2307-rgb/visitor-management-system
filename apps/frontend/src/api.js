@@ -1,4 +1,4 @@
-const BASE_URL = "https://vctcr7t3-5000.inc1.devtunnels.ms/api/v1" || 'http://localhost:5000/api/v1';
+const BASE_URL = "/api/v1";
 const AUTH_KEY = 'vms_auth';
 
 export const PURPOSES = ['TECHNICAL_DISCUSSION', 'INTERVIEW', 'BUSINESS_MEETING', 'CONTRACT_NEGOTIATION', 'DESIGN_REVIEW', 'TRAINING', 'AUDIT', 'DELIVERY', 'MAINTENANCE', 'OTHER'];
